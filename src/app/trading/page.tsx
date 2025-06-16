@@ -1,9 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/DashboardHeader';
-import OptionsChainTrading from '@/components/OptionsChainTrading';
-import OrderEntry from '@/components/OrderEntry';
-import PositionManager from '@/components/PositionManager';
+import FullOrderEntry from '@/components/FullOrderEntry';
+import LiveOptionsChain from '@/components/LiveOptionsChain';
+import ActivePositions from '@/components/ActivePositions';
 import TradingChart from '@/components/TradingChart';
 import MarketScanner from '@/components/MarketScanner';
 import RiskCalculator from '@/components/RiskCalculator';
@@ -21,48 +21,39 @@ export default function TradingPage() {
           </div>
         </div>
 
+        {/* Top Row - Chart and Order Entry */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Chart and Scanner */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2">
             <TradingChart />
-            <MarketScanner />
           </div>
-          
-          {/* Right Column - Order Entry and Risk */}
-          <div className="space-y-6">
-            <OrderEntry />
-            <RiskCalculator />
+          <div>
+            <FullOrderEntry />
           </div>
         </div>
 
         {/* Main Trading Interface */}
         <Tabs defaultValue="chain" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="chain">Options Chain</TabsTrigger>
             <TabsTrigger value="positions">Positions</TabsTrigger>
-            <TabsTrigger value="strategies">Strategies</TabsTrigger>
+            <TabsTrigger value="scanner">Scanner</TabsTrigger>
+            <TabsTrigger value="risk">Risk</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chain" className="space-y-4">
-            <OptionsChainTrading />
+            <LiveOptionsChain />
           </TabsContent>
 
           <TabsContent value="positions" className="space-y-4">
-            <PositionManager />
+            <ActivePositions />
           </TabsContent>
 
-          <TabsContent value="strategies" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Options Strategies</CardTitle>
-                <CardDescription>
-                  Pre-built and custom options strategies
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Strategy builder coming soon...</p>
-              </CardContent>
-            </Card>
+          <TabsContent value="scanner" className="space-y-4">
+            <MarketScanner />
+          </TabsContent>
+
+          <TabsContent value="risk" className="space-y-4">
+            <RiskCalculator />
           </TabsContent>
         </Tabs>
       </main>
