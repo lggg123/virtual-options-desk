@@ -92,16 +92,39 @@ export default function FullOrderEntry() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      console.log('Placing order:', orderData);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create option identifier for the backend
+      const optionId = `${orderData.symbol}-${orderData.expiry}-${orderData.strike}-${orderData.optionType}`;
+      
+      // Prepare order data for API
+      const orderPayload = {
+        optionId,
+        orderType: orderData.action, // 'buy' or 'sell'
+        quantity: orderData.quantity,
+        price: orderData.orderType === 'market' ? 0 : orderData.price, // Use 0 for market orders
+      };
 
-      // Here you would make the actual API call to place the order
+      console.log('Placing order:', orderPayload);
+
+      // Make actual API call to place the order
+      const response = await fetch('/api/options/price/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderPayload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to place order');
+      }
+
       const actionText = orderData.action === 'buy' ? 'BUY TO OPEN' : 'SELL TO OPEN';
       const contractText = `${orderData.symbol} $${orderData.strike}${orderData.optionType.charAt(0).toUpperCase()} ${orderData.expiry}`;
       
       toast.success('Order Placed Successfully!', {
-        description: `${actionText} ${orderData.quantity} ${contractText}`
+        description: `${actionText} ${orderData.quantity} ${contractText} - New Balance: $${result.newBalance?.toLocaleString()}`
       });
 
       // Reset form
@@ -117,9 +140,12 @@ export default function FullOrderEntry() {
       });
       setOrderPreview(null);
 
+      // Trigger a custom event to notify other components to refresh
+      window.dispatchEvent(new CustomEvent('orderPlaced', { detail: result }));
+
     } catch (error) {
       console.error('Order submission error:', error);
-      toast.error('Order Failed - There was an error placing your order. Please try again.');
+      toast.error(`Order Failed - ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
     } finally {
       setIsSubmitting(false);
     }
