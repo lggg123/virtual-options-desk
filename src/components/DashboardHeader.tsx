@@ -12,12 +12,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
-import { LogOut, Settings, User } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { LogOut, Settings, User, TrendingUp, BarChart3, DollarSign } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DashboardHeader() {
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const getUser = async () => {
@@ -32,12 +34,39 @@ export default function DashboardHeader() {
     router.push('/login');
   };
 
+  const navItems = [
+    { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+    { href: '/trading', label: 'Trading', icon: TrendingUp },
+    { href: '/portfolio', label: 'Portfolio', icon: DollarSign },
+  ];
+
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Virtual Options Desk</h1>
-          <p className="text-muted-foreground">Professional Options Trading Platform</p>
+        <div className="flex items-center space-x-8">
+          <div>
+            <h1 className="text-2xl font-bold">Virtual Options Desk</h1>
+            <p className="text-muted-foreground">Professional Options Trading Platform</p>
+          </div>
+          
+          {/* Navigation Menu */}
+          <nav className="hidden md:flex items-center space-x-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link key={item.href} href={item.href}>
+                  <Button 
+                    variant={isActive ? "default" : "ghost"} 
+                    className="flex items-center gap-2"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </Button>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
         <div className="flex items-center space-x-4">

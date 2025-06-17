@@ -1,115 +1,189 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { X, RotateCcw } from 'lucide-react';
+import { X, RotateCcw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface Position {
+  id: number;
+  symbol: string;
+  type: string;
+  strike: number;
+  expiry: string;
+  quantity: number;
+  avgPrice: number;
+  currentPrice: number;
+  pnl: number;
+  pnlPercent: number;
+  delta: number;
+  theta: number;
+  gamma: number;
+  vega: number;
+}
+
 export default function ActivePositions() {
-  const [positions, setPositions] = useState([
-    {
-      id: 1,
-      symbol: 'AAPL',
-      type: 'Call',
-      strike: 180,
-      expiry: '2024-02-16',
-      quantity: 5,
-      avgPrice: 3.25,
-      currentPrice: 3.85,
-      pnl: 300,
-      pnlPercent: 18.46,
-      delta: 0.65,
-      theta: -0.08,
-      gamma: 0.015,
-      vega: 0.12
-    },
-    {
-      id: 2,
-      symbol: 'TSLA',
-      type: 'Put',
-      strike: 250,
-      expiry: '2024-02-23',
-      quantity: -3,
-      avgPrice: 8.50,
-      currentPrice: 7.20,
-      pnl: 390,
-      pnlPercent: 15.29,
-      delta: -0.42,
-      theta: -0.12,
-      gamma: 0.018,
-      vega: 0.15
-    },
-    {
-      id: 3,
-      symbol: 'SPY',
-      type: 'Call',
-      strike: 450,
-      expiry: '2024-02-09',
-      quantity: 10,
-      avgPrice: 2.15,
-      currentPrice: 1.85,
-      pnl: -300,
-      pnlPercent: -13.95,
-      delta: 0.38,
-      theta: -0.15,
-      gamma: 0.020,
-      vega: 0.08
-    }
-  ]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleClosePosition = (positionId: number) => {
-    const position = positions.find(p => p.id === positionId);
-    if (position) {
-      setPositions(prev => prev.filter(p => p.id !== positionId));
-      toast.success(`Closed ${position.symbol} ${position.strike}${position.type.charAt(0)} position`);
-    }
-  };
+  const fetchPositions = async () => {
+    try {
+      const response = await fetch('/api/positions');
+      const result = await response.json();
 
-  const handleRollPosition = (positionId: number) => {
-    const position = positions.find(p => p.id === positionId);
-    if (position) {
-      toast.success(`Rolling ${position.symbol} ${position.strike}${position.type.charAt(0)} position`);
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch positions');
+      }
+
+      setPositions(result.positions || []);
+    } catch (error) {
+      console.error('Error fetching positions:', error);
+      toast.error('Failed to fetch positions');
+      // Fall back to mock data for development
+      setPositions([
+        {
+          id: 1,
+          symbol: 'AAPL',
+          type: 'Call',
+          strike: 180,
+          expiry: '2024-02-16',
+          quantity: 5,
+          avgPrice: 3.25,
+          currentPrice: 3.85,
+          pnl: 300,
+          pnlPercent: 18.46,
+          delta: 0.65,
+          theta: -0.08,
+          gamma: 0.015,
+          vega: 0.12
+        },
+        {
+          id: 2,
+          symbol: 'TSLA',
+          type: 'Put',
+          strike: 250,
+          expiry: '2024-02-23',
+          quantity: -3,
+          avgPrice: 8.50,
+          currentPrice: 7.20,
+          pnl: 390,
+          pnlPercent: 15.29,
+          delta: -0.42,
+          theta: -0.12,
+          gamma: 0.018,
+          vega: 0.15
+        }
+      ]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const totalPnL = positions.reduce((sum, pos) => sum + pos.pnl, 0);
-  const totalDelta = positions.reduce((sum, pos) => sum + (pos.delta * pos.quantity), 0);
+  const refreshPositions = async () => {
+    setRefreshing(true);
+    await fetchPositions();
+  };
+
+  useEffect(() => {
+    fetchPositions();
+
+    // Listen for order placement events
+    const handleOrderPlaced = () => {
+      refreshPositions();
+    };
+
+    window.addEventListener('orderPlaced', handleOrderPlaced);
+    return () => window.removeEventListener('orderPlaced', handleOrderPlaced);
+  }, []);
+
+  const closePosition = async (positionId: number) => {
+    try {
+      const response = await fetch(`/api/positions/${positionId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to close position');
+      }
+
+      await refreshPositions();
+      toast.success('Position closed successfully');
+    } catch (error) {
+      console.error('Error closing position:', error);
+      toast.error('Failed to close position');
+    }
+  };
+
+  const rollPosition = (positionId: number) => {
+    toast.info('Roll position functionality coming soon');
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
+  };
+
+  const formatPercent = (value: number) => {
+    return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Loading Positions...
+          </CardTitle>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Active Positions</CardTitle>
-        <CardDescription>Manage your current options positions</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Active Positions</CardTitle>
+            <CardDescription>
+              {positions.length} active option{positions.length !== 1 ? 's' : ''}
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshPositions}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RotateCcw className="h-4 w-4" />
+            )}
+            Refresh
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {/* Portfolio Summary */}
-          <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">Total P&L</div>
-              <div className={`text-lg font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(0)}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">Portfolio Delta</div>
-              <div className="text-lg font-bold">{totalDelta.toFixed(2)}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">Open Positions</div>
-              <div className="text-lg font-bold">{positions.length}</div>
-            </div>
+        {positions.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No active positions</p>
+            <p className="text-sm">Place your first trade to see positions here</p>
           </div>
-
-          {/* Positions Table */}
-          <div className="border rounded-lg overflow-x-auto">
+        ) : (
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Position</TableHead>
+                  <TableHead>Contract</TableHead>
                   <TableHead>Qty</TableHead>
                   <TableHead>Avg Price</TableHead>
                   <TableHead>Current</TableHead>
@@ -122,56 +196,55 @@ export default function ActivePositions() {
                 {positions.map((position) => (
                   <TableRow key={position.id}>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {position.symbol} ${position.strike}{position.type.charAt(0)}
-                        </div>
+                      <div className="space-y-1">
+                        <div className="font-medium">{position.symbol}</div>
                         <div className="text-sm text-muted-foreground">
-                          Exp: {position.expiry}
+                          {position.expiry} ${position.strike}{position.type.charAt(0)}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={position.quantity > 0 ? 'default' : 'destructive'}>
-                        {position.quantity > 0 ? '+' : ''}{position.quantity}
+                      <Badge variant={position.quantity > 0 ? "default" : "destructive"}>
+                        {position.quantity > 0 ? `+${position.quantity}` : position.quantity}
                       </Badge>
                     </TableCell>
-                    <TableCell>${position.avgPrice.toFixed(2)}</TableCell>
-                    <TableCell className="font-medium">${position.currentPrice.toFixed(2)}</TableCell>
+                    <TableCell>{formatCurrency(position.avgPrice)}</TableCell>
+                    <TableCell>{formatCurrency(position.currentPrice)}</TableCell>
                     <TableCell>
-                      <div className={position.pnl >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        <div className="font-medium">
-                          {position.pnl >= 0 ? '+' : ''}${position.pnl}
+                      <div className="space-y-1">
+                        <div className={`font-medium ${position.pnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(position.pnl)}
                         </div>
-                        <div className="text-sm">
-                          {position.pnlPercent >= 0 ? '+' : ''}{position.pnlPercent.toFixed(2)}%
+                        <div className={`text-sm ${position.pnlPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatPercent(position.pnlPercent)}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm space-y-1">
-                        <div>Δ: {position.delta.toFixed(2)}</div>
-                        <div>Θ: {position.theta.toFixed(2)}</div>
-                        <div>Γ: {position.gamma.toFixed(3)}</div>
+                      <div className="space-y-1 text-sm">
+                        <div>Δ {position.delta.toFixed(3)}</div>
+                        <div>Θ {position.theta.toFixed(3)}</div>
+                        <div>Γ {position.gamma.toFixed(3)}</div>
+                        <div>ν {position.vega.toFixed(2)}</div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex space-x-1">
-                        <Button 
-                          size="sm" 
+                      <div className="flex items-center gap-2">
+                        <Button
                           variant="outline"
-                          onClick={() => handleClosePosition(position.id)}
+                          size="sm"
+                          onClick={() => rollPosition(position.id)}
                         >
-                          <X className="h-3 w-3 mr-1" />
-                          Close
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleRollPosition(position.id)}
-                        >
-                          <RotateCcw className="h-3 w-3 mr-1" />
+                          <RotateCcw className="h-3 w-3" />
                           Roll
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => closePosition(position.id)}
+                        >
+                          <X className="h-3 w-3" />
+                          Close
                         </Button>
                       </div>
                     </TableCell>
@@ -180,13 +253,7 @@ export default function ActivePositions() {
               </TableBody>
             </Table>
           </div>
-
-          {positions.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No open positions. Start trading to see your positions here.
-            </div>
-          )}
-        </div>
+        )}
       </CardContent>
     </Card>
   );
