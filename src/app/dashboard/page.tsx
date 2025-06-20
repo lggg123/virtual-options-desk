@@ -37,9 +37,14 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">+$1,234.56</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+3.2%</span> today
-              </p>
+              <div className="flex items-center justify-between mt-2">
+                <Badge variant="default" className="bg-green-100 text-green-800">
+                  +3.2% today
+                </Badge>
+                <Button variant="ghost" size="sm">
+                  View Details
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -50,9 +55,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">23</div>
-              <p className="text-xs text-muted-foreground">
-                12 calls, 11 puts
-              </p>
+              <div className="flex gap-2 mt-2">
+                <Badge variant="secondary">12 Calls</Badge>
+                <Badge variant="outline">11 Puts</Badge>
+              </div>
             </CardContent>
           </Card>
 
@@ -71,6 +77,18 @@ export default function DashboardPage() {
         </div>
 
         {/* Main Dashboard Content */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Dashboard Overview</h2>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">
+              Refresh Data
+            </Button>
+            <Button size="sm">
+              New Trade
+            </Button>
+          </div>
+        </div>
+
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>

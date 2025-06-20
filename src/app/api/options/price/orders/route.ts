@@ -8,6 +8,12 @@ export async function POST(request: Request) {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
+    // Check for authentication error
+    if (authError) {
+      console.error('Auth error:', authError);
+      return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
+    }
+    
     // For development/testing, create a mock user if not authenticated
     const mockUser = user || {
       id: 'demo-user-id',
