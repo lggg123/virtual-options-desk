@@ -34,7 +34,7 @@ export class HybridMarketProvider {
         volume: parseInt(data['Global Quote']['06. volume'])
       };
     } catch (error) {
-      console.warn(`Failed to fetch real data for ${symbol}, falling back to simulation`);
+      console.warn(`Failed to fetch real data for ${symbol}, falling back to simulation:`, error);
       return null;
     }
   }
