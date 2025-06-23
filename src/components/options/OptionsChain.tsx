@@ -50,7 +50,16 @@ export function OptionsChain({ symbol, spotPrice }: OptionsChainProps) {
     }
     
     if (data) {
-      setOptions(data);
+      setOptions(
+        data.map((item: any) => ({
+          id: item.id,
+          symbol: item.symbol,
+          underlying_symbol: item.underlying_symbol,
+          strike_price: item.strike_price,
+          expiration_date: item.expiration_date ?? item.expiry_date,
+          option_type: item.option_type,
+        }))
+      );
     }
     setLoading(false);
   }, [symbol]);
