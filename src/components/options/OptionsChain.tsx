@@ -17,6 +17,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { Database } from '@/lib/types';
+
+// Add proper type for Supabase data
+type SupabaseOption = Database['public']['Tables']['options']['Row'];
 
 interface Option {
   id: string;
@@ -51,12 +55,12 @@ export function OptionsChain({ symbol, spotPrice }: OptionsChainProps) {
     
     if (data) {
       setOptions(
-        data.map((item: any) => ({
+        data.map((item: SupabaseOption) => ({
           id: item.id,
           symbol: item.symbol,
-          underlying_symbol: item.underlying_symbol,
+          underlying_symbol: symbol, // Use symbol from props since it's not in the database
           strike_price: item.strike_price,
-          expiration_date: item.expiration_date ?? item.expiry_date,
+          expiration_date: item.expiry_date, // Use expiry_date from database
           option_type: item.option_type,
         }))
       );

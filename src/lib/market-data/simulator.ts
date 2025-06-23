@@ -1,6 +1,17 @@
 // lib/market-data/simulator.ts
 import { supabase } from '@/lib/supabase/client';
 
+// Add interface for Supabase client with additional tables
+interface ExtendedSupabaseClient {
+  from: (table: string) => {
+    upsert: (data: any) => Promise<any>;
+    select: (columns?: string) => any;
+    insert: (data: any) => Promise<any>;
+    update: (data: any) => any;
+    delete: () => any;
+  };
+}
+
 interface StockData {
   symbol: string;
   price: number;
@@ -183,9 +194,9 @@ export class MarketSimulator {
         }
       });
 
-      // Also update a hypothetical prices table
-      // Use type assertion to bypass type error if 'stock_prices' is not in the generated types
-      await (supabase as unknown as { from: (table: string) => any })
+      // Use extended client interface for dynamic table access
+      const extendedClient = supabase as unknown as ExtendedSupabaseClient;
+      await extendedClient
         .from('stock_prices')
         .upsert({
           symbol,
