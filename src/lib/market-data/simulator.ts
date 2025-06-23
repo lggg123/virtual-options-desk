@@ -1,15 +1,33 @@
 // lib/market-data/simulator.ts
 import { supabase } from '@/lib/supabase/client';
 
+// Define proper types for Supabase operations
+interface SupabaseResponse<T> {
+  data: T | null;
+  error: Error | null;
+}
+
+interface StockPriceInsert {
+  symbol: string;
+  price: number;
+  volume: number;
+  high: number;
+  low: number;
+  open: number;
+  updated_at: string;
+}
+
+interface SupabaseQueryBuilder {
+  upsert: (data: StockPriceInsert) => Promise<SupabaseResponse<StockPriceInsert>>;
+  select: (columns?: string) => SupabaseQueryBuilder;
+  insert: (data: StockPriceInsert) => Promise<SupabaseResponse<StockPriceInsert>>;
+  update: (data: Partial<StockPriceInsert>) => SupabaseQueryBuilder;
+  delete: () => SupabaseQueryBuilder;
+}
+
 // Add interface for Supabase client with additional tables
 interface ExtendedSupabaseClient {
-  from: (table: string) => {
-    upsert: (data: any) => Promise<any>;
-    select: (columns?: string) => any;
-    insert: (data: any) => Promise<any>;
-    update: (data: any) => any;
-    delete: () => any;
-  };
+  from: (table: string) => SupabaseQueryBuilder;
 }
 
 interface StockData {
@@ -196,17 +214,17 @@ export class MarketSimulator {
 
       // Use extended client interface for dynamic table access
       const extendedClient = supabase as unknown as ExtendedSupabaseClient;
-      await extendedClient
-        .from('stock_prices')
-        .upsert({
-          symbol,
-          price: stockData.price,
-          volume: stockData.volume,
-          high: stockData.high,
-          low: stockData.low,
-          open: stockData.open,
-          updated_at: stockData.lastUpdate.toISOString(),
-        });
+      const stockPriceData: StockPriceInsert = {
+        symbol,
+        price: stockData.price,
+        volume: stockData.volume,
+        high: stockData.high,
+        low: stockData.low,
+        open: stockData.open,
+        updated_at: stockData.lastUpdate.toISOString(),
+      };
+      
+      await extendedClient.from('stock_prices').upsert(stockPriceData);
         
     } catch (error) {
       console.error(`Failed to broadcast price update for ${symbol}:`, error);
