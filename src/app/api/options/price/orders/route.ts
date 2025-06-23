@@ -1,7 +1,6 @@
 // app/api/orders/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
-import { Database } from '@/lib/types';
 
 // Type definitions for better type safety
 type OrderType = 'buy' | 'sell';
