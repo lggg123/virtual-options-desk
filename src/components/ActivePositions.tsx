@@ -99,7 +99,7 @@ export default function ActivePositions() {
 
     window.addEventListener('orderPlaced', handleOrderPlaced);
     return () => window.removeEventListener('orderPlaced', handleOrderPlaced);
-  }, []);
+  }, [refreshPositions]);
 
   const closePosition = async (positionId: number) => {
     try {
@@ -119,7 +119,7 @@ export default function ActivePositions() {
     }
   };
 
-  const rollPosition = (positionId: number) => {
+  const rollPosition = (_positionId: number) => {
     toast.info('Roll position functionality coming soon');
   };
 

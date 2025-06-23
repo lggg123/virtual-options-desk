@@ -24,6 +24,16 @@ interface OrderData {
   action: 'buy' | 'sell';
 }
 
+interface OrderPreview {
+  contract: string;
+  action: string;
+  quantity: number;
+  orderType: string;
+  price: string;
+  totalValue: number;
+  estimatedCommission: number;
+}
+
 export default function FullOrderEntry() {
   const [orderData, setOrderData] = useState<OrderData>({
     symbol: '',
@@ -37,7 +47,7 @@ export default function FullOrderEntry() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderPreview, setOrderPreview] = useState<any>(null);
+  const [orderPreview, setOrderPreview] = useState<OrderPreview | null>(null);
 
   const calculateOrderValue = () => {
     return orderData.quantity * orderData.price * 100;
