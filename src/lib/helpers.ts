@@ -1,5 +1,5 @@
 // filepath: lib/supabase/helpers.ts
-import { supabase } from './client';
+import { supabase } from './supabase/client';
 import type { Database } from './types';
 
 // Type aliases for easier use
