@@ -48,6 +48,18 @@ interface TradingSignal {
   timestamp: number;
 }
 
+interface MarketDataPoint {
+  price: number;
+  changePercent: number;
+  timestamp: string;
+}
+
+interface TooltipContext {
+  parsed: {
+    y: number;
+  };
+}
+
 export default function TradingChart() {
   const [symbol, setSymbol] = useState('AAPL');
   const [timeframe, setTimeframe] = useState('1M');
@@ -67,6 +79,23 @@ export default function TradingChart() {
   const [priceChangePercent, setPriceChangePercent] = useState(0);
   const [isLive, setIsLive] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Symbol search handler
+  const handleSymbolChange = (newSymbol: string) => {
+    setSymbol(newSymbol);
+    // Clear existing data when symbol changes
+    setPriceData([]);
+    setSignals([]);
+  };
+
+  // Toggle live data
+  const toggleLiveData = () => {
+    setIsLive(!isLive);
+    if (!isLive && intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
 
   // Update price data when market data changes
   useEffect(() => {
@@ -123,7 +152,30 @@ export default function TradingChart() {
     initializeData();
   }, [symbol, stockData]);
 
-  const generateTradingSignal = (data: any): TradingSignal | null => {
+  // Setup live data update interval
+  useEffect(() => {
+    if (isLive && !intervalRef.current) {
+      intervalRef.current = setInterval(() => {
+        // Force a price update every 30 seconds when live
+        if (stockData) {
+          const simulator = getMarketSimulator();
+          simulator.updatePrices();
+        }
+      }, 30000);
+    } else if (!isLive && intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [isLive, stockData]);
+
+  const generateTradingSignal = (data: MarketDataPoint): TradingSignal | null => {
     const changePercent = Math.abs(data.changePercent);
     
     if (changePercent < 0.5) return null;
@@ -179,7 +231,7 @@ export default function TradingChart() {
         mode: 'index' as const,
         intersect: false,
         callbacks: {
-          label: (context: any) => `Price: $${context.parsed.y.toFixed(2)}`,
+          label: (context: TooltipContext) => `Price: $${context.parsed.y.toFixed(2)}`,
         },
       },
     },
@@ -202,7 +254,7 @@ export default function TradingChart() {
           color: 'rgba(0, 0, 0, 0.1)',
         },
         ticks: {
-          callback: (value: any) => `$${value.toFixed(2)}`,
+          callback: (value: string | number) => `$${Number(value).toFixed(2)}`,
         },
       },
     },
@@ -263,6 +315,13 @@ export default function TradingChart() {
                 >
                   1Y
                 </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={toggleLiveData}
+                >
+                  {isLive ? 'Pause' : 'Resume'} Live
+                </Button>
                 <div className="flex items-center space-x-2 ml-4">
                   <Signal className="h-3 w-3" />
                   <span className="text-sm">{isConnected ? 'Live Data' : 'Connecting...'}</span>
@@ -270,6 +329,13 @@ export default function TradingChart() {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={symbol}
+                  onChange={(e) => handleSymbolChange(e.target.value.toUpperCase())}
+                  className="px-2 py-1 border rounded text-sm w-20"
+                  placeholder="Symbol"
+                />
                 <Badge variant="outline">{symbol}</Badge>
                 <Badge variant="default">${currentPrice.toFixed(2)}</Badge>
                 <Badge variant="secondary" className={priceChange >= 0 ? 'text-green-600' : 'text-red-600'}>
@@ -280,6 +346,11 @@ export default function TradingChart() {
                   )}
                   {priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)} ({priceChangePercent >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%)
                 </Badge>
+                {marketData && Object.keys(marketData).length > 0 && (
+                  <Badge variant="outline">
+                    {Object.keys(marketData).length} symbols
+                  </Badge>
+                )}
               </div>
             </div>
 

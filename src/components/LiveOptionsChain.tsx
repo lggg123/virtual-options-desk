@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,17 +44,7 @@ export default function LiveOptionsChain() {
     { strike: 190, bid: 8.85, ask: 8.95, last: 8.90, volume: 780, openInterest: 3140, iv: 31.8, delta: -0.72, gamma: 0.016 },
   ]);
 
-  // Initialize component and set up auto-refresh
-  useEffect(() => {
-    // Auto-refresh the options chain every 30 seconds
-    const interval = setInterval(() => {
-      refreshChain();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [symbol, expiry]);
-
-  const refreshChain = async () => {
+  const refreshChain = useCallback(async () => {
     setIsLoading(true);
     try {
       // Simulate API call
@@ -81,12 +71,23 @@ export default function LiveOptionsChain() {
       })));
       
       toast.success(`Options chain refreshed for ${symbol}`);
-    } catch (_error) {
+    } catch (error) {
+      console.error('Failed to refresh options chain:', error);
       toast.error('Failed to refresh options chain');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [symbol]);
+
+  // Initialize component and set up auto-refresh
+  useEffect(() => {
+    // Auto-refresh the options chain every 30 seconds
+    const interval = setInterval(() => {
+      refreshChain();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [refreshChain]);
 
   const handleTrade = (option: OptionData, type: 'call' | 'put', action: 'buy' | 'sell') => {
     toast.success(`${action.toUpperCase()} ${type.toUpperCase()} ${symbol} $${option.strike} initiated`);

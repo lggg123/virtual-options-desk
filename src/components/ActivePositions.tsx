@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +30,7 @@ export default function ActivePositions() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchPositions = async () => {
+  const fetchPositions = useCallback(async () => {
     try {
       const response = await fetch('/api/positions');
       const result = await response.json();
@@ -82,12 +82,12 @@ export default function ActivePositions() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
-  const refreshPositions = async () => {
+  const refreshPositions = useCallback(async () => {
     setRefreshing(true);
     await fetchPositions();
-  };
+  }, [fetchPositions]);
 
   useEffect(() => {
     fetchPositions();
@@ -99,7 +99,7 @@ export default function ActivePositions() {
 
     window.addEventListener('orderPlaced', handleOrderPlaced);
     return () => window.removeEventListener('orderPlaced', handleOrderPlaced);
-  }, [refreshPositions]);
+  }, [fetchPositions, refreshPositions]);
 
   const closePosition = async (positionId: number) => {
     try {
@@ -119,7 +119,7 @@ export default function ActivePositions() {
     }
   };
 
-  const rollPosition = (_positionId: number) => {
+  const rollPosition = () => {
     toast.info('Roll position functionality coming soon');
   };
 
@@ -233,7 +233,7 @@ export default function ActivePositions() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => rollPosition(position.id)}
+                          onClick={() => rollPosition()}
                         >
                           <RotateCcw className="h-3 w-3" />
                           Roll
