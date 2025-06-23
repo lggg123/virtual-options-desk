@@ -1,6 +1,7 @@
 // app/api/orders/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
+import { Database } from '@/lib/types';
 
 // Type definitions for better type safety
 type OrderType = 'buy' | 'sell';
@@ -18,14 +19,8 @@ interface MockUser {
   email: string;
 }
 
-interface MockPortfolio {
-  id: string;
-  user_id: string;
-  cash_balance: number;
-  total_value: number;
-  created_at: string;
-  updated_at: string;
-}
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type Portfolio = Database['public']['Tables']['portfolios']['Row'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,11 +64,11 @@ export async function POST(request: NextRequest) {
     }
     
     // Get or create user profile
-    let profile = null;
+    let profile: Profile | null = null;
     if (user) {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('*')
         .eq('id', mockUser.id)
         .single();
         
@@ -83,12 +78,33 @@ export async function POST(request: NextRequest) {
       }
       
       profile = profileData;
+      
+      // Create profile if it doesn't exist
+      if (!profile) {
+        const { data: newProfile, error: createProfileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: mockUser.id,
+            username: mockUser.email.split('@')[0], // Use email prefix as username
+            full_name: mockUser.email.split('@')[0],
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+          
+        if (createProfileError) {
+          console.error('Profile creation error:', createProfileError);
+          return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 });
+        }
+        
+        profile = newProfile;
+      }
     }
     
     // Get or create portfolio
-    let portfolio: MockPortfolio | null = null;
+    let portfolio: Portfolio | null = null;
     
-    if (user) {
+    if (user && profile) {
       const { data: portfolioData, error: portfolioError } = await supabase
         .from('portfolios')
         .select('*')
@@ -176,7 +192,11 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString()
         }, 
         newBalance,
-        message: 'Order simulated successfully (demo mode)'
+        message: 'Order simulated successfully (demo mode)',
+        profile: profile ? {
+          username: profile.username,
+          full_name: profile.full_name
+        } : null
       });
     }
     
@@ -278,7 +298,12 @@ export async function POST(request: NextRequest) {
         success: true,
         order, 
         newBalance,
-        message: 'Order processed successfully'
+        message: 'Order processed successfully',
+        profile: profile ? {
+          username: profile.username,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url
+        } : null
       });
       
     } catch (dbError) {
