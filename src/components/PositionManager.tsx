@@ -98,7 +98,12 @@ export default function PositionManager() {
                   <TableCell>${position.currentPrice.toFixed(2)}</TableCell>
                   <TableCell>
                     <div className={position.pnl >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      <div className="font-medium">
+                      <div className="font-medium flex items-center gap-1">
+                        {position.pnl >= 0 ? (
+                          <TrendingUp className="h-3 w-3" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3" />
+                        )}
                         {position.pnl >= 0 ? '+' : ''}${position.pnl}
                       </div>
                       <div className="text-sm">
@@ -120,6 +125,9 @@ export default function PositionManager() {
                       </Button>
                       <Button size="sm" variant="outline">
                         Roll
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   </TableCell>

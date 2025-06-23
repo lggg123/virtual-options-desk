@@ -1,7 +1,7 @@
 // components/options/OptionsChain.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { calculateBlackScholes } from '@/lib/calculations/black-scholes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 interface Option {
   id: string;
@@ -35,13 +35,8 @@ interface OptionsChainProps {
 export function OptionsChain({ symbol, spotPrice }: OptionsChainProps) {
   const [options, setOptions] = useState<Option[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
   
-  useEffect(() => {
-    fetchOptions();
-  }, [symbol]);
-  
-  const fetchOptions = async () => {
+  const fetchOptions = useCallback(async () => {
     const { data, error } = await supabase
       .from('options')
       .select('*')
@@ -49,11 +44,20 @@ export function OptionsChain({ symbol, spotPrice }: OptionsChainProps) {
       .order('expiration_date', { ascending: true })
       .order('strike_price', { ascending: true });
     
+    if (error) {
+      console.error('Error fetching options:', error);
+      toast.error('Failed to fetch options data');
+    }
+    
     if (data) {
       setOptions(data);
     }
     setLoading(false);
-  };
+  }, [symbol]);
+  
+  useEffect(() => {
+    fetchOptions();
+  }, [fetchOptions]);
   
   const calculatePrice = (option: Option) => {
     const timeToExpiry = (new Date(option.expiration_date).getTime() - new Date().getTime()) / (365 * 24 * 60 * 60 * 1000);
@@ -85,17 +89,10 @@ export function OptionsChain({ symbol, spotPrice }: OptionsChainProps) {
     });
     
     if (response.ok) {
-      toast({
-        title: "Order Placed",
-        description: `Successfully ${orderType === 'buy' ? 'bought' : 'sold'} 1 contract at ${price}`,
-      });
+      toast.success(`Successfully ${orderType === 'buy' ? 'bought' : 'sold'} 1 contract at ${price}`);
     } else {
       const error = await response.json();
-      toast({
-        title: "Order Failed",
-        description: error.error,
-        variant: "destructive",
-      });
+      toast.error(`Order Failed: ${error.error}`);
     }
   };
   

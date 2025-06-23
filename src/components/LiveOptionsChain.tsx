@@ -11,6 +11,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface OptionData {
+  strike: number;
+  bid: number;
+  ask: number;
+  last: number;
+  volume: number;
+  openInterest: number;
+  iv: number;
+  delta: number;
+  gamma: number;
+}
+
 export default function LiveOptionsChain() {
   const [symbol, setSymbol] = useState('AAPL');
   const [expiry, setExpiry] = useState('2024-02-16');
@@ -32,6 +44,16 @@ export default function LiveOptionsChain() {
     { strike: 190, bid: 8.85, ask: 8.95, last: 8.90, volume: 780, openInterest: 3140, iv: 31.8, delta: -0.72, gamma: 0.016 },
   ]);
 
+  // Initialize component and set up auto-refresh
+  useEffect(() => {
+    // Auto-refresh the options chain every 30 seconds
+    const interval = setInterval(() => {
+      refreshChain();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [symbol, expiry]);
+
   const refreshChain = async () => {
     setIsLoading(true);
     try {
@@ -41,15 +63,32 @@ export default function LiveOptionsChain() {
       // Mock price updates
       setStockPrice(prev => prev + (Math.random() - 0.5) * 2);
       
+      // Update options data with small random changes to simulate real-time updates
+      setCallOptions(prev => prev.map(option => ({
+        ...option,
+        bid: option.bid + (Math.random() - 0.5) * 0.1,
+        ask: option.ask + (Math.random() - 0.5) * 0.1,
+        last: option.last + (Math.random() - 0.5) * 0.1,
+        volume: option.volume + Math.floor(Math.random() * 100),
+      })));
+      
+      setPutOptions(prev => prev.map(option => ({
+        ...option,
+        bid: option.bid + (Math.random() - 0.5) * 0.1,
+        ask: option.ask + (Math.random() - 0.5) * 0.1,
+        last: option.last + (Math.random() - 0.5) * 0.1,
+        volume: option.volume + Math.floor(Math.random() * 100),
+      })));
+      
       toast.success(`Options chain refreshed for ${symbol}`);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to refresh options chain');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleTrade = (option: any, type: 'call' | 'put', action: 'buy' | 'sell') => {
+  const handleTrade = (option: OptionData, type: 'call' | 'put', action: 'buy' | 'sell') => {
     toast.success(`${action.toUpperCase()} ${type.toUpperCase()} ${symbol} $${option.strike} initiated`);
   };
 
@@ -101,6 +140,10 @@ export default function LiveOptionsChain() {
                 <div className="text-sm text-green-600 flex items-center">
                   <TrendingUp className="h-3 w-3 mr-1" />
                   +$2.15 (+1.19%)
+                </div>
+                <div className="text-xs text-muted-foreground flex items-center mt-1">
+                  <TrendingDown className="h-3 w-3 mr-1" />
+                  Previous: $180.30
                 </div>
               </div>
             </div>

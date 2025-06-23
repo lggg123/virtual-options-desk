@@ -55,6 +55,9 @@ export default function MarketScanner() {
                     <Badge variant={opp.change >= 0 ? 'default' : 'destructive'}>
                       {opp.change >= 0 ? '+' : ''}{opp.change}%
                     </Badge>
+                    {opp.probability > 70 && (
+                      <TrendingUp className="h-4 w-4 text-green-600" />
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">{opp.description}</p>
                 </div>

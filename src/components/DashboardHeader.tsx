@@ -17,7 +17,10 @@ import { LogOut, Settings, User, TrendingUp, BarChart3, DollarSign } from 'lucid
 import Link from 'next/link';
 
 export default function DashboardHeader() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ 
+    email?: string; 
+    user_metadata?: { avatar_url?: string } 
+  } | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -74,7 +77,7 @@ export default function DashboardHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  {/* Remove the AvatarImage to avoid 404 error */}
+                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email || 'User'} />
                   <AvatarFallback>
                     {user?.email?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
