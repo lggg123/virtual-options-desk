@@ -184,7 +184,8 @@ export class MarketSimulator {
       });
 
       // Also update a hypothetical prices table
-      await supabase
+      // Use type assertion to bypass type error if 'stock_prices' is not in the generated types
+      await (supabase as unknown as { from: (table: string) => any })
         .from('stock_prices')
         .upsert({
           symbol,
