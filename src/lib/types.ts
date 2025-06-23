@@ -43,6 +43,69 @@ export interface Database {
           }
         ]
       }
+      options: {
+        Row: {
+          id: string
+          symbol: string
+          option_type: 'call' | 'put'
+          strike_price: number
+          expiry_date: string
+          bid: number
+          ask: number
+          last_price: number
+          volume: number
+          open_interest: number
+          implied_volatility: number
+          delta: number
+          gamma: number
+          theta: number
+          vega: number
+          rho: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          symbol: string
+          option_type: 'call' | 'put'
+          strike_price: number
+          expiry_date: string
+          bid?: number
+          ask?: number
+          last_price?: number
+          volume?: number
+          open_interest?: number
+          implied_volatility?: number
+          delta?: number
+          gamma?: number
+          theta?: number
+          vega?: number
+          rho?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          symbol?: string
+          option_type?: 'call' | 'put'
+          strike_price?: number
+          expiry_date?: string
+          bid?: number
+          ask?: number
+          last_price?: number
+          volume?: number
+          open_interest?: number
+          implied_volatility?: number
+          delta?: number
+          gamma?: number
+          theta?: number
+          vega?: number
+          rho?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       options_trades: {
         Row: {
           id: string
