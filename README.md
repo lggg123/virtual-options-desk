@@ -1,40 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Virtual Options Desk
 
-## Getting Started
+A comprehensive options trading platform with AI-powered market analysis and autonomous blog generation.
 
-First, run the development server:
+## 🚀 Quick Start (Local Development)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone and start everything
+git clone <your-repo>
+cd virtual-options-desk
+chmod +x start-dev.sh
+./start-dev.sh
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Services:**
+- Frontend: http://localhost:3000
+- CrewAI Service: http://localhost:8001 (optional)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📊 Free Market Data APIs
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Get your API keys from these providers (all have free tiers):
 
-## Learn More
+| Provider | Free Limit | Best For | Signup |
+|----------|------------|----------|---------|
+| **Alpha Vantage** | 100 req/day | Beginners, Technical indicators | [Get Key](https://www.alphavantage.co/support/#api-key) |
+| **Finnhub** | 60 calls/min | Real-time data, News | [Get Key](https://finnhub.io/register) |
+| **Polygon.io** | 5 calls/min | Options data, Professional | [Get Key](https://polygon.io/pricing) |
+| **FMP** | 250 req/day | Financial statements | [Get Key](https://site.financialmodelingprep.com/developer/docs) |
+| **EODHD** | 20 req/day | End-of-day data | [Get Key](https://eodhd.com/register) |
 
-To learn more about Next.js, take a look at the following resources:
+## ⚙️ Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Install Dependencies**
+```bash
+cd frontend && bun install
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Configure API Keys**
+```bash
+cp frontend/.env.example frontend/.env.local
+# Edit frontend/.env.local with your API keys
+```
 
-## Deploy on Vercel
+3. **Start Development**
+```bash
+./start-dev.sh
+# Or manually:
+bun run dev:frontend  # Frontend only
+bun run dev:crewai    # CrewAI service (optional)
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔧 Testing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Test blog generation
+bun run test:blog
 
-### Supabase database password
+# Test market data APIs
+curl "http://localhost:3000/api/market-data?symbol=AAPL&provider=alpha_vantage&type=current"
 
-hnYqHHEtoUBAV5nV
+# Test historical data
+curl "http://localhost:3000/api/market-data?symbol=SPY&type=historical&days=7"
+```
+
+## 🏗️ Architecture
+
+```
+virtual-options-desk/
+├── frontend/           # Next.js TypeScript app
+│   ├── src/app/       # App router & API routes
+│   ├── src/lib/       # Services & utilities
+│   └── package.json
+├── crewai-service/    # Optional AI enhancement
+│   ├── python/        # CrewAI analysis scripts
+│   ├── main.py        # FastAPI server
+│   └── requirements.txt
+└── start-dev.sh       # Development startup script
+```
+
+## 🎯 Features
+
+- **📈 Real Market Data**: 5 different API providers
+- **🤖 AI Analysis**: CrewAI multi-agent market analysis
+- **📝 Daily Blogs**: Automated market analysis posts
+- **📊 3D Visualization**: Interactive price/volume charts
+- **💹 Options Trading**: Virtual trading environment
+- **🔄 Fallback Systems**: Works without external services
+
+## 🚀 Deployment Options
+
+**Frontend Only (Recommended Start):**
+- Deploy to Vercel/Netlify
+- Works with built-in fallback analysis
+- Add CrewAI service later
+
+**Full Stack:**
+- Frontend → Vercel
+- CrewAI Service → Railway/Render
+
+## 🔑 Environment Variables
+
+```bash
+# Market Data (choose one)
+ALPHA_VANTAGE_API_KEY=your_key
+FINNHUB_API_KEY=your_key
+POLYGON_API_KEY=your_key
+
+# AI Enhancement (optional)
+ANTHROPIC_API_KEY=your_key
+CREWAI_SERVICE_URL=http://localhost:8001
+```
+
+## 🛠️ Development Scripts
+
+```bash
+# Start everything
+./start-dev.sh
+
+# Individual services
+bun run dev:frontend    # Next.js on :3000
+bun run dev:crewai      # Python service on :8001
+
+# Testing
+bun run test:blog       # Blog generation
+bun run test:crewai     # Market analysis
+```
+
+Ready to trade! 📊✨

@@ -9,9 +9,6 @@ export interface MarketAnalysis {
   splineData?: {
     x: number[];
     
-    
-    
-    
     y: number[];
     z: number[];
   };
