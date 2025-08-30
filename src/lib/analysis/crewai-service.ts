@@ -8,6 +8,7 @@ export interface MarketAnalysis {
   confidence: number;
   splineData?: {
     x: number[];
+    
     y: number[];
     z: number[];
   };
