@@ -1,16 +1,25 @@
 [phases.setup]
-aptPkgs = ["python3", "python3-pip", "python3-dev"]
+aptPkgs = ["python3", "python3-pip", "python3-venv", "curl"]
 
 [phases.install]
 cmds = [
+    # Install Poetry
+    "curl -sSL https://install.python-poetry.org | python3 -",
+    "export PATH=\"$HOME/.local/bin:$PATH\"",
+    # Install Bun
     "curl -fsSL https://bun.sh/install | bash",
     "export PATH=\"$HOME/.bun/bin:$PATH\"",
-    "pip install -r requirements.txt",
-    "~/.bun/bin/bun install"
+    # Install frontend dependencies
+    "cd frontend && ~/.bun/bin/bun install",
+    # Install Python dependencies
+    "cd services && ~/.local/bin/poetry install --no-dev"
 ]
 
 [phases.build]
-cmds = ["~/.bun/bin/bun run build"]
+cmds = [
+    "export PATH=\"$HOME/.bun/bin:$PATH\"",
+    "cd frontend && ~/.bun/bin/bun run build"
+]
 
 [start]
-cmd = "~/.bun/bin/bun start"
+cmd = "export PATH=\"$HOME/.bun/bin:$PATH\" && export PATH=\"$HOME/.local/bin:$PATH\" && ~/.bun/bin/bun run start"
