@@ -6,6 +6,38 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+// Market Data Types
+export interface MarketData {
+  price: number;
+  volume?: number;
+  timestamp: string;
+  high?: number;
+  low?: number;
+  open?: number;
+  symbol?: string;
+}
+
+export interface OptionsPricing {
+  id: string;
+  symbol: string;
+  option_type: 'call' | 'put';
+  strike_price: number;
+  expiry_date: string;
+  bid: number;
+  ask: number;
+  last_price: number;
+  volume: number;
+  open_interest: number;
+  implied_volatility: number;
+  delta: number;
+  gamma: number;
+  theta: number;
+  vega: number;
+  rho: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
