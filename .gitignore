@@ -39,3 +39,93 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ==================== PYTHON ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.log
+*.db
+*.sqlite3
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==================== FLUTTER/DART ====================
+mobile/build/
+mobile/.dart_tool/
+mobile/.packages
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/App.framework
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/ios/Flutter/Generated.xcconfig
+mobile/ios/Flutter/ephemeral
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/debug/
+mobile/android/app/profile/
+mobile/android/app/release/
+mobile/android/captures/
+mobile/linux/flutter/ephemeral
+mobile/macos/Flutter/ephemeral
+mobile/windows/flutter/ephemeral
+
+# ==================== ML MODELS ====================
+*.pkl
+*.h5
+*.pt
+*.pth
+*.onnx
+*.pb
+ml_models/*.pkl
+ml_models/*.h5
+ml_models/*.pt
+ml_models/trained/
+
+# ==================== LOGS ====================
+*.log
+logs/
+pattern_service.log
+ml_service.log
+
+# ==================== SECRETS ====================
+*.pem
+*.key
+secrets/
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# ==================== IDE ====================
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ==================== OS ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+

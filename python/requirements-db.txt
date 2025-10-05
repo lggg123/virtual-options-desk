@@ -1,0 +1,6 @@
+# Supabase client for Python
+supabase-py>=2.0.0
+
+# PostgreSQL adapter (if using direct connection)
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
