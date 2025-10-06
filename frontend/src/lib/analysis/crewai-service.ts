@@ -1,5 +1,5 @@
 // lib/analysis/crewai-service.ts
-import { MarketData, OptionsPricing } from '../types';
+import { MarketData } from '../types';
 import { spawn } from 'child_process';
 import path from 'path';
 
