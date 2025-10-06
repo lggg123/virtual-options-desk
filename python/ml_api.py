@@ -98,6 +98,12 @@ async def root():
     }
 
 
+@app.get("/health")
+async def health():
+    """Health check endpoint for Render"""
+    return {"status": "healthy"}
+
+
 @app.get("/api/ml/status", response_model=TrainingStatusResponse)
 async def get_training_status():
     """Get current training status"""
