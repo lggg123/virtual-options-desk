@@ -84,22 +84,36 @@ Set to: **`crewai-market-analysis`**
 
 Railway will show error: "Railpack could not determine how to build the app"
 
-**Solution: Manual Configuration (REQUIRED)**
+**Solution: Use Nixpacks with Custom Config (REQUIRED)**
 
 1. Go to **Settings** → **Build & Deploy**
-2. Find **"Builder"** dropdown (may show "Nixpacks" or "Auto")
-3. Click dropdown → Select **"Dockerfile"**
-4. Set **"Dockerfile Path"**: `Dockerfile.crewai`
-5. Set **"Docker Build Context"**: `.` (dot = root)
-6. Click **"Redeploy"**
+2. In **"Build"** section, look for **"Nixpacks Config File"** or **"Config File Path"**
+3. Enter: `nixpacks-crewai.toml`
+4. This tells Nixpacks to:
+   - Install Python 3.12
+   - Install dependencies from `crewai-service/requirements.txt`
+   - Start with: `uvicorn main:app` (in crewai-service directory)
+5. Click **"Redeploy"**
 
-**Alternative: Use Railway Config File** (Less Reliable)
-1. Go to **Settings** → **Build & Deploy**
-2. If you see **"Railway Config File"** field
-3. Enter: `railway-crewai.json`
-4. This automatically uses `Dockerfile.crewai`
+**Alternative: Custom Start Command**
 
-**Note**: Manual Dockerfile configuration is more reliable for multi-service repos.
+If Nixpacks Config doesn't work:
+1. Let Railway use **Nixpacks** (default)
+2. Go to **Settings** → **Deploy**
+3. Set **Custom Start Command**:
+   ```bash
+   pip install -r crewai-service/requirements.txt && cd crewai-service && uvicorn main:app --host 0.0.0.0 --port $PORT
+   ```
+4. Redeploy
+
+**Why Not Dockerfile?**
+
+Railway's current UI only offers:
+- **Nixpacks** (recommended - uses `nixpacks-crewai.toml`)
+- **Railpack** (fails with multiple Python files)
+- **Custom Build Command** (advanced users)
+
+Direct Dockerfile selection is not available in the current Railway interface.
 3. Set **Dockerfile Path**: `Dockerfile.crewai`
 
 ### Step 3: Environment Variables

@@ -1,5 +1,18 @@
 # 🔧 Railway Deployment Troubleshooting
 
+## ⚠️ IMPORTANT: Railway Interface Update
+
+**Railway no longer offers direct "Dockerfile" selection in the builder dropdown!**
+
+The current Railway interface only provides:
+- ✅ **Nixpacks** (recommended - use with `nixpacks-*.toml` config)
+- ❌ **Railpack** (fails with multiple Python files)
+- ⚠️ **Custom Build Command** (advanced)
+
+**All Dockerfile references in old documentation are outdated.**
+
+This guide has been updated to use **Nixpacks with custom config files**.
+
 ## Error: "Railpack could not determine how to build the app"
 
 ### Problem
@@ -23,59 +36,74 @@ Railway is not detecting or using your `railway-*.json` config file or Dockerfil
 
 ## Solutions
 
-### Solution 1: Manually Set Builder to Dockerfile (Recommended)
+### Solution 1: Use Nixpacks with Custom Config File (Recommended)
+
+**Railway's Current Interface** only offers:
+- Nixpacks (recommended)
+- Railpack (fails for multi-file projects)
+- Custom Build Command
+
+**There is NO "Dockerfile" option in the builder dropdown anymore.**
 
 1. **Go to Railway Dashboard**
    - Navigate to your service (e.g., `pattern-detection-api`)
    - Click **Settings** tab
 
-2. **Change Builder**
-   - Scroll to **"Build & Deploy"** section
-   - Find **"Builder"** dropdown (might show "Nixpacks" or "Auto")
-   - Click dropdown → Select **"Dockerfile"**
+2. **Set Nixpacks Config File**
+   - Scroll to **"Build"** section
+   - Look for **"Nixpacks Config File"** or **"Config File Path"** field
+   - For Pattern Detection: Enter `nixpacks-pattern.toml`
+   - For CrewAI Service: Enter `nixpacks-crewai.toml`
 
-3. **Set Dockerfile Path**
-   - Field: **"Dockerfile Path"**
-   - Enter: `Dockerfile.pattern` (for Pattern Detection)
-   - OR: `Dockerfile.crewai` (for CrewAI)
+3. **What This Does**
+   - Tells Nixpacks which dependencies to install
+   - Specifies the correct start command
+   - Uses Python 3.12
+   - Installs only the required packages for that service
 
-4. **Set Build Context** (if needed)
-   - Field: **"Docker Build Context"**
-   - Value: `.` (dot = root directory)
-
-5. **Save & Redeploy**
+4. **Save & Redeploy**
    - Changes save automatically
    - Click **"Redeploy"** button at top
    - OR push a new commit to trigger deployment
 
-### Solution 2: Use Railway Config File
+**Nixpacks Config Files in Repo:**
+- `nixpacks-pattern.toml` - For Pattern Detection API
+- `nixpacks-crewai.toml` - For CrewAI Service
 
-If the config file isn't being detected:
+### Solution 2: Use Custom Start Command
 
-1. **Settings → Build & Deploy**
-2. Look for **"Railway Config File"** or **"Service Config"** field
-3. Enter: `railway-pattern-detection.json` (or `railway-crewai.json`)
-4. Redeploy
+If Nixpacks config file doesn't work:
 
-### Solution 3: Add railway.json to Root
+1. **Settings → Deploy** (not Build)
+2. Look for **"Custom Start Command"** field
+3. For Pattern Detection, enter:
+   ```bash
+   pip install -r python/requirements-ml.txt && uvicorn python.pattern_detection_api:app --host 0.0.0.0 --port $PORT
+   ```
+4. For CrewAI, enter:
+   ```bash
+   pip install -r crewai-service/requirements.txt && cd crewai-service && uvicorn main:app --host 0.0.0.0 --port $PORT
+   ```
+5. Redeploy
 
-Sometimes Railway only looks for `railway.json` in the root:
+**Note**: This installs dependencies on every startup (slower)
+
+### Solution 3: Use railway.toml Root Config
+
+Railway can use a `railway.toml` file for configuration:
 
 **For Pattern Detection API:**
-```bash
-# Create symlink or copy
-cp railway-pattern-detection.json railway.json
-git add railway.json
-git commit -m "Add railway.json for auto-detection"
-git push
+Create `railway.toml` in root (if only deploying this service):
+```toml
+[build]
+nixpacksConfigPath = "nixpacks-pattern.toml"
+
+[deploy]
+startCommand = "uvicorn python.pattern_detection_api:app --host 0.0.0.0 --port $PORT"
+restartPolicyType = "on_failure"
 ```
 
-**For CrewAI Service:**
-```bash
-cp railway-crewai.json railway.json
-```
-
-**⚠️ Warning**: This only works if deploying ONE service. For multiple services, use Solution 1 (manual configuration).
+**⚠️ Warning**: This only works if deploying ONE service. For multiple services, use Solution 1 (Nixpacks config per service).
 
 ### Solution 4: Verify Dockerfile Location
 
@@ -114,18 +142,18 @@ Railway Dashboard
 
 **For Pattern Detection API:**
 ```
-Builder: Dockerfile
-Dockerfile Path: Dockerfile.pattern
-Docker Build Context: .
-Railway Config File: railway-pattern-detection.json
+Builder: Nixpacks (default)
+Nixpacks Config File: nixpacks-pattern.toml
+OR
+Custom Start Command: pip install -r python/requirements-ml.txt && uvicorn python.pattern_detection_api:app --host 0.0.0.0 --port $PORT
 ```
 
 **For CrewAI Service:**
 ```
-Builder: Dockerfile
-Dockerfile Path: Dockerfile.crewai
-Docker Build Context: .
-Railway Config File: railway-crewai.json
+Builder: Nixpacks (default)
+Nixpacks Config File: nixpacks-crewai.toml
+OR
+Custom Start Command: pip install -r crewai-service/requirements.txt && cd crewai-service && uvicorn main:app --host 0.0.0.0 --port $PORT
 ```
 
 ## Verification Steps
@@ -134,12 +162,15 @@ Railway Config File: railway-crewai.json
 
 After redeploying, check the build logs:
 
-**Good logs (using Dockerfile):**
+**Good logs (using Nixpacks with config):**
 ```
-#1 [internal] load build definition from Dockerfile.pattern
-#2 [internal] load .dockerignore
-#3 [internal] load metadata for docker.io/library/python:3.12-slim
-...
+=> Using Nixpacks config from: nixpacks-pattern.toml
+=> Installing nixPkgs: python312, gcc, pkg-config
+=> Running install phase
+=> pip install -r python/requirements-ml.txt
+=> Successfully installed...
+=> Starting: uvicorn python.pattern_detection_api:app
+✅ Build successful
 ```
 
 **Bad logs (using Railpack):**
@@ -147,6 +178,7 @@ After redeploying, check the build logs:
 Railpack could not determine how to build the app.
 The following languages are supported:
 ...
+❌ Build failed
 ```
 
 ### 2. Test Build Locally

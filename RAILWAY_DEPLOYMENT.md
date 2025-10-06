@@ -49,29 +49,42 @@ Deploy the Pattern Detection API with WebSocket support to Railway for integrati
 
 #### Build & Deploy Configuration
 
-**IMPORTANT**: Railway's auto-detection (Railpack) will fail with multiple Python files. You MUST manually configure the builder.
+**IMPORTANT**: Railway's auto-detection (Railpack) will fail with multiple Python files. You MUST manually configure the build.
 
 **⚠️ CRITICAL STEP - Don't Skip This!**
 
 Railway will show error: "Railpack could not determine how to build the app"
 
-**Solution: Manual Configuration (REQUIRED)**
+**Solution: Use Nixpacks with Custom Config (REQUIRED)**
 
 1. Go to **Settings** → **Build & Deploy**
-2. Find **"Builder"** dropdown (may show "Nixpacks" or "Auto")
-3. Click dropdown → Select **"Dockerfile"**
-4. Set **"Dockerfile Path"**: `Dockerfile.pattern`
-5. Set **"Docker Build Context"**: `.` (dot = root directory)
-6. Click **"Redeploy"**
+2. In **"Build"** section, look for **"Nixpacks Config File"** or **"Config File Path"**
+3. Enter: `nixpacks-pattern.toml`
+4. This tells Nixpacks to:
+   - Install Python 3.12
+   - Install dependencies from `python/requirements-ml.txt`
+   - Start with: `uvicorn python.pattern_detection_api:app`
+5. Click **"Redeploy"**
 
-**Alternative: Use Railway Config File**
+**Alternative: Custom Start Command**
 
-If you see a **"Railway Config File"** field:
-1. Go to **Settings** → **Build & Deploy**
-2. Set **Railway Config File**: `railway-pattern-detection.json`
-3. This automatically uses `Dockerfile.pattern`
+If Nixpacks Config doesn't work:
+1. Let Railway use **Nixpacks** (default)
+2. Go to **Settings** → **Deploy**
+3. Set **Custom Start Command**:
+   ```bash
+   pip install -r python/requirements-ml.txt && uvicorn python.pattern_detection_api:app --host 0.0.0.0 --port $PORT
+   ```
+4. Redeploy
 
-**⚠️ Note**: For multi-service repos, manual Dockerfile configuration is more reliable than config files.
+**Why Not Dockerfile?**
+
+Railway's current UI only offers:
+- **Nixpacks** (recommended - uses `nixpacks-pattern.toml`)
+- **Railpack** (fails with multiple Python files)
+- **Custom Build Command** (advanced users)
+
+Direct Dockerfile selection is not available in the current Railway interface.
 
 **Option C: Manual Configuration (Not Recommended)**
 
