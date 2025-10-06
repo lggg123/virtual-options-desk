@@ -1,12 +1,5 @@
 // app/api/blog/schedule/route.ts
-import { NextRequest, NextRe      })
-    });
-    
-  } catch {
-    return NextResponse.json(
-      { error: 'Failed to get status' },
-      { status: 500 }
-    ); from 'next/server';
+import { NextRequest, NextResponse} from 'next/server';
 import { getBlogAgent } from '@/lib/blog';
 
 export async function POST(request: NextRequest) {
