@@ -1,0 +1,14 @@
+# Nixpacks configuration for Pattern Detection API
+# This tells Railway to build only Python dependencies
+
+[phases.setup]
+nixPkgs = ["python312", "gcc", "g++"]
+
+[phases.install]
+cmds = ["pip install -r python/requirements-ml.txt"]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "uvicorn python.pattern_detection_api:app --host 0.0.0.0 --port $PORT"
