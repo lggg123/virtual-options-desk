@@ -18,9 +18,9 @@
     "test:frontend": "cd frontend && bun run test",
     "test:blog": "cd frontend && bun run ../test-blog-agent.js",
     "test:crewai": "cd frontend && bun run ../test-crewai.js",
-    "install": "bun install && cd frontend && bun install && cd ../crewai-service && pip install -r requirements.txt",
+    "install-all": "bun install && cd frontend && bun install && cd ../crewai-service && pip install -r requirements.txt",
     "install:crewai": "cd crewai-service && pip install -r requirements.txt",
-    "setup": "bun run install"
+    "setup": "bun run install-all"
   },
   "devDependencies": {
     "@types/node": "^20",
