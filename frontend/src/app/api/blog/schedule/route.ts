@@ -63,7 +63,7 @@ export async function GET() {
       }
     });
     
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to get status' },
       { status: 500 }

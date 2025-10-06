@@ -191,9 +191,9 @@ export class CrewAIAnalysisService {
       await this.initialize();
     }
 
-    // Analyze implied volatility and Greeks
-    this.analyzeImpliedVolatility(optionsData);
-    this.analyzeGreeks(optionsData);
+    // Analyze implied volatility and Greeks (placeholder)
+    this.analyzeImpliedVolatility();
+    this.analyzeGreeks();
 
     return {
       strategy: 'iron_condor', // Example strategy
@@ -314,7 +314,7 @@ export class CrewAIAnalysisService {
     return reasoning + '.';
   }
 
-  private analyzeImpliedVolatility(_optionsData: OptionsPricing[]): {
+  private analyzeImpliedVolatility(): {
     average: number;
     skew: number;
     term_structure: number[];
@@ -327,7 +327,7 @@ export class CrewAIAnalysisService {
     };
   }
 
-  private analyzeGreeks(_optionsData: OptionsPricing[]): {
+  private analyzeGreeks(): {
     total_delta: number;
     total_gamma: number;
     total_theta: number;
