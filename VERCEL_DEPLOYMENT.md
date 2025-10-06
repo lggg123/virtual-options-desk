@@ -1,18 +1,32 @@
 # Vercel Deployment Configuration
 
-## Important: Root Directory Setting
+## 🔴 CRITICAL: Root Directory Setting Required!
 
-Since this is a monorepo with Next.js in the `frontend` subdirectory, you **MUST** configure Vercel to use the correct root directory.
+**You are seeing this error:**
+```
+Error: The file "/vercel/path0/.next/routes-manifest.json" couldn't be found.
+This is often caused by a misconfiguration in your project.
+```
+
+**Why?** Vercel is building from repo root (`.`) instead of the `frontend/` subdirectory.
+
+Since this is a monorepo with Next.js in the `frontend` subdirectory, you **MUST** configure Vercel to use the correct root directory **BEFORE** the build will succeed.
 
 ### Option 1: Configure in Vercel Dashboard (Recommended)
 
+**⚠️ DO THIS NOW TO FIX THE ERROR:**
+
 1. Go to your project on [Vercel Dashboard](https://vercel.com/dashboard)
-2. Go to **Settings** → **General**
-3. Find **Root Directory** section
-4. Click **Edit**
-5. Set to: `frontend`
-6. Click **Save**
-7. Redeploy the project
+2. Click on your project name
+3. Go to **Settings** → **General** tab
+4. Scroll down to **Root Directory** section
+5. Click **Edit** button
+6. Change from `.` to: **`frontend`**
+7. Click **Save**
+8. Go to **Deployments** tab
+9. Click **"︙"** (three dots) on latest deployment
+10. Click **"Redeploy"**
+11. ✅ Build should now succeed!
 
 ### Option 2: Use vercel.json (Already Configured)
 
@@ -54,9 +68,30 @@ BLOG_AUTO_PUBLISH=true
 
 ## Troubleshooting
 
-### Error: "routes-manifest.json couldn't be found"
+### ❌ Error: "routes-manifest.json couldn't be found"
 
-**Cause**: Vercel is building from the wrong directory.
+**Full Error:**
+```
+Error: The file "/vercel/path0/.next/routes-manifest.json" couldn't be found.
+This is often caused by a misconfiguration in your project.
+Learn More: https://err.sh/vercel/vercel/now-next-routes-manifest
+```
+
+**Root Cause**: Vercel is building from the wrong directory (repo root `.` instead of `frontend/`).
+
+**Fix (Settings Method):**
+1. Vercel Dashboard → Your Project → Settings → General
+2. Find "Root Directory" section
+3. Click Edit → Change to: `frontend`
+4. Save → Redeploy
+
+**Fix (New Deployment Method):**
+1. Delete the failed deployment
+2. Create new deployment
+3. When importing, **BEFORE clicking Deploy**:
+   - Click "Edit" next to Root Directory
+   - Select `frontend` from dropdown
+4. Now click Deploy
 
 **Solution**: 
 1. Set **Root Directory** to `frontend` in Vercel settings
