@@ -49,20 +49,29 @@ Deploy the Pattern Detection API with WebSocket support to Railway for integrati
 
 #### Build & Deploy Configuration
 
-**IMPORTANT**: Railway detects the monorepo and tries to install Bun. We use a custom Dockerfile to avoid this.
+**IMPORTANT**: Railway's auto-detection (Railpack) will fail with multiple Python files. You MUST manually configure the builder.
 
-**Option A: Use Railway Config File (Recommended)**
+**⚠️ CRITICAL STEP - Don't Skip This!**
 
+Railway will show error: "Railpack could not determine how to build the app"
+
+**Solution: Manual Configuration (REQUIRED)**
+
+1. Go to **Settings** → **Build & Deploy**
+2. Find **"Builder"** dropdown (may show "Nixpacks" or "Auto")
+3. Click dropdown → Select **"Dockerfile"**
+4. Set **"Dockerfile Path"**: `Dockerfile.pattern`
+5. Set **"Docker Build Context"**: `.` (dot = root directory)
+6. Click **"Redeploy"**
+
+**Alternative: Use Railway Config File**
+
+If you see a **"Railway Config File"** field:
 1. Go to **Settings** → **Build & Deploy**
 2. Set **Railway Config File**: `railway-pattern-detection.json`
-3. This uses `Dockerfile.pattern` for Docker build
+3. This automatically uses `Dockerfile.pattern`
 
-**Option B: Manual Dockerfile Configuration**
-
-1. Go to **Settings** → **Build & Deploy**
-2. Set **Builder**: `Dockerfile`
-3. Set **Dockerfile Path**: `Dockerfile.pattern`
-4. Leave **Start Command** empty (defined in Dockerfile)
+**⚠️ Note**: For multi-service repos, manual Dockerfile configuration is more reliable than config files.
 
 **Option C: Manual Configuration (Not Recommended)**
 

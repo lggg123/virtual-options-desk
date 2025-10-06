@@ -80,14 +80,26 @@ Set to: **`crewai-market-analysis`**
 
 #### Build Configuration
 
-**Option A: Use Railway Config File**
-1. Go to **Settings** → **Build & Deploy**
-2. Set **Railway Config File**: `railway-crewai.json`
-3. This automatically uses `Dockerfile.crewai`
+**⚠️ CRITICAL STEP - Railway Auto-Detection Will Fail!**
 
-**Option B: Manual Docker Configuration**
+Railway will show error: "Railpack could not determine how to build the app"
+
+**Solution: Manual Configuration (REQUIRED)**
+
 1. Go to **Settings** → **Build & Deploy**
-2. Set **Builder**: `Dockerfile`
+2. Find **"Builder"** dropdown (may show "Nixpacks" or "Auto")
+3. Click dropdown → Select **"Dockerfile"**
+4. Set **"Dockerfile Path"**: `Dockerfile.crewai`
+5. Set **"Docker Build Context"**: `.` (dot = root)
+6. Click **"Redeploy"**
+
+**Alternative: Use Railway Config File** (Less Reliable)
+1. Go to **Settings** → **Build & Deploy**
+2. If you see **"Railway Config File"** field
+3. Enter: `railway-crewai.json`
+4. This automatically uses `Dockerfile.crewai`
+
+**Note**: Manual Dockerfile configuration is more reliable for multi-service repos.
 3. Set **Dockerfile Path**: `Dockerfile.crewai`
 
 ### Step 3: Environment Variables
