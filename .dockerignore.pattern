@@ -1,20 +1,41 @@
-# Exclude everything by default
-*
+# Dockerignore for Pattern Detection API
+# Exclude everything except python/ directory
 
-# Include only what's needed for Pattern Detection API
-!python/
-!python/**
+# Node/Frontend files
+node_modules/
+frontend/
+.next/
+.vercel/
+bun.lock
+package.json
+package-lock.json
+*.config.js
+*.config.ts
 
-# Exclude Python cache and bytecode
-**/__pycache__
+# Root requirements (use python/requirements-ml.txt instead)
+requirements.txt
+
+# Python cache and bytecode
+**/__pycache__/
 **/*.pyc
 **/*.pyo
 **/*.pyd
 .Python
 *.so
 *.egg
-*.egg-info
+*.egg-info/
 dist/
 build/
 .venv/
 venv/
+
+# Git and docs
+.git/
+.gitignore
+*.md
+docs/
+
+# Other services
+crewai-service/
+ml_models/
+database/
