@@ -105,13 +105,14 @@ export class RealMarketDataService {
     const marketData: MarketData[] = [];
 
     for (const [timestamp, values] of Object.entries(timeSeries)) {
+      const timeSeriesData = values as Record<string, string>;
       marketData.push({
-        price: parseFloat((values as any)['4. close']),
-        volume: parseInt((values as any)['5. volume']),
+        price: parseFloat(timeSeriesData['4. close']),
+        volume: parseInt(timeSeriesData['5. volume']),
         timestamp: new Date(timestamp).toISOString(),
-        high: parseFloat((values as any)['2. high']),
-        low: parseFloat((values as any)['3. low']),
-        open: parseFloat((values as any)['1. open']),
+        high: parseFloat(timeSeriesData['2. high']),
+        low: parseFloat(timeSeriesData['3. low']),
+        open: parseFloat(timeSeriesData['1. open']),
         symbol
       });
 
@@ -210,7 +211,8 @@ export class RealMarketDataService {
       throw new Error(`Polygon error: ${data.error || 'Unknown error'}`);
     }
 
-    return data.results.map((item: any) => ({
+    interface PolygonResult { c: number; v: number; t: number; h: number; l: number; o: number; }
+    return data.results.map((item: PolygonResult) => ({
       price: item.c,
       volume: item.v,
       timestamp: new Date(item.t).toISOString(),
@@ -251,7 +253,8 @@ export class RealMarketDataService {
       throw new Error('FMP: Invalid response format');
     }
 
-    return data.slice(0, days * 78).reverse().map((item: any) => ({
+    interface FMPData { close: number; volume: number; date: string; high: number; low: number; open: number; }
+    return data.slice(0, days * 78).reverse().map((item: FMPData) => ({
       price: item.close,
       volume: item.volume,
       timestamp: new Date(item.date).toISOString(),
@@ -294,7 +297,8 @@ export class RealMarketDataService {
       throw new Error('EODHD: Invalid response format');
     }
 
-    return data.map((item: any) => ({
+    interface TwelveDataItem { close: number; volume: number; datetime: string; high: number; low: number; open: number; }
+    return data.map((item: TwelveDataItem) => ({
       price: item.close,
       volume: item.volume,
       timestamp: new Date(`${item.datetime}Z`).toISOString(),

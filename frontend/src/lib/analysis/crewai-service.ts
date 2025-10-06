@@ -118,7 +118,7 @@ export class CrewAIAnalysisService {
     }
   }
 
-  private async callPythonAnalysis(inputData: any): Promise<MarketAnalysis> {
+  private async callPythonAnalysis(inputData: Record<string, unknown>): Promise<MarketAnalysis> {
     return new Promise((resolve, reject) => {
       let resultData = '';
       let errorData = '';
@@ -179,8 +179,7 @@ export class CrewAIAnalysisService {
   }
 
   async analyzeOptionsStrategy(
-    optionsData: OptionsPricing[],
-    underlyingPrice: number
+    optionsData: OptionsPricing[]
   ): Promise<{
     strategy: string;
     reasoning: string;
@@ -193,8 +192,8 @@ export class CrewAIAnalysisService {
     }
 
     // Analyze implied volatility and Greeks
-    const ivAnalysis = this.analyzeImpliedVolatility(optionsData);
-    const greeksAnalysis = this.analyzeGreeks(optionsData);
+    this.analyzeImpliedVolatility(optionsData);
+    this.analyzeGreeks(optionsData);
 
     return {
       strategy: 'iron_condor', // Example strategy
@@ -315,7 +314,7 @@ export class CrewAIAnalysisService {
     return reasoning + '.';
   }
 
-  private analyzeImpliedVolatility(optionsData: OptionsPricing[]): {
+  private analyzeImpliedVolatility(_optionsData: OptionsPricing[]): {
     average: number;
     skew: number;
     term_structure: number[];
@@ -328,7 +327,7 @@ export class CrewAIAnalysisService {
     };
   }
 
-  private analyzeGreeks(optionsData: OptionsPricing[]): {
+  private analyzeGreeks(_optionsData: OptionsPricing[]): {
     total_delta: number;
     total_gamma: number;
     total_theta: number;

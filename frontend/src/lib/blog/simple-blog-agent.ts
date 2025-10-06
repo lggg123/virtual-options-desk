@@ -98,13 +98,6 @@ export class SimpleBlogAgent {
   }
 
   private createBlogFromAnalysis(analysis: MarketAnalysis): BlogPost {
-    const date = new Date().toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-
     const title = `Market Pulse ${new Date().toLocaleDateString()}: ${analysis.trend.charAt(0).toUpperCase() + analysis.trend.slice(1)} Momentum Ahead`;
     
     const content = `# ${title}
@@ -281,7 +274,6 @@ For retail and institutional investors looking to engage with ${topic}:
     const data = [];
     
     for (let i = 0; i < 10; i++) {
-      const timeOffset = i * 15 * 60 * 1000; // 15 minute intervals
       const priceVariation = (Math.random() - 0.5) * 4; // +/- $2 variation
       
       data.push({
