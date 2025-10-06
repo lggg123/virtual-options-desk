@@ -12,10 +12,15 @@ from datetime import datetime
 import sys
 import os
 
-# Add parent directory to path
+# Add parent directory to path for local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from python.pattern_detector import PatternDetector, DetectedPattern
+try:
+    # Try production import first
+    from pattern_detector import PatternDetector, DetectedPattern
+except ImportError:
+    # Fall back to development import
+    from python.pattern_detector import PatternDetector, DetectedPattern
 
 app = FastAPI(
     title="AI Candlestick Pattern Detection API",

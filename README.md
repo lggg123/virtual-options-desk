@@ -2,14 +2,22 @@
 
 A comprehensive options trading platform with AI-powered market analysis a## 🎯 Features
 
+- **📈 ## 🎯 Key Capabilities
+
 - **📈 Real Market Data**: 5 different API providers
+- **🤖 AI Analysis**: CrewAI multi-agent market analysis
+- **📝 Daily Blogs**: Automated market analysis posts
+- **📊 3D Visualization**: Interactive price/volume charts
+- **💹 Options Trading**: Virtual trading environment
+- **📱 REST APIs**: Backend services for iOS app integration
+- **🔄 Fallback Systems**: Works without external serviceset Data**: 5 different API providers
 - **🤖 AI Analysis**: CrewAI multi-agent market analysis
 - **🤖 ML Stock Screening**: Multi-model ensemble (XGBoost, Random Forest, LightGBM, LSTM)
 - **📝 Daily Blogs**: Automated market analysis posts
 - **📊 3D Visualization**: Interactive price/volume charts
 - **💹 Options Trading**: Virtual trading environment
-- **📱 Mobile App**: Flutter app with candlestick charts & AI insights
-- **🔄 Fallback Systems**: Works without external servicesmous blog generation.
+- **📱 API Backend**: REST APIs for mobile app integration
+- **🔄 Fallback Systems**: Works without external services
 
 ## 🚀 Quick Start (Local Development)
 
@@ -22,9 +30,10 @@ chmod +x start-dev.sh
 ```
 
 **Services:**
-- Frontend: http://localhost:3000
+- Next.js Web App: http://localhost:3000
 - CrewAI Service: http://localhost:8001 (optional)
-- ML Service: http://localhost:8002 (for stock screening)
+- ML API Service: http://localhost:8002 (stock screening)
+- Pattern Detection API: http://localhost:8003 (pattern analysis)
 
 ## 📊 Free Market Data APIs
 
@@ -97,26 +106,30 @@ curl "http://localhost:3000/api/market-data?symbol=SPY&type=historical&days=7"
 
 ```
 virtual-options-desk/
-├── frontend/           # Next.js TypeScript app
+├── frontend/           # Next.js TypeScript web app
 │   ├── src/app/       # App router & API routes
 │   ├── src/lib/       # Services & utilities
 │   └── package.json
-├── mobile/            # Flutter mobile app
-│   ├── lib/           # Dart source code
-│   ├── android/       # Android platform files
-│   ├── ios/           # iOS platform files
-│   └── pubspec.yaml   # Flutter dependencies
+├── src/               # Next.js app (root level)
+│   ├── app/api/       # REST API endpoints
+│   └── lib/           # Shared utilities
 ├── python/            # Python ML & AI services
-│   ├── ml_ensemble.py # ML model ensemble
-│   ├── ml_api.py      # FastAPI ML service
-│   └── crewai_analysis.py # CrewAI integration
+│   ├── ml_ensemble.py      # ML model ensemble
+│   ├── ml_api.py           # FastAPI ML service (port 8002)
+│   ├── pattern_detector.py # Pattern detection
+│   ├── pattern_detection_api.py # Pattern API (port 8003)
+│   └── crewai_analysis.py  # CrewAI integration
 ├── ml_models/         # Trained ML models (not in git)
+├── database/          # Supabase schema & setup
+│   ├── supabase_schema.sql
+│   └── SUPABASE_SETUP.md
 ├── crewai-service/    # Optional AI enhancement
 │   ├── python/        # CrewAI analysis scripts
 │   ├── main.py        # FastAPI server
 │   └── requirements.txt
-├── start-dev.sh       # Development startup script
-└── start-ml-service.sh # ML service startup script
+├── start-dev.sh            # Development startup script
+├── start-ml-service.sh     # ML service startup
+└── start-pattern-service.sh # Pattern detection startup
 ```
 
 ## 🎯 Features
@@ -168,38 +181,46 @@ bun run test:blog       # Blog generation
 bun run test:crewai     # Market analysis
 ```
 
-## 📱 Mobile App
+## 📱 API Backend for iOS App
 
-The Flutter mobile app provides real-time candlestick charts, AI stock picks, and pattern detection on iOS, Android, and web.
+This repository provides backend services and APIs consumed by a separate iOS application.
 
-**Features:**
-- 📊 Real-time candlestick charts with pattern overlays
-- ⭐ Browse 1000 AI-selected stocks from ML screening
-- 🔍 Search and filter stocks by category, confidence, risk
-- 📈 Detailed stock analysis with model breakdowns
-- 🔄 Real-time updates via Supabase
+**Available API Endpoints:**
 
-**Quick Start:**
+### Pattern Detection API (Port 8003)
 ```bash
-cd mobile
+# Start the service
+./start-pattern-service.sh
 
-# 1. Install dependencies
-flutter pub get
-
-# 2. Configure Supabase (copy credentials to .env)
-cp .env.example .env
-# Edit .env with your Supabase URL and key
-
-# 3. Run the app
-flutter run -d chrome  # For web
-flutter run -d android # For Android
-flutter run -d ios     # For iOS
+# Detect patterns in stock data
+curl -X POST http://localhost:8003/api/patterns/detect \
+  -H "Content-Type: application/json" \
+  -d '{"symbol": "AAPL", "timeframe": "1d"}'
 ```
 
-**Documentation:**
-- [Complete Setup Guide](mobile/SETUP_COMPLETE.md) - Detailed walkthrough
-- [Supabase Integration](mobile/README_SUPABASE.md) - Database connection
-- [Flutter Integration Guide](docs/FLUTTER_INTEGRATION_GUIDE.md) - Architecture overview
+### ML Stock Screening API (Port 8002)
+```bash
+# Start the service
+./start-ml-service.sh
+
+# Get AI stock picks
+curl http://localhost:8002/api/predictions
+
+# Predict specific symbols
+curl -X POST http://localhost:8002/api/predict \
+  -H "Content-Type: application/json" \
+  -d '{"symbols": ["AAPL", "MSFT", "GOOGL"]}'
+```
+
+### Supabase Database
+- Stock picks stored in `stock_picks` table
+- Real-time updates via Supabase subscriptions
+- See [database/SUPABASE_SETUP.md](database/SUPABASE_SETUP.md) for setup
+
+**iOS App Integration:**
+- Configure Supabase URL and anon key in your iOS app
+- Connect to Python APIs for pattern detection and ML predictions
+- Subscribe to real-time stock_picks updates
 
 ## 🤖 Machine Learning Stock Screening
 

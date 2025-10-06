@@ -9,12 +9,26 @@ from typing import List, Dict, Optional
 from datetime import datetime
 import asyncio
 import json
+import sys
+import os
 
-from ml_ensemble import (
-    StockScreeningEnsemble,
-    MonthlyScreeningPipeline,
-    ModelPrediction
-)
+# Add parent directory to path for local imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    # Try production import first
+    from ml_ensemble import (
+        StockScreeningEnsemble,
+        MonthlyScreeningPipeline,
+        ModelPrediction
+    )
+except ImportError:
+    # Fall back to development import
+    from python.ml_ensemble import (
+        StockScreeningEnsemble,
+        MonthlyScreeningPipeline,
+        ModelPrediction
+    )
 
 app = FastAPI(title="Stock Screening ML API", version="1.0.0")
 
