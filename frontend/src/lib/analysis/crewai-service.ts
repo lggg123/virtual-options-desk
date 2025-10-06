@@ -179,7 +179,7 @@ export class CrewAIAnalysisService {
   }
 
   async analyzeOptionsStrategy(
-    optionsData: OptionsPricing[]
+    _optionsData: OptionsPricing[]
   ): Promise<{
     strategy: string;
     reasoning: string;
