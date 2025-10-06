@@ -40,7 +40,17 @@ Region: Oregon
 
 ---
 
-## 🚀 Deploy Now
+## 🚀 Deployment Architecture & Configuration
+
+## ⚠️ IMPORTANT: Railway No Longer Supports Direct Dockerfile Selection
+
+**Use Nixpacks config files instead:**
+- Pattern Detection: `nixpacks-pattern.toml` ✅
+- CrewAI Service: `nixpacks-crewai.toml` ✅
+
+---
+
+# Deployment Ready - All Services Configured
 
 ### Option A: Via Render Dashboard (Recommended)
 1. Push code to GitHub
