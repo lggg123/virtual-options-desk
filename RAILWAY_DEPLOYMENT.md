@@ -30,28 +30,31 @@ Deploy the Pattern Detection API with WebSocket support to Railway for integrati
 
 #### Build & Deploy Configuration
 
-**IMPORTANT**: Railway may try to install Bun (for frontend) which isn't needed for this service.
+**IMPORTANT**: Railway detects the monorepo and tries to install Bun. We use a custom Dockerfile to avoid this.
 
-**Option A: Use Nixpacks Config (Recommended)**
-
-1. Go to **Settings** → **Build & Deploy**
-2. Set **Nixpacks Config Path**: `nixpacks-pattern.toml`
-3. This will only install Python dependencies
-
-**Option B: Use Railway Config File**
+**Option A: Use Railway Config File (Recommended)**
 
 1. Go to **Settings** → **Build & Deploy**
 2. Set **Railway Config File**: `railway-pattern-detection.json`
-3. This references the nixpacks config
+3. This uses `Dockerfile.pattern` for Docker build
 
-**Option C: Manual Configuration**
+**Option B: Manual Dockerfile Configuration**
 
-If not using the config files:
+1. Go to **Settings** → **Build & Deploy**
+2. Set **Builder**: `Dockerfile`
+3. Set **Dockerfile Path**: `Dockerfile.pattern`
+4. Leave **Start Command** empty (defined in Dockerfile)
+
+**Option C: Manual Configuration (Not Recommended)**
+
+If not using Docker:
 
 1. **Root Directory**: `/` (leave as is)
 2. **Build Command**: `pip install -r python/requirements-ml.txt`
 3. **Start Command**: `uvicorn python.pattern_detection_api:app --host 0.0.0.0 --port $PORT`
 4. **Watch Paths**: `python/**`
+
+**Note**: Nixpacks is deprecated on Railway. The Dockerfile approach is now preferred.
 
 #### Environment Variables
 

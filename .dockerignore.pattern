@@ -1,0 +1,20 @@
+# Exclude everything by default
+*
+
+# Include only what's needed for Pattern Detection API
+!python/
+!python/**
+
+# Exclude Python cache and bytecode
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist/
+build/
+.venv/
+venv/
