@@ -1,5 +1,21 @@
 # 🚂 Railway Deployment Guide - Pattern Detection API
 
+## 🔴 IMPORTANT: Multi-Service Railway Setup
+
+This repository supports **TWO separate Railway services** from the same GitHub repo:
+
+| Service | Dockerfile | Source Directory | Service Name |
+|---------|-----------|------------------|--------------|
+| **Pattern Detection API** (this guide) | `Dockerfile.pattern` | `python/` | `pattern-detection-api` |
+| **CrewAI Service** (see CREWAI_DEPLOYMENT.md) | `Dockerfile.crewai` | `crewai-service/` | `crewai-market-analysis` |
+
+**How it works**:
+- Both services connect to the **same GitHub repository**
+- Each service uses a **different Dockerfile** (specified in `railway-*.json`)
+- Each Dockerfile copies only its relevant directory (`python/` or `crewai-service/`)
+- Railway builds and deploys them **independently** as separate services
+- You can deploy them in the **same Railway project** or separate projects
+
 ## Overview
 
 Deploy the Pattern Detection API with WebSocket support to Railway for integration with the Svelte Chart App.
@@ -12,13 +28,16 @@ Deploy the Pattern Detection API with WebSocket support to Railway for integrati
 
 ## Deployment Steps
 
-### 1. Create New Railway Project
+### Step 1: Create Railway Project
 
-1. Go to [Railway Dashboard](https://railway.app/dashboard)
-2. Click **"New Project"**
+1. Go to [Railway Dashboard](https://railway.app/new)
+2. Click **"New Project"** (or use existing project)
 3. Select **"Deploy from GitHub repo"**
-4. Choose repository: `lggg123/virtual-options-desk`
-5. Click **"Deploy Now"**
+4. Choose your repository: `lggg123/virtual-options-desk`
+5. Click **"Add Service"** if adding to existing project
+6. Click **"Deploy"**
+
+**Note**: If you're also deploying the CrewAI service, you'll create **two separate services** in Railway from the same GitHub repo. Each service uses a different Dockerfile.
 
 ### 2. Configure Service Settings
 
