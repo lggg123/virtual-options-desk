@@ -2,10 +2,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createMarketDataService, MarketDataProviders } from '@/lib/market-data/real-market-data';
 
+type Provider = 'alpha_vantage' | 'finnhub' | 'polygon' | 'fmp' | 'eodhd';
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const symbol = searchParams.get('symbol') || 'SPY';
-  const provider = (searchParams.get('provider') as MarketDataProviders) || 'alpha_vantage';
+  const provider = (searchParams.get('provider') as Provider) || 'alpha_vantage';
   const type = searchParams.get('type') || 'current'; // 'current' or 'historical'
   const days = parseInt(searchParams.get('days') || '7');
   
