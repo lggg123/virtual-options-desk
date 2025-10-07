@@ -13,11 +13,11 @@ from datetime import datetime, timedelta
 
 try:
     from crewai import Agent, Task, Crew
-    from langchain.llms import OpenAI
+    from langchain_openai import ChatOpenAI
     CREWAI_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     CREWAI_AVAILABLE = False
-    print("Warning: CrewAI not installed. Using mock analysis.", file=sys.stderr)
+    print(f"Warning: CrewAI not installed. Using mock analysis. Error: {e}", file=sys.stderr)
 
 
 class MarketAnalysisAgent:
@@ -26,7 +26,11 @@ class MarketAnalysisAgent:
         self.llm = None
         if CREWAI_AVAILABLE and api_key:
             try:
-                self.llm = OpenAI(api_key=api_key, temperature=0.1)
+                self.llm = ChatOpenAI(
+                    api_key=api_key,
+                    model="gpt-4-turbo-preview",
+                    temperature=0.1
+                )
             except Exception as e:
                 print(f"Warning: Could not initialize LLM: {e}", file=sys.stderr)
         
