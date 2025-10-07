@@ -88,7 +88,7 @@ export default function PricingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{id: string; email?: string} | null>(null);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
   useEffect(() => {
@@ -364,10 +364,10 @@ export default function PricingPage() {
 
             <div className="bg-slate-800 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-white mb-2">
-                What's your refund policy?
+                What&apos;s your refund policy?
               </h3>
               <p className="text-gray-400">
-                We offer a 14-day money-back guarantee on all paid plans. If you're not satisfied, contact us for a full refund.
+                We offer a 14-day money-back guarantee on all paid plans. If you&apos;re not satisfied, contact us for a full refund.
               </p>
             </div>
           </div>

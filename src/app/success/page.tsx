@@ -58,7 +58,7 @@ export default function SuccessPage() {
         {/* What's Next */}
         <div className="text-left mb-8">
           <h2 className="text-lg font-semibold text-white mb-4">
-            What's Next?
+            What&apos;s Next?
           </h2>
           <ul className="space-y-3">
             <li className="flex items-start">
