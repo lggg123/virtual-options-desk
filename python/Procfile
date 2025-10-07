@@ -1,2 +1,0 @@
-release: pip install --upgrade pip setuptools wheel && pip install -r requirements-ml.txt && chmod +x start.sh
-web: ./start.sh

@@ -1,4 +1,10 @@
-# Nixpacks configuration for Pattern Detection API
+# # Minimal Nixpacks config - Railway will handle everything
+# Just tell it this is a Python project
+
+providers = []
+
+[start]
+cmd = "./start.sh"ation for Pattern Detection API
 # Railway Root Directory should be set to: python
 # Nixpacks Config File should be set to: ../nixpacks-pattern.toml
 
@@ -7,14 +13,12 @@ nixPkgs = ["python312", "gcc", "g++", "python312Packages.setuptools"]
 
 [phases.install]
 cmds = [
-    "pip install --upgrade pip setuptools wheel"
+    "pip install --upgrade pip setuptools wheel",
+    "pip install -r requirements-ml.txt"
 ]
 
 [phases.build]
-cmds = [
-    "pip install -r requirements-ml.txt",
-    "chmod +x start.sh"
-]
+cmds = ["chmod +x start.sh"]
 
 [start]
 cmd = "./start.sh"
