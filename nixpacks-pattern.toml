@@ -7,12 +7,14 @@ nixPkgs = ["python312", "gcc", "g++", "python312Packages.setuptools"]
 
 [phases.install]
 cmds = [
-    "pip install --upgrade pip setuptools wheel",
-    "pip install -r requirements-ml.txt"
+    "pip install --upgrade pip setuptools wheel"
 ]
 
 [phases.build]
-cmds = ["chmod +x start.sh"]
+cmds = [
+    "pip install -r requirements-ml.txt",
+    "chmod +x start.sh"
+]
 
 [start]
 cmd = "./start.sh"

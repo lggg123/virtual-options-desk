@@ -11,11 +11,10 @@ Railway keeps building from the wrong directory.
 
 ⚠️ This is THE most important setting! Without it, nothing works.
 
-### Step 2: Set Custom Build Command  
-**Settings → Build → Custom Build Command**:
-```bash
-pip install --upgrade pip setuptools wheel && pip install -r requirements-ml.txt && chmod +x start.sh
-```
+### Step 2: SKIP Custom Build Command
+**Settings → Build → Custom Build Command**: Leave EMPTY
+
+Let Nixpacks handle the build using the config file.
 
 ### Step 3: Set Custom Start Command
 **Settings → Deploy → Custom Start Command**: `./start.sh`
@@ -29,17 +28,18 @@ pip install --upgrade pip setuptools wheel && pip install -r requirements-ml.txt
 | Setting | Value |
 |---------|-------|
 | Root Directory | `python` |
-| Custom Build Command | `pip install --upgrade pip setuptools wheel && pip install -r requirements-ml.txt && chmod +x start.sh` |
+| Builder | NIXPACKS |
+| Nixpacks Config File | `../nixpacks-pattern.toml` |
+| Custom Build Command | (leave empty) |
 | Custom Start Command | `./start.sh` |
-| Nixpacks Config | `../nixpacks-pattern.toml` (optional) |
 
 ---
 
 ## Why This Works
 
 - **Root Directory = `python`**: Railway starts inside python/ folder, can't see __pycache__ at wrong level
-- **Custom Build**: Installs dependencies directly, bypasses nixpacks detection
-- **Custom Start**: Runs start.sh which handles PORT variable correctly
+- **Nixpacks Config**: `../nixpacks-pattern.toml` sets up Python, installs dependencies from requirements-ml.txt
+- **Custom Start Command**: `./start.sh` handles PORT variable correctly
 
 ---
 

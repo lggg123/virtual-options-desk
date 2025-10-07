@@ -1,4 +1,11 @@
-# 🎉 Render Deployment - Ready to Deploy!
+You reached the start of the range
+Oct 6, 2025 at 5:31 PM
+Starting Container
+Warning: CrewAI not installed. Using mock analysis.
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)# 🎉 Render Deployment - Ready to Deploy!
 
 ## ✅ What's Been Set Up
 
