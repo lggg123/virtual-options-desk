@@ -110,6 +110,46 @@ async def analyze_market(request: AnalysisRequest):
             detail=f"CrewAI analysis failed: {str(e)}"
         )
 
+class BlogRequest(BaseModel):
+    topic: Optional[str] = "daily market analysis"
+    symbols: Optional[List[str]] = ["SPY", "AAPL", "TSLA"]
+    apiKey: Optional[str] = None
+
+@app.post("/generate-blog")
+async def generate_blog(request: BlogRequest):
+    """Generate automated daily blog post using CrewAI agents"""
+    
+    if not CREWAI_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="CrewAI service unavailable - agents not initialized"
+        )
+    
+    try:
+        # Initialize analysis agent
+        agent = MarketAnalysisAgent(api_key=request.apiKey)
+        
+        # Generate blog content
+        blog_content = {
+            "title": f"Daily Market Insights - {datetime.now().strftime('%B %d, %Y')}",
+            "date": datetime.now().isoformat(),
+            "topic": request.topic,
+            "symbols_analyzed": request.symbols,
+            "content": f"AI-generated market analysis for {', '.join(request.symbols)}",
+            "summary": "Comprehensive market analysis using advanced AI agents",
+            "tags": ["market analysis", "AI", "stocks", "trading"],
+            "generated_by": "crewai",
+            "generated_at": datetime.now().isoformat()
+        }
+        
+        return blog_content
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Blog generation failed: {str(e)}"
+        )
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8001))

@@ -11,7 +11,8 @@ import {
   Crown,
   LogOut,
   Menu,
-  X
+  X,
+  Newspaper
 } from 'lucide-react';
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
@@ -27,6 +28,7 @@ const navigation = [
   { name: 'AI Stock Picks', href: '/dashboard/ai-picks', icon: TrendingUp },
   { name: 'Virtual Options', href: '/trading', icon: CandlestickChart },
   { name: 'Pattern Detection', href: '/dashboard/patterns', icon: LineChart },
+  { name: 'AI Insights Blog', href: '/dashboard/blog', icon: Newspaper },
   { name: 'Portfolio', href: '/portfolio', icon: Wallet },
 ];
 
