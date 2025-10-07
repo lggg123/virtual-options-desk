@@ -1,0 +1,37 @@
+# Ignore Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environments
+venv/
+.env/
+.venv/
+
+# Ignore git and version control
+.git/
+
+# Ignore logs and temp files
+*.log
+*.tmp
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore test and notebook files
+*.ipynb
+
+# Ignore local config
+.env
+
+# Ignore build and dist folders
+dist/
+build/
+
+# Ignore Railway and deployment artifacts
+railway.json
+
+# Ignore node modules (if any)
+node_modules/
