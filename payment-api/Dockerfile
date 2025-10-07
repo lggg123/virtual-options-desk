@@ -12,8 +12,11 @@ RUN npm ci
 # Copy source
 COPY src ./src
 
-# Build TypeScript
-RUN npx tsc
+# Build using npm script
+RUN npm run build
+
+# Verify build output
+RUN ls -la dist/
 
 # Production image
 FROM node:20-alpine
@@ -22,18 +25,22 @@ WORKDIR /app
 
 # Set environment
 ENV NODE_ENV=production
+ENV PORT=8080
 
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies (but keep typescript for now)
-RUN npm ci --include=prod
+# Install production dependencies only
+RUN npm ci --omit=dev
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 
-# Expose port (Railway will use PORT env var)
+# Verify files copied
+RUN ls -la dist/
+
+# Expose port
 EXPOSE 8080
 
-# Start
-CMD ["node", "dist/index.js"]
+# Start with explicit node command
+CMD ["node", "--trace-warnings", "dist/index.js"]
