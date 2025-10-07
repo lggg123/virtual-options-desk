@@ -11,7 +11,7 @@
 ### Option 1: Virtual Environment (Cleanest Approach)
 - **Custom Build Command**: 
   ```bash
-  apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0 && python3 -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip setuptools wheel && /opt/venv/bin/pip install -r requirements-ml.txt && chmod +x start.sh
+  apt-get update && apt-get install -y libgl1 libglib2.0-0 && python3 -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip setuptools wheel && /opt/venv/bin/pip install -r requirements-ml.txt && chmod +x start.sh
   ```
 
 - **Custom Start Command**: 
@@ -22,7 +22,7 @@
 ### Option 2: Break System Packages (Simpler, works on Railway)
 - **Custom Build Command**: 
   ```bash
-  apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0 && python3 -m pip install --break-system-packages --upgrade pip setuptools wheel && python3 -m pip install --break-system-packages -r requirements-ml.txt && chmod +x start.sh
+  apt-get update && apt-get install -y libgl1 libglib2.0-0 && python3 -m pip install --break-system-packages --upgrade pip setuptools wheel && python3 -m pip install --break-system-packages -r requirements-ml.txt && chmod +x start.sh
   ```
 
 - **Custom Start Command**: 
@@ -33,7 +33,7 @@
 ### Option 3: Install Python + Break System Packages (if Python missing)
 - **Custom Build Command**: 
   ```bash
-  apt-get update && apt-get install -y python3 python3-pip python3-venv libgl1-mesa-glx libglib2.0-0 && python3 -m pip install --break-system-packages -r requirements-ml.txt && chmod +x start.sh
+  apt-get update && apt-get install -y python3 python3-pip python3-venv libgl1 libglib2.0-0 && python3 -m pip install --break-system-packages -r requirements-ml.txt && chmod +x start.sh
   ```
 
 - **Custom Start Command**: 
@@ -43,7 +43,7 @@
 
 **Note**: 
 - Skips upgrading pip/setuptools/wheel since they're Debian-managed and cause uninstall errors
-- Installs `libgl1-mesa-glx` and `libglib2.0-0` for OpenCV support (fixes libGL.so.1 error)
+- Installs `libgl1` and `libglib2.0-0` for OpenCV support (fixes libGL.so.1 error)
 
 ### If Predeploy doesn't work - Use Custom Build Command instead:
 
@@ -157,9 +157,10 @@ After deployment, check Railway logs for:
 
 ### If you see "libGL.so.1: cannot open shared object file"
 - **Cause**: OpenCV requires OpenGL libraries that aren't installed by default
-- **Solution**: Add `libgl1-mesa-glx` and `libglib2.0-0` to apt-get install command
-- **Updated Command**: `apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0 && ...`
+- **Solution**: Add `libgl1` and `libglib2.0-0` to apt-get install command
+- **Updated Command**: `apt-get update && apt-get install -y libgl1 libglib2.0-0 && ...`
 - This error occurs when using opencv-python (cv2) in headless Docker containers
+- **Note**: `libgl1-mesa-glx` is obsolete in newer Debian/Ubuntu, use `libgl1` instead
 
 ## Notes
 
