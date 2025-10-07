@@ -128,14 +128,27 @@ const PLANS: Record<string, SubscriptionPlan> = {
 
 // ==================== ROUTES ====================
 
-// Health check
-fastify.get('/health', async () => {
-  return {
-    status: 'healthy',
-    service: 'Payment API',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-  };
+// Health check - must return exactly what Railway expects
+fastify.get('/health', async (request, reply) => {
+  try {
+    // Test Supabase connection
+    const { error: supabaseError } = await supabase.from('subscriptions').select('count').limit(1);
+    
+    reply.code(200).send({
+      status: 'ok',
+      service: 'payment-api',
+      timestamp: new Date().toISOString(),
+      stripe: stripe ? 'connected' : 'disconnected',
+      supabase: supabaseError ? 'error' : 'connected',
+    });
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    fastify.log.error(error, 'Health check failed');
+    reply.code(503).send({
+      status: 'error',
+      error: error.message,
+    });
+  }
 });
 
 // Get pricing plans
