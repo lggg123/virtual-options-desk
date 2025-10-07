@@ -1,18 +1,21 @@
 # Nixpacks configuration for CrewAI Service
+# Railway Root Directory should be set to: crewai-service
+# Nixpacks Config File should be set to: ../nixpacks-crewai.toml
+
 [phases.setup]
-nixPkgs = ["python312", "gcc", "pkg-config"]
+nixPkgs = ["python312", "gcc", "pkg-config", "python312Packages.setuptools"]
 
 [phases.install]
 cmds = [
     "pip install --upgrade pip setuptools wheel",
-    "pip install -r crewai-service/requirements.txt"
+    "pip install -r requirements.txt"
 ]
 
 [phases.build]
 cmds = ["echo 'CrewAI Service - Build complete'"]
 
 [start]
-cmd = "cd crewai-service && uvicorn main:app --host 0.0.0.0 --port $PORT"
+cmd = "uvicorn main:app --host 0.0.0.0 --port $PORT"
 
 [variables]
 PYTHON_VERSION = "3.12"
