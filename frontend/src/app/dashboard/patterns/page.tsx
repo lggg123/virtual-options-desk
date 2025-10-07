@@ -19,14 +19,12 @@ export default function PatternsPage() {
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     connectToWebSocket();
     return () => {
       if (wsConnection) {
         wsConnection.close();
       }
     };
-    // Only run on symbol change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol]);
 

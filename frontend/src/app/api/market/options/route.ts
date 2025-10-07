@@ -40,6 +40,16 @@ export async function GET(request: NextRequest) {
     const calls = optionChain.options[0].calls || [];
     const puts = optionChain.options[0].puts || [];
 
+    interface YahooOption {
+      strike: number;
+      bid: number;
+      ask: number;
+      lastPrice: number;
+      volume?: number;
+      openInterest?: number;
+      impliedVolatility?: number;
+    }
+
     interface Option {
       strike: number;
       bid: number;
@@ -56,7 +66,7 @@ export async function GET(request: NextRequest) {
       type: 'call' | 'put';
     }
     const options: Option[] = [
-      ...calls.map((call: Record<string, any>) => ({
+      ...calls.map((call: YahooOption) => ({
         strike: call.strike,
         bid: call.bid,
         ask: call.ask,
@@ -71,7 +81,7 @@ export async function GET(request: NextRequest) {
         expiration: new Date(optionChain.expirationDates[0] * 1000).toISOString(),
         type: 'call'
       })),
-      ...puts.map((put: Record<string, any>) => ({
+      ...puts.map((put: YahooOption) => ({
         strike: put.strike,
         bid: put.bid,
         ask: put.ask,
