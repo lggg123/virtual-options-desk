@@ -12,10 +12,10 @@ cmds = [
 ]
 
 [phases.build]
-cmds = ["echo 'CrewAI Service - Build complete'"]
+cmds = ["chmod +x start.sh"]
 
 [start]
-cmd = "bash -c 'uvicorn main:app --host 0.0.0.0 --port $PORT'"
+cmd = "./start.sh"
 
 [variables]
 PYTHON_VERSION = "3.12"
