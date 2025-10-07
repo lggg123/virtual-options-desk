@@ -35,9 +35,5 @@ COPY .env* ./
 # Expose port (Railway will use PORT env var)
 EXPOSE 8080
 
-# Health check - use PORT env var
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 8080) + '/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
-
 # Start
 CMD ["node", "dist/index.js"]

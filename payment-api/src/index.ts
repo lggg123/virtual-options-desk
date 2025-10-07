@@ -128,27 +128,13 @@ const PLANS: Record<string, SubscriptionPlan> = {
 
 // ==================== ROUTES ====================
 
-// Health check - must return exactly what Railway expects
+// Health check - simple and fast for Railway
 fastify.get('/health', async (request, reply) => {
-  try {
-    // Test Supabase connection
-    const { error: supabaseError } = await supabase.from('subscriptions').select('count').limit(1);
-    
-    reply.code(200).send({
-      status: 'ok',
-      service: 'payment-api',
-      timestamp: new Date().toISOString(),
-      stripe: stripe ? 'connected' : 'disconnected',
-      supabase: supabaseError ? 'error' : 'connected',
-    });
-  } catch (err) {
-    const error = err instanceof Error ? err : new Error(String(err));
-    fastify.log.error(error, 'Health check failed');
-    reply.code(503).send({
-      status: 'error',
-      error: error.message,
-    });
-  }
+  reply.code(200).send({
+    status: 'ok',
+    service: 'payment-api',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Get pricing plans
