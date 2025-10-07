@@ -12,6 +12,14 @@ RUN npm ci
 # Copy source
 COPY src ./src
 
+# Debug: Show files and tsconfig
+RUN echo "=== Current directory ===" && pwd
+RUN echo "=== Files in /app ===" && ls -la
+RUN echo "=== Contents of tsconfig.json ===" && cat tsconfig.json
+RUN echo "=== Files in src/ ===" && ls -la src/
+RUN echo "=== Node version ===" && node --version
+RUN echo "=== TypeScript version ===" && npx tsc --version
+
 # Build using npm script
 RUN npm run build
 
