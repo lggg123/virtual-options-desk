@@ -385,3 +385,15 @@ ALTER TABLE stock_picks DISABLE ROW LEVEL SECURITY;
 **Ready to use Supabase!** 🎉
 
 Your database is now cloud-hosted, scalable, and has built-in real-time capabilities perfect for your trading platform.
+
+# Supabase Environment Variables
+
+Add these to your `.env.local` (for local dev) or to Vercel/production environment variables:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://qcwtkyxvejcogbhbauey.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjd3RreXh2ZWpjb2diaGJhdWV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3Nzg5NDcsImV4cCI6MjA3NTM1NDk0N30.v6sLdGX4o8tVwMWiPeZGKxAhHE_SKh-vMP1RqrAYGQo
+```
+
+- `NEXT_PUBLIC_SUPABASE_URL` is your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` is your public anon key (safe for frontend)
