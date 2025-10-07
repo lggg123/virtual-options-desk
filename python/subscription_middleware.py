@@ -334,8 +334,11 @@ async def auth_middleware(request: Request, call_next):
     Middleware to extract user_id from Authorization header
     Expects: Authorization: Bearer <supabase-jwt-token>
     """
+    # Skip authentication for WebSocket endpoints
+    if request.url.path.startswith("/ws/"):
+        return await call_next(request)
+
     auth_header = request.headers.get('Authorization')
-    
     if auth_header and auth_header.startswith('Bearer ') and supabase:
         token = auth_header.split(' ')[1]
         try:
@@ -345,6 +348,6 @@ async def auth_middleware(request: Request, call_next):
                 request.state.user_id = user.user.id
         except Exception as e:
             print(f"Error verifying token: {str(e)}")
-    
+
     response = await call_next(request)
     return response
