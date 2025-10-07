@@ -15,15 +15,8 @@ import sys
 import os
 import yfinance as yf
 
-# Add parent directory to path for local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-try:
-    # Try production import first
-    from pattern_detector import PatternDetector, DetectedPattern
-except ImportError:
-    # Fall back to development import
-    from python.pattern_detector import PatternDetector, DetectedPattern
+# Import pattern detector - works when running from python/ directory (Railway)
+from pattern_detector import PatternDetector, DetectedPattern
 
 app = FastAPI(
     title="AI Candlestick Pattern Detection API",
