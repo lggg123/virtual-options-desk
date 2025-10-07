@@ -5,8 +5,6 @@ builder = "NIXPACKS"
 NODE_VERSION = "20"
 
 [deploy]
-startCommand = "npm run build && npm start"
-healthcheckPath = "/health"
-healthcheckTimeout = 10
+startCommand = "node --trace-warnings dist/index.js"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

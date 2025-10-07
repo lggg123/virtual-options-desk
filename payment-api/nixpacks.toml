@@ -3,16 +3,17 @@ nixPkgs = ["nodejs-20_x"]
 
 [phases.install]
 cmds = [
-  "npm ci"
+  "npm ci --include=dev"
 ]
 
 [phases.build]
 cmds = [
-  "npx tsc"
+  "npm run build"
 ]
 
 [start]
-cmd = "node dist/index.js"
+cmd = "node --trace-warnings dist/index.js"
 
 [variables]
 NODE_ENV = "production"
+PORT = "8080"
