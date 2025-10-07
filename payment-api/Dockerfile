@@ -6,31 +6,31 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
+# Install ALL dependencies including TypeScript
 RUN npm ci
 
 # Copy source
 COPY src ./src
 
-# Build
-RUN npm run build
+# Build TypeScript
+RUN npx tsc
 
 # Production image
 FROM node:20-alpine
 
 WORKDIR /app
 
+# Set environment
+ENV NODE_ENV=production
+
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Install production dependencies (but keep typescript for now)
+RUN npm ci --include=prod
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
-
-# Copy .env file if exists (for local development)
-COPY .env* ./
 
 # Expose port (Railway will use PORT env var)
 EXPOSE 8080
