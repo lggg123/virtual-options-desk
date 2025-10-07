@@ -1,7 +1,12 @@
 #!/bin/bash
 # Startup script for Pattern Detection API
-# Reads PORT from environment or defaults to 8000
+set -e
 
-PORT=${PORT:-8000}
-echo "Starting Pattern Detection API on port $PORT"
-uvicorn pattern_detection_api:app --host 0.0.0.0 --port $PORT
+# Export PORT for uvicorn to use
+export PORT="${PORT:-8000}"
+
+echo "=== Pattern Detection API Startup ==="
+echo "PORT environment variable: ${PORT}"
+echo "Starting uvicorn..."
+
+exec uvicorn pattern_detection_api:app --host 0.0.0.0 --port "${PORT}"
