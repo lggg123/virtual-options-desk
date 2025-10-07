@@ -29,6 +29,10 @@ pytz>=2023.3
 tqdm>=4.66.0
 python-dotenv>=1.0.0
 
+# Database - Supabase
+supabase>=2.0.0
+httpx>=0.24.0
+
 # WebSocket support
 websockets>=12.0
 

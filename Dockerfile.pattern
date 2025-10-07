@@ -17,16 +17,17 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Copy requirements first (for better caching)
-COPY python/requirements-ml.txt ./python/
+COPY python/requirements-ml.txt ./
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r python/requirements-ml.txt
+RUN pip install --no-cache-dir -r requirements-ml.txt
 
-# Copy application code
-COPY python/ ./python/
+# Copy application code to root (not /app/python/)
+COPY python/ ./
 
-# Set Python path
+# Set Python path (current directory)
 ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
 
 # Expose port (Railway will set PORT env var)
 EXPOSE 8080
@@ -35,5 +36,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health').read()" || exit 1
 
-# Start the application
-CMD uvicorn python.pattern_detection_api:app --host 0.0.0.0 --port ${PORT:-8080}
+# Start the application (no python. prefix since files are in /app root)
+CMD uvicorn pattern_detection_api:app --host 0.0.0.0 --port ${PORT:-8080}
