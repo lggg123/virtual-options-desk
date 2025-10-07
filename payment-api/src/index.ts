@@ -7,8 +7,11 @@ import { createClient } from '@supabase/supabase-js';
 import 'dotenv/config';
 
 const fastify = Fastify({
-  logger: true,
+  logger: {
+    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
+  },
   bodyLimit: 1048576, // 1MB
+  trustProxy: true, // Important for Railway
 });
 
 // Initialize Stripe
@@ -26,6 +29,7 @@ const supabase = createClient(
 // Register plugins
 await fastify.register(helmet, {
   contentSecurityPolicy: false, // Disable for webhooks
+  global: true,
 });
 
 await fastify.register(cors, {
@@ -458,12 +462,14 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
 // ==================== START SERVER ====================
 
-const port = parseInt(process.env.PORT || '3001', 10);
+const port = parseInt(process.env.PORT || '8080', 10);
 const host = process.env.HOST || '0.0.0.0';
 
 try {
   await fastify.listen({ port, host });
-  console.log(`🚀 Payment API running on http://${host}:${port}`);
+  fastify.log.info(`🚀 Payment API running on http://${host}:${port}`);
+  fastify.log.info(`📊 Health check available at http://${host}:${port}/health`);
+  fastify.log.info(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
 } catch (err) {
   fastify.log.error(err);
   process.exit(1);
