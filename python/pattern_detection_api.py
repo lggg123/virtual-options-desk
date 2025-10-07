@@ -31,19 +31,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware
+# CORS middleware - Allow all origins for WebSocket compatibility
+# Note: CORS doesn't apply to WebSocket connections in the traditional sense
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://svelte-chart-app.vercel.app",
-        "http://localhost:5173",  # for local dev
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=False,  # Must be False when allow_origins=["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Add authentication middleware
+# Add authentication middleware - only for HTTP requests, not WebSockets
 app.middleware("http")(auth_middleware)
 
 # Global pattern detector instance
@@ -546,18 +544,35 @@ async def fetch_latest_candle(symbol: str, timeframe: str) -> Optional[Dict]:
 
 @app.websocket("/ws/live/{symbol}")
 async def websocket_endpoint(websocket: WebSocket, symbol: str, timeframe: str = "1d"):
-    """WebSocket endpoint for real-time chart data - for Svelte chart app"""
-    await websocket.accept()
-    # Debug: Log connection info and headers
-    headers = dict(websocket.headers)
-    print(f"📊 Client connected for {symbol} ({timeframe}) via WebSocket")
-    print(f"WebSocket headers: {headers}")
-    # Optional: Check for Authorization header or token (for debugging, not enforced)
-    auth_header = headers.get('authorization')
-    if auth_header:
-        print(f"WebSocket Authorization header: {auth_header}")
-    else:
-        print("WebSocket Authorization header not provided.")
+    """WebSocket endpoint for real-time chart data - for Svelte chart app
+    
+    NOTE: This endpoint allows connections from any origin for development/testing.
+    In production, implement proper origin validation if needed.
+    """
+    print(f"🔵 WebSocket connection attempt for {symbol} (timeframe: {timeframe})")
+    print(f"🔵 Client: {websocket.client}")
+    print(f"🔵 URL: {websocket.url}")
+    
+    # Accept connection immediately without any checks
+    # WebSocket connections bypass CORS in the traditional sense
+    try:
+        await websocket.accept()
+        print(f"✅ WebSocket connection ACCEPTED for {symbol}")
+        # Debug: Log connection info and headers
+        headers = dict(websocket.headers)
+        print(f"📊 Client connected for {symbol} ({timeframe}) via WebSocket")
+        print(f"WebSocket headers: {headers}")
+        print(f"WebSocket client host: {websocket.client.host if websocket.client else 'unknown'}")
+        
+        # Optional: Check for Authorization header or token (for debugging, not enforced)
+        auth_header = headers.get('authorization')
+        if auth_header:
+            print(f"WebSocket Authorization header: {auth_header}")
+        else:
+            print("WebSocket Authorization header not provided.")
+    except Exception as e:
+        print(f"❌ Error accepting WebSocket connection: {e}")
+        raise
     
     try:
         # Send historical data first
