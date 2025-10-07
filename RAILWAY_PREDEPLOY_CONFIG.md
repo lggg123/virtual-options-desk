@@ -11,7 +11,7 @@
 ### Option 1: Virtual Environment (Cleanest Approach)
 - **Custom Build Command**: 
   ```bash
-   sudo apt-get update && apt-get install -y python3 python3-pip && python3 -m pip install --upgrade pip setuptools wheel && python3 -m pip install -r requirements-ml.txt && chmod +x start.sh
+  python3 -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip setuptools wheel && /opt/venv/bin/pip install -r requirements-ml.txt && chmod +x start.sh
   ```
 
 - **Custom Start Command**: 
@@ -19,10 +19,21 @@
   ./start.sh
   ```
 
-### Option 2: Break System Packages (Simpler but less clean)
+### Option 2: Break System Packages (Simpler, works on Railway)
 - **Custom Build Command**: 
   ```bash
   python3 -m pip install --break-system-packages --upgrade pip setuptools wheel && python3 -m pip install --break-system-packages -r requirements-ml.txt && chmod +x start.sh
+  ```
+
+- **Custom Start Command**: 
+  ```bash
+  ./start.sh
+  ```
+
+### Option 3: Install Python + Break System Packages (if Python missing)
+- **Custom Build Command**: 
+  ```bash
+  apt-get update && apt-get install -y python3 python3-pip && python3 -m pip install --break-system-packages --upgrade pip setuptools wheel && python3 -m pip install --break-system-packages -r requirements-ml.txt && chmod +x start.sh
   ```
 
 - **Custom Start Command**: 
