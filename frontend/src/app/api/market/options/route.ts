@@ -40,8 +40,23 @@ export async function GET(request: NextRequest) {
     const calls = optionChain.options[0].calls || [];
     const puts = optionChain.options[0].puts || [];
 
-    const options = [
-      ...calls.map((call: any) => ({
+    interface Option {
+      strike: number;
+      bid: number;
+      ask: number;
+      last: number;
+      volume: number;
+      openInterest: number;
+      impliedVolatility: number;
+      delta: number;
+      gamma: number;
+      theta: number;
+      vega: number;
+      expiration: string;
+      type: 'call' | 'put';
+    }
+    const options: Option[] = [
+      ...calls.map((call: Record<string, any>) => ({
         strike: call.strike,
         bid: call.bid,
         ask: call.ask,
@@ -54,9 +69,9 @@ export async function GET(request: NextRequest) {
         theta: 0,
         vega: 0,
         expiration: new Date(optionChain.expirationDates[0] * 1000).toISOString(),
-        type: 'call' as const
+        type: 'call'
       })),
-      ...puts.map((put: any) => ({
+      ...puts.map((put: Record<string, any>) => ({
         strike: put.strike,
         bid: put.bid,
         ask: put.ask,
@@ -69,7 +84,7 @@ export async function GET(request: NextRequest) {
         theta: 0,
         vega: 0,
         expiration: new Date(optionChain.expirationDates[0] * 1000).toISOString(),
-        type: 'put' as const
+        type: 'put'
       }))
     ];
 
