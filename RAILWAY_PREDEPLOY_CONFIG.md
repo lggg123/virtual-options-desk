@@ -1,6 +1,6 @@
 # Railway Pattern Detection - Simplified Configuration
 
-## Complete Railway Settings (Bypass Nixpacks Approach)
+## Complete Railway Settings (Recommended)
 
 ### Settings → General
 - **Root Directory**: `python`
@@ -8,11 +8,10 @@
 ### Settings → Deploy
 - **Nixpacks Config File**: `../nixpacks-pattern.toml` (minimal config)
 
-- **Custom Build Command**: **(LEAVE EMPTY)**
-
-- **Predeploy Command**: 
+### Option 1: Virtual Environment (Cleanest Approach)
+- **Custom Build Command**: 
   ```bash
-  python3 -m pip install --upgrade pip setuptools wheel && python3 -m pip install -r requirements-ml.txt && chmod +x start.sh
+   sudo apt-get update && apt-get install -y python3 python3-pip && python3 -m pip install --upgrade pip setuptools wheel && python3 -m pip install -r requirements-ml.txt && chmod +x start.sh
   ```
 
 - **Custom Start Command**: 
@@ -20,18 +19,32 @@
   ./start.sh
   ```
 
-### Alternative: Install Python from scratch (if system Python missing)
-If Railway doesn't have Python available at all:
-
-- **Predeploy Command**:
+### Option 2: Break System Packages (Simpler but less clean)
+- **Custom Build Command**: 
   ```bash
-  curl -sSL https://install.python-poetry.org | python3 - && python3 -m pip install --upgrade pip setuptools wheel && python3 -m pip install -r requirements-ml.txt && chmod +x start.sh
+  python3 -m pip install --break-system-packages --upgrade pip setuptools wheel && python3 -m pip install --break-system-packages -r requirements-ml.txt && chmod +x start.sh
   ```
 
-Or use apt-get (if Railway has sudo access):
+- **Custom Start Command**: 
   ```bash
-  apt-get update && apt-get install -y python3 python3-pip && python3 -m pip install --upgrade pip setuptools wheel && python3 -m pip install -r requirements-ml.txt && chmod +x start.sh
+  ./start.sh
   ```
+
+### If Predeploy doesn't work - Use Custom Build Command instead:
+
+Railway's Python is externally managed (PEP 668), so we need to use `--break-system-packages`:
+
+- **Custom Build Command**:
+  ```bash
+  python3 -m pip install --break-system-packages --upgrade pip setuptools wheel && python3 -m pip install --break-system-packages -r requirements-ml.txt && chmod +x start.sh
+  ```
+
+Or create a virtual environment (cleaner approach):
+  ```bash
+  python3 -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip setuptools wheel && /opt/venv/bin/pip install -r requirements-ml.txt && chmod +x start.sh
+  ```
+
+**Note**: If using venv approach, you'll need to update start.sh to use `/opt/venv/bin/python3` and `/opt/venv/bin/uvicorn`
 
 ## How It Works
 
