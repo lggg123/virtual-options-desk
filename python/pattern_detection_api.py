@@ -3,7 +3,7 @@ FastAPI service for AI Candlestick Pattern Detection
 Exposes pattern detection endpoints for Flutter app and Svelte chart app
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional
@@ -17,6 +17,13 @@ import yfinance as yf
 
 # Import pattern detector - works when running from python/ directory (Railway)
 from pattern_detector import PatternDetector, DetectedPattern
+from subscription_middleware import (
+    check_plan_access,
+    check_usage_limit,
+    increment_usage,
+    get_user_subscription,
+    auth_middleware
+)
 
 app = FastAPI(
     title="AI Candlestick Pattern Detection API",
@@ -32,6 +39,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add authentication middleware
+app.middleware("http")(auth_middleware)
 
 # Global pattern detector instance
 detector = PatternDetector(use_ml=False)  # Set to True when ML model is trained
@@ -120,7 +130,7 @@ async def root():
     }
 
 @app.post("/detect", response_model=DetectionResult)
-async def detect_patterns(request: PatternDetectionRequest):
+async def detect_patterns(request_data: PatternDetectionRequest, request: Request, subscription: dict = None):
     """
     Detect candlestick patterns in historical data
     
@@ -128,15 +138,42 @@ async def detect_patterns(request: PatternDetectionRequest):
     - **timeframe**: Candlestick timeframe (e.g., "1d", "4h")
     - **candles**: List of OHLCV candles
     - **context**: Optional context (RSI, MACD, etc.)
+    
+    **Subscription Required**: All plans (Free: 10/month, Premium: 100/month, Pro: unlimited)
     """
     try:
+        # Get user_id from request state (set by auth_middleware) or query params
+        user_id = getattr(request.state, 'user_id', None) or request.query_params.get('user_id')
+        
+        if not user_id:
+            raise HTTPException(
+                status_code=401,
+                detail="Authentication required. Please provide user_id or Authorization header."
+            )
+        
+        # Check usage limit
+        usage_check = await check_usage_limit(user_id, 'picks_per_month')
+        if not usage_check['allowed']:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    'error': 'Monthly usage limit reached',
+                    'usage': usage_check['usage'],
+                    'limit': usage_check['limit'],
+                    'upgrade_url': '/pricing'
+                }
+            )
+        
         start_time = datetime.now()
         
         # Convert to DataFrame
-        df = candles_to_dataframe(request.candles)
+        df = candles_to_dataframe(request_data.candles)
         
         # Detect patterns
-        patterns = detector.detect_patterns(df, request.context)
+        patterns = detector.detect_patterns(df, request_data.context)
+        
+        # Increment usage counter
+        await increment_usage(user_id, 'picks')
         
         # Calculate detection time
         detection_time = (datetime.now() - start_time).total_seconds() * 1000
@@ -145,8 +182,8 @@ async def detect_patterns(request: PatternDetectionRequest):
         pattern_responses = [pattern_to_response(p) for p in patterns]
         
         return DetectionResult(
-            symbol=request.symbol,
-            timeframe=request.timeframe,
+            symbol=request_data.symbol,
+            timeframe=request_data.timeframe,
             patterns=pattern_responses,
             total_patterns=len(pattern_responses),
             detection_time_ms=detection_time
@@ -192,6 +229,46 @@ async def detect_realtime(request: RealtimeDetectionRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Realtime detection failed: {str(e)}")
+
+@app.get("/subscription/status")
+async def get_subscription_status(request: Request):
+    """
+    Get user's subscription status and usage limits
+    
+    Returns plan details, usage stats, and feature access
+    """
+    try:
+        # Get user_id from request
+        user_id = getattr(request.state, 'user_id', None) or request.query_params.get('user_id')
+        
+        if not user_id:
+            raise HTTPException(
+                status_code=401,
+                detail="Authentication required. Please provide user_id or Authorization header."
+            )
+        
+        # Get subscription details
+        subscription = await get_user_subscription(user_id)
+        
+        # Get usage stats
+        usage = await check_usage_limit(user_id, 'picks_per_month')
+        
+        return {
+            "user_id": user_id,
+            "plan": subscription['plan_id'],
+            "status": subscription['status'],
+            "features": subscription['features'],
+            "usage": {
+                "picks_used": usage['usage'],
+                "picks_limit": usage['limit'],
+                "picks_remaining": usage['remaining'],
+                "unlimited": usage.get('unlimited', False)
+            },
+            "upgrade_available": subscription['plan_id'] != 'pro'
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get subscription status: {str(e)}")
 
 @app.get("/patterns/types")
 async def get_pattern_types():
