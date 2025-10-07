@@ -34,7 +34,10 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust for production
+    allow_origins=[
+        "https://svelte-chart-app.vercel.app",
+        "http://localhost:5173",  # for local dev
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -545,7 +548,16 @@ async def fetch_latest_candle(symbol: str, timeframe: str) -> Optional[Dict]:
 async def websocket_endpoint(websocket: WebSocket, symbol: str, timeframe: str = "1d"):
     """WebSocket endpoint for real-time chart data - for Svelte chart app"""
     await websocket.accept()
-    print(f"📊 Client connected for {symbol} ({timeframe})")
+    # Debug: Log connection info and headers
+    headers = dict(websocket.headers)
+    print(f"📊 Client connected for {symbol} ({timeframe}) via WebSocket")
+    print(f"WebSocket headers: {headers}")
+    # Optional: Check for Authorization header or token (for debugging, not enforced)
+    auth_header = headers.get('authorization')
+    if auth_header:
+        print(f"WebSocket Authorization header: {auth_header}")
+    else:
+        print("WebSocket Authorization header not provided.")
     
     try:
         # Send historical data first
