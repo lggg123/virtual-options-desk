@@ -43,41 +43,7 @@ export default function ActivePositions() {
     } catch (error) {
       console.error('Error fetching positions:', error);
       toast.error('Failed to fetch positions');
-      // Fall back to mock data for development
-      setPositions([
-        {
-          id: 1,
-          symbol: 'AAPL',
-          type: 'Call',
-          strike: 180,
-          expiry: '2024-02-16',
-          quantity: 5,
-          avgPrice: 3.25,
-          currentPrice: 3.85,
-          pnl: 300,
-          pnlPercent: 18.46,
-          delta: 0.65,
-          theta: -0.08,
-          gamma: 0.015,
-          vega: 0.12
-        },
-        {
-          id: 2,
-          symbol: 'TSLA',
-          type: 'Put',
-          strike: 250,
-          expiry: '2024-02-23',
-          quantity: -3,
-          avgPrice: 8.50,
-          currentPrice: 7.20,
-          pnl: 390,
-          pnlPercent: 15.29,
-          delta: -0.42,
-          theta: -0.12,
-          gamma: 0.018,
-          vega: 0.15
-        }
-      ]);
+      setPositions([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
