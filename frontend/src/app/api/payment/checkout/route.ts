@@ -7,6 +7,9 @@ export async function POST(request: NextRequest) {
   try {
     const { planId } = await request.json();
     
+    console.log('Checkout request received for plan:', planId);
+    console.log('Payment API URL:', PAYMENT_API_URL);
+    
     if (!planId) {
       return NextResponse.json(
         { error: 'Plan ID is required' },
@@ -30,14 +33,20 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
     
+    console.log('User authenticated:', user.id);
+    
     // Call payment API to create checkout session
-    const response = await fetch(`${PAYMENT_API_URL}/api/checkout/create`, {
+    const paymentApiUrl = `${PAYMENT_API_URL}/api/checkout/create`;
+    console.log('Calling payment API:', paymentApiUrl);
+    
+    const response = await fetch(paymentApiUrl, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -51,7 +60,16 @@ export async function POST(request: NextRequest) {
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorText = await response.text();
+      console.error('Payment API error:', response.status, errorText);
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText };
+      }
+      
       return NextResponse.json(
         { error: errorData.error || 'Failed to create checkout session' },
         { status: response.status }
@@ -59,12 +77,16 @@ export async function POST(request: NextRequest) {
     }
     
     const data = await response.json();
+    console.log('Checkout session created successfully');
     return NextResponse.json(data);
     
   } catch (error) {
     console.error('Checkout error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
