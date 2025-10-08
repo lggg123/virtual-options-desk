@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 const PAYMENT_API_URL = process.env.PAYMENT_API_URL || 'http://localhost:3001';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get authenticated user using cookies
     const cookieStore = await cookies();

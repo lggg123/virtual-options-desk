@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/supabase/client';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { LogOut, Settings, User, TrendingUp, BarChart3, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,7 +21,6 @@ export default function DashboardHeader() {
     email?: string; 
     user_metadata?: { avatar_url?: string } 
   } | null>(null);
-  const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {

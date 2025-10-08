@@ -92,28 +92,27 @@ export default function PricingPage() {
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
   useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error('Auth check error:', error);
+          setUser(null);
+          return;
+        }
+        setUser(user);
+        
+        // Only fetch subscription if user is authenticated
+        if (user) {
+          await fetchSubscription();
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+      }
+    }
+    
     checkAuth();
   }, []);
-
-  async function checkAuth() {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Auth check error:', error);
-        setUser(null);
-        return;
-      }
-      setUser(user);
-      
-      // Only fetch subscription if user is authenticated
-      if (user) {
-        await fetchSubscription();
-      }
-    } catch (error) {
-      console.error('Auth check error:', error);
-      setUser(null);
-    }
-  }
 
   async function fetchSubscription() {
     try {
