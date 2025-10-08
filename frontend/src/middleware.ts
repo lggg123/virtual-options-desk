@@ -56,8 +56,19 @@ export async function middleware(request: NextRequest) {
 
   // Refresh session if expired - required for Server Components
   // Try to get the session first (more reliable than getUser alone)
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   const user = session?.user;
+
+  // Log authentication state for debugging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Middleware]', {
+      path: request.nextUrl.pathname,
+      hasSession: !!session,
+      hasUser: !!user,
+      userId: user?.id,
+      sessionError: sessionError?.message,
+    });
+  }
 
   // Protected routes that require authentication
   const protectedRoutes = ['/dashboard', '/trading', '/portfolio', '/settings'];
@@ -67,6 +78,7 @@ export async function middleware(request: NextRequest) {
 
   // If accessing a protected route without authentication, redirect to login
   if (isProtectedRoute && !user) {
+    console.log('[Middleware] Redirecting to login - no authenticated user for protected route:', request.nextUrl.pathname);
     const redirectUrl = new URL('/login', request.url);
     redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
@@ -74,6 +86,7 @@ export async function middleware(request: NextRequest) {
 
   // If accessing login/signup while authenticated, redirect to dashboard
   if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && user) {
+    console.log('[Middleware] User already authenticated, redirecting to dashboard');
     // Check for redirect parameter
     const redirect = request.nextUrl.searchParams.get('redirect');
     if (redirect) {

@@ -51,7 +51,15 @@ export default function LoginForm() {
         return;
       }
 
-      console.log('Login successful, redirecting to dashboard...');
+      console.log('Login successful, session established:', {
+        userId: data.user.id,
+        sessionId: data.session.access_token.substring(0, 20) + '...'
+      });
+      
+      // Small delay to ensure cookies are properly set before redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('Redirecting to dashboard...');
       // Force page reload to ensure middleware picks up new session
       window.location.href = '/dashboard';
     } catch (error: unknown) {

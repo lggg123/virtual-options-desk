@@ -45,8 +45,11 @@ export default function SignUpForm() {
 
       if (data.user && !data.user.email_confirmed_at) {
         setSuccess(true);
-      } else if (data.user) {
-        router.push('/dashboard');
+      } else if (data.user && data.session) {
+        // Small delay to ensure cookies are properly set before redirect
+        await new Promise(resolve => setTimeout(resolve, 100));
+        // Force page reload to ensure middleware picks up new session
+        window.location.href = '/dashboard';
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An unexpected error occurred');
