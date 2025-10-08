@@ -25,6 +25,7 @@ export async function GET() {
     }
 
     // Fetch user account using admin client (bypasses RLS, TypeScript types)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: account, error: accountError } = await supabaseAdmin
       .from('user_accounts' as any)
       .select('*')
@@ -34,6 +35,7 @@ export async function GET() {
     if (accountError) {
       // If account doesn't exist, create one
       if (accountError.code === 'PGRST116') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: newAccount, error: createError } = await supabaseAdmin
           .from('user_accounts' as any)
           .insert({

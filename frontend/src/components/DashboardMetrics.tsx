@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, TrendingUp, Activity, Target, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Activity, Loader2 } from 'lucide-react';
 
 interface Account {
   cash_balance: number;

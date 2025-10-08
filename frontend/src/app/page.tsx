@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, TrendingUp, Shield, Zap, BarChart3, BookOpen, Users, DollarSign } from 'lucide-react';
+import { ArrowRight, TrendingUp, Zap, BarChart3, BookOpen, Users, DollarSign } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
 export default function HomePage() {
@@ -36,7 +37,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <img src="/logo.svg" alt="AI Stock Desk Logo" className="h-10 w-10 mr-3" />
+              <Image src="/logo.svg" alt="AI Stock Desk Logo" width={40} height={40} className="mr-3" />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">AI Stock Desk</span>
             </div>
             <div className="flex items-center space-x-4">
