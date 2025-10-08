@@ -238,11 +238,51 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="py-12 px-4 border-t border-gray-800">
-        <div className="max-w-7xl mx-auto text-center text-gray-400">
-          <p>&copy; 2025 OptionSim. All rights reserved. Not affiliated with any real brokerage.</p>
-          <p className="mt-2 text-sm">
-            This is a simulated trading platform for educational purposes only.
-          </p>
+        <div className="max-w-7xl mx-auto">
+          {/* Footer Links */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h3 className="text-white font-semibold mb-4">Platform</h3>
+              <ul className="space-y-2">
+                <li><Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">Dashboard</Link></li>
+                <li><Link href="/dashboard/ai-picks" className="text-gray-400 hover:text-white transition-colors">AI Stock Picks</Link></li>
+                <li><Link href="/dashboard/patterns" className="text-gray-400 hover:text-white transition-colors">Pattern Detection</Link></li>
+                <li><Link href="/trading" className="text-gray-400 hover:text-white transition-colors">Virtual Trading</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Company</h3>
+              <ul className="space-y-2">
+                <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</Link></li>
+                <li><Link href="/dashboard/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
+                <li><Link href="#features" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Resources</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Documentation</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">API Reference</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Support</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Disclaimer</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Copyright */}
+          <div className="text-center text-gray-400 pt-8 border-t border-gray-800">
+            <p>&copy; 2025 AI Stock Picks. All rights reserved.</p>
+            <p className="mt-2 text-sm">
+              This platform provides AI-driven market analysis for educational and informational purposes only. Not investment advice.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

@@ -24,7 +24,12 @@ export default function RootLayout({
           <div className="min-h-screen bg-slate-950">
             <Navigation />
             <main className="lg:pl-64">
-              <div className="lg:pt-0 pt-16">
+              {/* Remove pt-16 for landing page on mobile */}
+              <div className={
+                typeof window !== 'undefined' && window.location.pathname === '/'
+                  ? 'lg:pt-0'
+                  : 'lg:pt-0 pt-16'
+              }>
                 {children}
               </div>
             </main>

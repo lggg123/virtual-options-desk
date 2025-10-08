@@ -30,6 +30,7 @@ const navigation = [
   { name: 'Pattern Detection', href: '/dashboard/patterns', icon: LineChart },
   { name: 'AI Insights Blog', href: '/dashboard/blog', icon: Newspaper },
   { name: 'Portfolio', href: '/portfolio', icon: Wallet },
+  { name: 'Pricing', href: '/pricing', icon: Crown },
 ];
 
 export default function Navigation() {
