@@ -77,8 +77,16 @@ export default function PortfolioOverview() {
     );
   }
 
+  interface GroupedPosition {
+    symbol: string;
+    type: string;
+    quantity: number;
+    value: number;
+    percentage: number;
+  }
+
   // Group positions by symbol and calculate percentages
-  const groupedPositions = positions.reduce((acc: any[], pos) => {
+  const groupedPositions = positions.reduce((acc: GroupedPosition[], pos) => {
     const existing = acc.find(p => p.symbol === pos.symbol && p.type === pos.type);
     const value = pos.currentPrice * pos.quantity * 100;
     
