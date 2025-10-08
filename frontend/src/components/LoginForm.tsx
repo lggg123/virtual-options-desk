@@ -41,8 +41,8 @@ export default function LoginForm() {
         throw error;
       }
 
-      if (data.user) {
-        // Use window.location.href for hard redirect to ensure fresh state
+      if (data.user && data.session) {
+        // Force page reload to ensure middleware picks up new session
         window.location.href = '/dashboard';
       }
     } catch (error: unknown) {
