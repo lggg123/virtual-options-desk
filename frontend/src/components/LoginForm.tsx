@@ -7,19 +7,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setNeedsConfirmation(false);
+    setResendSuccess(false);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -27,15 +32,49 @@ export default function LoginForm() {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's an email confirmation error
+        if (error.message.toLowerCase().includes('email not confirmed') || 
+            error.message.toLowerCase().includes('confirm your email')) {
+          setNeedsConfirmation(true);
+          setError('Please confirm your email address before signing in. Check your inbox for the confirmation link.');
+          return;
+        }
+        throw error;
+      }
 
       if (data.user) {
-        router.push('/dashboard');
+        // Use window.location.href for hard redirect to ensure fresh state
+        window.location.href = '/dashboard';
       }
     } catch (error: unknown) {
+      console.error('Login error:', error);
       setError(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    setResendingEmail(true);
+    setError(null);
+    setResendSuccess(false);
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+
+      if (error) throw error;
+
+      setResendSuccess(true);
+      setNeedsConfirmation(false);
+    } catch (error: unknown) {
+      console.error('Resend error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to resend confirmation email');
+    } finally {
+      setResendingEmail(false);
     }
   };
 
@@ -71,10 +110,32 @@ export default function LoginForm() {
         </Alert>
       )}
 
+      {resendSuccess && (
+        <Alert className="bg-green-50 border-green-200">
+          <Mail className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            Confirmation email sent! Check your inbox and click the link to verify your account.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Button type="submit" className="w-full" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {loading ? 'Signing in...' : 'Sign in'}
       </Button>
+
+      {needsConfirmation && (
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full" 
+          onClick={handleResendConfirmation}
+          disabled={resendingEmail}
+        >
+          {resendingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {resendingEmail ? 'Sending...' : 'Resend Confirmation Email'}
+        </Button>
+      )}
     </form>
   );
 }
