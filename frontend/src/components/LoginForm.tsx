@@ -25,12 +25,16 @@ export default function LoginForm() {
     setResendSuccess(false);
 
     try {
+      console.log('Attempting login for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Login response:', { data, error });
+
       if (error) {
+        console.error('Supabase auth error:', error);
         // Check if it's an email confirmation error
         if (error.message.toLowerCase().includes('email not confirmed') || 
             error.message.toLowerCase().includes('confirm your email')) {
@@ -41,10 +45,15 @@ export default function LoginForm() {
         throw error;
       }
 
-      if (data.user && data.session) {
-        // Force page reload to ensure middleware picks up new session
-        window.location.href = '/dashboard';
+      if (!data.session || !data.user) {
+        console.error('No session or user returned:', data);
+        setError('Login failed: No session created. Please try again or contact support.');
+        return;
       }
+
+      console.log('Login successful, redirecting to dashboard...');
+      // Force page reload to ensure middleware picks up new session
+      window.location.href = '/dashboard';
     } catch (error: unknown) {
       console.error('Login error:', error);
       setError(error instanceof Error ? error.message : 'An unexpected error occurred');
