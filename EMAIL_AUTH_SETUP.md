@@ -664,6 +664,153 @@ You can also customize these templates with similar styling:
 </html>
 ```
 
+**Invite User Template:**
+```html
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .header {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .content h2 {
+        color: #333;
+        font-size: 22px;
+        margin-top: 0;
+      }
+      .content p {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.8;
+      }
+      .button {
+        display: inline-block;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 16px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .button:hover {
+        opacity: 0.9;
+      }
+      .footer {
+        background: #f8f9fa;
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid #e9ecef;
+      }
+      .footer p {
+        color: #6c757d;
+        font-size: 14px;
+        margin: 5px 0;
+      }
+      .highlight-box {
+        background: #e8f5e9;
+        border-left: 4px solid #43e97b;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .highlight-box p {
+        color: #1b5e20;
+        margin: 0;
+        font-size: 14px;
+      }
+      .inviter-info {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 20px 0;
+      }
+      .inviter-info p {
+        margin: 5px 0;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>&#128640; AI Stock Desk</h1>
+      </div>
+      <div class="content">
+        <h2>&#128075; You're Invited!</h2>
+        <p>You've been invited to join AI Stock Desk, a platform for learning stock analysis and practicing trading strategies in a risk-free environment.</p>
+        
+        <div class="inviter-info">
+          <p><strong>Invited by:</strong> {{ .InviterEmail }}</p>
+          <p><strong>Organization:</strong> {{ .OrganizationName }}</p>
+        </div>
+        
+        <p>Click the button below to accept the invitation and create your account:</p>
+        
+        <div style="text-align: center;">
+          <a href="{{ .ConfirmationURL }}" class="button">
+            Accept Invitation
+          </a>
+        </div>
+        
+        <p>Once you join, you'll get access to:</p>
+        <ul style="list-style: none; padding-left: 0;">
+          <li style="margin-bottom: 10px;">&#9989; <strong>Virtual Trading Practice</strong> - Learn without risk</li>
+          <li style="margin-bottom: 10px;">&#128200; <strong>AI Stock Picks</strong> - Daily market insights</li>
+          <li style="margin-bottom: 10px;">&#128201; <strong>Market Sentiment Analysis</strong> - Real-time data</li>
+          <li style="margin-bottom: 10px;">&#128185; <strong>Options Strategy Tools</strong> - Educational resources</li>
+        </ul>
+        
+        <div class="highlight-box">
+          <p><strong>&#127881; Getting Started:</strong> After accepting this invitation, you'll be guided through setting up your account and can start exploring the platform immediately.</p>
+        </div>
+        
+        <p style="font-size: 14px; color: #999; margin-top: 30px;">
+          This invitation link will expire in 7 days. If you didn't expect this invitation, you can safely ignore this email.
+        </p>
+      </div>
+      <div class="footer">
+        <p><strong>AI Stock Desk</strong></p>
+        <p>AI-powered stock analysis, sentiment tracking, and virtual options trading</p>
+        <p style="margin-top: 15px;">
+          <a href="{{ .SiteURL }}" style="color: #667eea; text-decoration: none;">Visit Website</a> &bull;
+          <a href="{{ .SiteURL }}/pricing" style="color: #667eea; text-decoration: none;">View Pricing</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
+```
+
 ---
 
 ## Part 2: Create Email Confirmation Callback Page

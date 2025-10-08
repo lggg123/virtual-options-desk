@@ -15,6 +15,7 @@ All email templates styled consistently with proper emoji encoding (using HTML e
 | **Password Reset** | Red Gradient | Forgotten password recovery |
 | **Change Email** | Cyan Gradient | Email address update |
 | **Re-authentication** | Pink Gradient | Security verification |
+| **Invite User** | Green Gradient | Team/organization invitations |
 
 ---
 
@@ -140,6 +141,39 @@ All email templates styled consistently with proper emoji encoding (using HTML e
 
 ---
 
+## 6️⃣ Invite User Email
+
+**When it's sent:** User is invited to join platform or organization  
+**Supabase Template:** "Invite User" (if available)  
+**Button action:** Accepts invitation and creates account  
+**Expiry:** 7 days  
+
+**Color scheme:** Green gradient (💚)  
+**Header:** `&#128640;` (🚀) AI Stock Desk  
+**Icon:** `&#128075;` (👋) You're Invited!  
+
+**Key features:**
+- Shows who invited them ({{ .InviterEmail }})
+- Organization context ({{ .OrganizationName }})
+- Welcome tone, not sales-y
+- Lists platform benefits
+- 7-day expiration (longer for invites)
+- Getting started guidance
+
+**Emoji codes used:**
+- `&#128640;` = 🚀 (rocket)
+- `&#128075;` = 👋 (waving hand)
+- `&#127881;` = 🎉 (party popper)
+- `&#9989;` = ✅ (check mark)
+
+**Variables:**
+- `{{ .ConfirmationURL }}` - Invitation acceptance link
+- `{{ .InviterEmail }}` - Email of person who sent invite
+- `{{ .OrganizationName }}` - Name of organization/team
+- `{{ .SiteURL }}` - Platform URL
+
+---
+
 ## 🎨 Common Design Elements
 
 ### Color Gradients:
@@ -158,6 +192,9 @@ background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 
 /* Re-auth - Pink */
 background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+
+/* Invite User - Green */
+background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 ```
 
 ### Typography:
@@ -227,6 +264,8 @@ Common emojis encoded for email compatibility:
 | ✉️ | `&#9993;&#65039;` | Envelope |
 | 🔔 | `&#128276;` | Bell |
 | 🔐 | `&#128272;` | Locked with key |
+| 👋 | `&#128075;` | Waving hand |
+| 🎉 | `&#127881;` | Party popper |
 | • | `&bull;` | Bullet separator |
 
 ---
@@ -240,6 +279,7 @@ For each template in Supabase Dashboard:
 - [ ] **Password Reset** - Authentication → Email Templates → Reset Password
 - [ ] **Change Email** - Authentication → Email Templates → Change Email Address
 - [ ] **Re-authentication** - Authentication → Email Templates → Reauthenticate (if available)
+- [ ] **Invite User** - Authentication → Email Templates → Invite User (if available)
 
 ### For Each Template:
 1. ✅ Copy full HTML from EMAIL_AUTH_SETUP.md
@@ -283,6 +323,15 @@ For each template in Supabase Dashboard:
 2. Change email address
 3. Check NEW email for cyan-themed template
 4. Click button, should confirm change
+```
+
+### Test Invite User:
+```bash
+1. Use invite functionality (if implemented)
+2. Enter invitee email address
+3. Check their email for green-themed template
+4. Click "Accept Invitation" button
+5. Should redirect to signup/onboarding
 ```
 
 ---
@@ -332,8 +381,21 @@ All templates in this guide use HTML entities, so they should render correctly i
 - ✅ Proper expiration notices
 - ✅ Mobile-responsive design
 
-**Template Count:** 5 complete email templates  
+**Template Count:** 6 complete email templates  
 **Status:** Production-ready  
 **Last Updated:** October 8, 2025  
 
 All templates are copy-paste ready from EMAIL_AUTH_SETUP.md! 🚀
+
+---
+
+## 🎨 Color Palette Reference
+
+Each template has a unique color scheme for quick visual identification:
+
+- 🟣 **Purple** - Signup Confirmation (welcome)
+- 🔵 **Blue** - Magic Link (security/login)
+- 🔴 **Red** - Password Reset (urgent action)
+- 🔵💙 **Cyan** - Change Email (update)
+- 🩷 **Pink** - Re-authentication (verification)
+- 💚 **Green** - Invite User (invitation/welcome)
