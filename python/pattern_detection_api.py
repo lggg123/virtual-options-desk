@@ -38,7 +38,7 @@ async def custom_cors_middleware(request: Request, call_next):
     """
     # Check if this is a WebSocket upgrade request
     if request.headers.get("upgrade") == "websocket":
-        # Pass through without CORS processing
+        # Pass through without CORS processing AND without auth
         return await call_next(request)
     
     # Handle regular HTTP CORS
@@ -48,8 +48,18 @@ async def custom_cors_middleware(request: Request, call_next):
     response.headers["Access-Control-Allow-Headers"] = "*"
     return response
 
-# Add authentication middleware - only for HTTP requests, not WebSockets
-app.middleware("http")(auth_middleware)
+# Custom authentication middleware wrapper that skips WebSocket upgrade requests
+@app.middleware("http")
+async def auth_middleware_wrapper(request: Request, call_next):
+    """
+    Authentication middleware that skips WebSocket upgrade requests
+    """
+    # Skip auth for WebSocket upgrade requests
+    if request.headers.get("upgrade") == "websocket":
+        return await call_next(request)
+    
+    # Apply auth to regular HTTP requests
+    return await auth_middleware(request, call_next)
 
 # Global pattern detector instance
 detector = PatternDetector(use_ml=False)  # Set to True when ML model is trained
