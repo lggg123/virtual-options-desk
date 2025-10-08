@@ -36,9 +36,15 @@ async def custom_cors_middleware(request: Request, call_next):
     """
     Custom CORS middleware that doesn't interfere with WebSocket upgrades
     """
-    # Check if this is a WebSocket upgrade request
-    if request.headers.get("upgrade") == "websocket":
+    # Check if this is a WebSocket upgrade request OR WebSocket path
+    is_websocket_upgrade = request.headers.get("upgrade", "").lower() == "websocket"
+    is_websocket_path = request.url.path.startswith("/ws/")
+    
+    if is_websocket_upgrade or is_websocket_path:
         # Pass through without CORS processing AND without auth
+        print(f"🔵 Allowing WebSocket: upgrade={is_websocket_upgrade}, path={is_websocket_path}")
+        print(f"🔵 Origin: {request.headers.get('origin', 'none')}")
+        print(f"🔵 Path: {request.url.path}")
         return await call_next(request)
     
     # Handle regular HTTP CORS
@@ -46,6 +52,7 @@ async def custom_cors_middleware(request: Request, call_next):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
 
 # Custom authentication middleware wrapper that skips WebSocket upgrade requests
@@ -54,8 +61,12 @@ async def auth_middleware_wrapper(request: Request, call_next):
     """
     Authentication middleware that skips WebSocket upgrade requests
     """
-    # Skip auth for WebSocket upgrade requests
-    if request.headers.get("upgrade") == "websocket":
+    # Skip auth for WebSocket upgrade requests OR WebSocket paths
+    is_websocket_upgrade = request.headers.get("upgrade", "").lower() == "websocket"
+    is_websocket_path = request.url.path.startswith("/ws/")
+    
+    if is_websocket_upgrade or is_websocket_path:
+        print(f"✅ Skipping auth for WebSocket connection")
         return await call_next(request)
     
     # Apply auth to regular HTTP requests
