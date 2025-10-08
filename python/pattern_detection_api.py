@@ -34,17 +34,20 @@ app = FastAPI(
 @app.middleware("http")
 async def custom_cors_middleware(request: Request, call_next):
     """
-    Custom CORS middleware that doesn't interfere with WebSocket upgrades
+    Custom CORS middleware that doesn't interfere with WebSocket upgrades.
+    WebSocket connections are completely unrestricted for now.
     """
     # Check if this is a WebSocket upgrade request OR WebSocket path
     is_websocket_upgrade = request.headers.get("upgrade", "").lower() == "websocket"
     is_websocket_path = request.url.path.startswith("/ws/")
     
     if is_websocket_upgrade or is_websocket_path:
-        # Pass through without CORS processing AND without auth
-        print(f"🔵 Allowing WebSocket: upgrade={is_websocket_upgrade}, path={is_websocket_path}")
+        # COMPLETELY bypass all checks for WebSocket connections
+        print(f"🔵 PUBLIC WebSocket Access: upgrade={is_websocket_upgrade}, path={is_websocket_path}")
         print(f"🔵 Origin: {request.headers.get('origin', 'none')}")
         print(f"🔵 Path: {request.url.path}")
+        print(f"🔵 Host: {request.headers.get('host', 'none')}")
+        # Pass through immediately without ANY processing
         return await call_next(request)
     
     # Handle regular HTTP CORS
@@ -55,21 +58,23 @@ async def custom_cors_middleware(request: Request, call_next):
     response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
 
-# Custom authentication middleware wrapper that skips WebSocket upgrade requests
+# NOTE: Authentication middleware is DISABLED for WebSocket connections
+# WebSocket endpoints (/ws/*) are publicly accessible for external apps
 @app.middleware("http")
 async def auth_middleware_wrapper(request: Request, call_next):
     """
-    Authentication middleware that skips WebSocket upgrade requests
+    Authentication middleware - SKIPS ALL WebSocket connections.
+    WebSocket endpoints are public and do not require authentication.
     """
-    # Skip auth for WebSocket upgrade requests OR WebSocket paths
+    # Skip ALL checks for WebSocket paths - they are PUBLIC
     is_websocket_upgrade = request.headers.get("upgrade", "").lower() == "websocket"
     is_websocket_path = request.url.path.startswith("/ws/")
     
     if is_websocket_upgrade or is_websocket_path:
-        print(f"✅ Skipping auth for WebSocket connection")
+        print(f"✅ PUBLIC WebSocket - NO AUTH REQUIRED")
         return await call_next(request)
     
-    # Apply auth to regular HTTP requests
+    # Apply auth ONLY to regular HTTP API requests (not WebSockets)
     return await auth_middleware(request, call_next)
 
 # Global pattern detector instance
@@ -157,6 +162,22 @@ async def root():
         "ml_enabled": detector.use_ml,
         "patterns_supported": detector.pattern_types
     }
+
+@app.get("/health")
+async def health_check():
+    """Public health check endpoint - no authentication required"""
+    return {
+        "status": "healthy",
+        "service": "pattern-detection-api",
+        "websocket_endpoint": "/ws/live/{symbol}",
+        "websocket_example": "wss://your-domain.railway.app/ws/live/AAPL?timeframe=1d",
+        "authentication": "WebSocket endpoints are PUBLIC - no auth required"
+    }
+
+@app.options("/{full_path:path}")
+async def options_handler():
+    """Handle CORS preflight requests"""
+    return {}
 
 @app.post("/detect", response_model=DetectionResult)
 async def detect_patterns(request_data: PatternDetectionRequest, request: Request, subscription: dict = None):
