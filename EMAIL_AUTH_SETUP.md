@@ -105,12 +105,12 @@ Click on **"Confirm signup"** template and replace the content with this custom 
   <body>
     <div class="container">
       <div class="header">
-        <h1>🚀 AI Stock Desk</h1>
+        <h1>&#128640; AI Stock Desk</h1>
       </div>
       <div class="content">
         <h2>Welcome! Confirm Your Email</h2>
         <p>Thanks for signing up for AI Stock Desk! We're excited to have you on board.</p>
-        <p>To get started with AI-powered stock picks, market sentiment analysis, and virtual options trading, please confirm your email address by clicking the button below:</p>
+        <p>To get started with AI-powered stock analysis and virtual trading practice, please confirm your email address by clicking the button below:</p>
         
         <div style="text-align: center;">
           <a href="{{ .ConfirmationURL }}" class="button">
@@ -119,15 +119,15 @@ Click on **"Confirm signup"** template and replace the content with this custom 
         </div>
         
         <p>Once confirmed, you'll get instant access to:</p>
-        <ul>
-          <li>✅ <strong>$100,000 in virtual trading funds</strong></li>
-          <li>📊 <strong>AI Stock Picks</strong> - Daily recommendations</li>
-          <li>📈 <strong>Market Sentiment Analysis</strong> - Real-time insights</li>
-          <li>💹 <strong>Virtual Options Trading</strong> - Risk-free practice</li>
+        <ul style="list-style: none; padding-left: 0;">
+          <li style="margin-bottom: 10px;">&#9989; <strong>Virtual Trading Practice</strong> - Learn without risk</li>
+          <li style="margin-bottom: 10px;">&#128200; <strong>AI Stock Picks</strong> - Daily market insights</li>
+          <li style="margin-bottom: 10px;">&#128201; <strong>Market Sentiment Analysis</strong> - Real-time data</li>
+          <li style="margin-bottom: 10px;">&#128185; <strong>Options Strategy Tools</strong> - Educational resources</li>
         </ul>
         
         <div class="security-note">
-          <p><strong>⚠️ Security Notice:</strong> If you didn't create an account with AI Stock Desk, please ignore this email or contact support if you're concerned.</p>
+          <p><strong>&#9888;&#65039; Security Notice:</strong> If you didn't create an account with AI Stock Desk, please ignore this email or contact our support team.</p>
         </div>
         
         <p style="font-size: 14px; color: #999; margin-top: 30px;">
@@ -138,7 +138,7 @@ Click on **"Confirm signup"** template and replace the content with this custom 
         <p><strong>AI Stock Desk</strong></p>
         <p>AI-powered stock analysis, sentiment tracking, and virtual options trading</p>
         <p style="margin-top: 15px;">
-          <a href="{{ .SiteURL }}" style="color: #667eea; text-decoration: none;">Visit Dashboard</a> •
+          <a href="{{ .SiteURL }}" style="color: #667eea; text-decoration: none;">Visit Dashboard</a> &bull;
           <a href="{{ .SiteURL }}/pricing" style="color: #667eea; text-decoration: none;">View Pricing</a>
         </p>
       </div>
@@ -178,29 +178,490 @@ You can also customize these templates with similar styling:
 
 **Magic Link Template:**
 ```html
-<!-- Same header/footer as above -->
-<div class="content">
-  <h2>Your Magic Login Link</h2>
-  <p>Click the button below to sign in to your AI Stock Desk account:</p>
-  <div style="text-align: center;">
-    <a href="{{ .ConfirmationURL }}" class="button">Sign In to Dashboard</a>
-  </div>
-  <p style="font-size: 14px; color: #999;">This link expires in 1 hour.</p>
-</div>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .content h2 {
+        color: #333;
+        font-size: 22px;
+        margin-top: 0;
+      }
+      .content p {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.8;
+      }
+      .button {
+        display: inline-block;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 16px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .button:hover {
+        opacity: 0.9;
+      }
+      .footer {
+        background: #f8f9fa;
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid #e9ecef;
+      }
+      .footer p {
+        color: #6c757d;
+        font-size: 14px;
+        margin: 5px 0;
+      }
+      .security-note {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .security-note p {
+        color: #0d47a1;
+        margin: 0;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>&#128640; AI Stock Desk</h1>
+      </div>
+      <div class="content">
+        <h2>&#128274; Your Magic Login Link</h2>
+        <p>You requested a magic link to sign in to your AI Stock Desk account. Click the button below to securely access your dashboard:</p>
+        
+        <div style="text-align: center;">
+          <a href="{{ .ConfirmationURL }}" class="button">
+            Sign In to Dashboard
+          </a>
+        </div>
+        
+        <div class="security-note">
+          <p><strong>&#128274; Secure Login:</strong> This link will log you in automatically without needing your password. Keep it secure!</p>
+        </div>
+        
+        <p style="font-size: 14px; color: #999; margin-top: 30px;">
+          This magic link expires in 1 hour. If you didn't request this, please ignore this email.
+        </p>
+      </div>
+      <div class="footer">
+        <p><strong>AI Stock Desk</strong></p>
+        <p>AI-powered stock analysis, sentiment tracking, and virtual options trading</p>
+        <p style="margin-top: 15px;">
+          <a href="{{ .SiteURL }}" style="color: #667eea; text-decoration: none;">Visit Dashboard</a> &bull;
+          <a href="{{ .SiteURL }}/pricing" style="color: #667eea; text-decoration: none;">View Pricing</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
 ```
 
 **Password Reset Template:**
 ```html
-<div class="content">
-  <h2>Reset Your Password</h2>
-  <p>You requested to reset your password for AI Stock Desk. Click the button below to set a new password:</p>
-  <div style="text-align: center;">
-    <a href="{{ .ConfirmationURL }}" class="button">Reset Password</a>
-  </div>
-  <div class="security-note">
-    <p><strong>⚠️ Security Notice:</strong> If you didn't request this, please ignore this email. Your password will remain unchanged.</p>
-  </div>
-</div>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .content h2 {
+        color: #333;
+        font-size: 22px;
+        margin-top: 0;
+      }
+      .content p {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.8;
+      }
+      .button {
+        display: inline-block;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 16px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .button:hover {
+        opacity: 0.9;
+      }
+      .footer {
+        background: #f8f9fa;
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid #e9ecef;
+      }
+      .footer p {
+        color: #6c757d;
+        font-size: 14px;
+        margin: 5px 0;
+      }
+      .security-note {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .security-note p {
+        color: #856404;
+        margin: 0;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>&#128640; AI Stock Desk</h1>
+      </div>
+      <div class="content">
+        <h2>&#128273; Reset Your Password</h2>
+        <p>You requested to reset your password for AI Stock Desk. Click the button below to set a new password for your account:</p>
+        
+        <div style="text-align: center;">
+          <a href="{{ .ConfirmationURL }}" class="button">
+            Reset Password
+          </a>
+        </div>
+        
+        <div class="security-note">
+          <p><strong>&#9888;&#65039; Security Notice:</strong> If you didn't request this password reset, please ignore this email. Your password will remain unchanged. Consider changing your password if you suspect unauthorized access.</p>
+        </div>
+        
+        <p style="font-size: 14px; color: #999; margin-top: 30px;">
+          This password reset link expires in 1 hour. After that, you'll need to request a new one.
+        </p>
+      </div>
+      <div class="footer">
+        <p><strong>AI Stock Desk</strong></p>
+        <p>AI-powered stock analysis, sentiment tracking, and virtual options trading</p>
+        <p style="margin-top: 15px;">
+          <a href="{{ .SiteURL }}" style="color: #667eea; text-decoration: none;">Visit Dashboard</a> &bull;
+          <a href="{{ .SiteURL }}/pricing" style="color: #667eea; text-decoration: none;">View Pricing</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
+```
+
+**Change Email Address Template:**
+```html
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .content h2 {
+        color: #333;
+        font-size: 22px;
+        margin-top: 0;
+      }
+      .content p {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.8;
+      }
+      .button {
+        display: inline-block;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 16px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .button:hover {
+        opacity: 0.9;
+      }
+      .footer {
+        background: #f8f9fa;
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid #e9ecef;
+      }
+      .footer p {
+        color: #6c757d;
+        font-size: 14px;
+        margin: 5px 0;
+      }
+      .info-box {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .info-box p {
+        color: #0d47a1;
+        margin: 0;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>&#128640; AI Stock Desk</h1>
+      </div>
+      <div class="content">
+        <h2>&#9993;&#65039; Confirm Your New Email Address</h2>
+        <p>You requested to change your email address for your AI Stock Desk account. Please confirm your new email address by clicking the button below:</p>
+        
+        <div style="text-align: center;">
+          <a href="{{ .ConfirmationURL }}" class="button">
+            Confirm New Email
+          </a>
+        </div>
+        
+        <div class="info-box">
+          <p><strong>&#128276; What happens next:</strong> After confirming, your login email will be updated. You'll use this new email address to sign in to AI Stock Desk.</p>
+        </div>
+        
+        <p style="font-size: 14px; color: #999; margin-top: 30px;">
+          This confirmation link expires in 24 hours. If you didn't request this email change, please contact support immediately.
+        </p>
+      </div>
+      <div class="footer">
+        <p><strong>AI Stock Desk</strong></p>
+        <p>AI-powered stock analysis, sentiment tracking, and virtual options trading</p>
+        <p style="margin-top: 15px;">
+          <a href="{{ .SiteURL }}" style="color: #667eea; text-decoration: none;">Visit Dashboard</a> &bull;
+          <a href="{{ .SiteURL }}/pricing" style="color: #667eea; text-decoration: none;">View Pricing</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
+```
+
+**Re-authentication Template:**
+```html
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .content h2 {
+        color: #333;
+        font-size: 22px;
+        margin-top: 0;
+      }
+      .content p {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.8;
+      }
+      .button {
+        display: inline-block;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 16px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .button:hover {
+        opacity: 0.9;
+      }
+      .footer {
+        background: #f8f9fa;
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid #e9ecef;
+      }
+      .footer p {
+        color: #6c757d;
+        font-size: 14px;
+        margin: 5px 0;
+      }
+      .security-note {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .security-note p {
+        color: #856404;
+        margin: 0;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>&#128640; AI Stock Desk</h1>
+      </div>
+      <div class="content">
+        <h2>&#128272; Identity Verification Required</h2>
+        <p>For security purposes, we need to verify your identity before proceeding. Click the button below to re-authenticate and confirm it's really you:</p>
+        
+        <div style="text-align: center;">
+          <a href="{{ .ConfirmationURL }}" class="button">
+            Verify My Identity
+          </a>
+        </div>
+        
+        <div class="security-note">
+          <p><strong>&#128272; Why am I seeing this?</strong> We ask for re-authentication when you're performing sensitive account operations to keep your account secure. This extra step helps protect your trading data and personal information.</p>
+        </div>
+        
+        <p style="font-size: 14px; color: #999; margin-top: 30px;">
+          This verification link expires in 15 minutes. If you didn't initiate this action, please contact support immediately.
+        </p>
+      </div>
+      <div class="footer">
+        <p><strong>AI Stock Desk</strong></p>
+        <p>AI-powered stock analysis, sentiment tracking, and virtual options trading</p>
+        <p style="margin-top: 15px;">
+          <a href="{{ .SiteURL }}" style="color: #667eea; text-decoration: none;">Visit Dashboard</a> &bull;
+          <a href="{{ .SiteURL }}/pricing" style="color: #667eea; text-decoration: none;">View Pricing</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
 ```
 
 ---
