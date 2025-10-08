@@ -333,11 +333,29 @@ async def auth_middleware(request: Request, call_next):
     """
     Middleware to extract user_id from Authorization header
     Expects: Authorization: Bearer <supabase-jwt-token>
+    
+    Bypasses authentication for:
+    - WebSocket endpoints (/ws/)
+    - WebSocket upgrade requests from allowed origins
     """
     # Skip authentication for WebSocket endpoints
     if request.url.path.startswith("/ws/"):
         return await call_next(request)
-
+    
+    # Skip authentication for WebSocket upgrade requests
+    if request.headers.get("upgrade") == "websocket":
+        origin = request.headers.get("origin", "")
+        allowed_origins = [
+            "https://svelte-chart-app.vercel.app",  # Your Vercel deployment
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173"
+        ]
+        if any(origin.startswith(allowed) for allowed in allowed_origins):
+            print(f"✅ Allowing WebSocket upgrade from {origin}")
+            return await call_next(request)
+    
+    # Apply auth for regular HTTP requests
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer ') and supabase:
         token = auth_header.split(' ')[1]
