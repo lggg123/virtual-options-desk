@@ -93,17 +93,40 @@ export default function PricingPage() {
 
   useEffect(() => {
     checkAuth();
-    fetchSubscription();
   }, []);
 
   async function checkAuth() {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Auth check error:', error);
+        setUser(null);
+        return;
+      }
+      setUser(user);
+      
+      // Only fetch subscription if user is authenticated
+      if (user) {
+        await fetchSubscription();
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      setUser(null);
+    }
   }
 
   async function fetchSubscription() {
     try {
-      const res = await fetch('/api/payment/subscription');
+      const res = await fetch('/api/payment/subscription', {
+        credentials: 'include', // Important: include cookies
+      });
+      
+      if (res.status === 401) {
+        // User not authenticated, clear user state
+        setUser(null);
+        return;
+      }
+      
       if (res.ok) {
         const data = await res.json();
         setSubscription(data);
@@ -319,14 +342,24 @@ export default function PricingPage() {
                 <button
                   onClick={() => plan.id === 'free' ? router.push('/signup') : handleSubscribe(plan.id)}
                   disabled={loading === plan.id || isCurrentPlan}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
-                    plan.popular
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
-                      : 'bg-slate-700 hover:bg-slate-600 text-white'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all transform ${
+                    isCurrentPlan
+                      ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                      : plan.popular
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:scale-105 hover:shadow-lg text-white active:scale-100'
+                      : 'bg-slate-700 hover:bg-slate-600 hover:scale-105 hover:shadow-lg text-white active:scale-100'
+                  } ${loading === plan.id ? 'opacity-70 cursor-wait' : ''}`}
                 >
                   {loading === plan.id
-                    ? 'Loading...'
+                    ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading...
+                      </span>
+                    )
                     : isCurrentPlan
                     ? 'Current Plan'
                     : plan.id === 'free'

@@ -33,8 +33,17 @@ export default function DashboardHeader() {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+      }
+      // Force a hard redirect to clear all client state
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Sign out error:', error);
+      window.location.href = '/login';
+    }
   };
 
   const navItems = [

@@ -55,7 +55,15 @@ export default function HomePage() {
                         Portfolio
                       </Link>
                       <button
-                        onClick={() => supabase.auth.signOut()}
+                        onClick={async () => {
+                          try {
+                            await supabase.auth.signOut();
+                            window.location.href = '/login';
+                          } catch (error) {
+                            console.error('Sign out error:', error);
+                            window.location.href = '/login';
+                          }
+                        }}
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition"
                       >
                         Sign Out
