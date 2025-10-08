@@ -158,14 +158,14 @@ Click on **"Confirm signup"** template and replace the content with this custom 
 1. Go to **Authentication** → **URL Configuration**
 2. Set **Site URL** to your production URL:
    ```
-   https://your-domain.vercel.app
+   https://www.marketstockpick.com
    ```
    (Or for local dev: `http://localhost:3000`)
 
 3. Add **Redirect URLs** (comma-separated):
    ```
-   https://your-domain.vercel.app/auth/callback,
-   https://your-domain.vercel.app/dashboard,
+   https://www.marketstockpick.com/auth/callback,
+   https://www.marketstockpick.com/dashboard,
    http://localhost:3000/auth/callback,
    http://localhost:3000/dashboard
    ```
@@ -390,8 +390,9 @@ export default function AuthCallbackPage() {
 
 1. **Go to signup page:**
    ```
-   http://localhost:3000/signup
+   https://www.marketstockpick.com/signup
    ```
+   (Or for local dev: `http://localhost:3000/signup`)
 
 2. **Enter email and password, submit form**
    - Should see: "Check your email for a confirmation link"
@@ -401,12 +402,12 @@ export default function AuthCallbackPage() {
    - Subject: "Confirm Your Signup"
 
 4. **Click "Confirm Email Address" button**
-   - Redirects to: `/auth/callback`
+   - Redirects to: `https://www.marketstockpick.com/auth/callback`
    - Shows: "Email Confirmed!" with green checkmark
    - Auto-redirects to dashboard after 2 seconds
 
 5. **Verify dashboard access**
-   - Should be logged in
+   - Should be logged in at: `https://www.marketstockpick.com/dashboard`
    - Should see $100,000 starting balance
 
 ### Test Error Cases
