@@ -4,7 +4,6 @@ Exposes pattern detection endpoints for Flutter app and Svelte chart app
 """
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import pandas as pd
@@ -31,15 +30,23 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware - Allow all origins for WebSocket compatibility
-# Note: CORS doesn't apply to WebSocket connections in the traditional sense
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
-    allow_credentials=False,  # Must be False when allow_origins=["*"]
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Custom middleware to handle CORS without breaking WebSockets
+@app.middleware("http")
+async def custom_cors_middleware(request: Request, call_next):
+    """
+    Custom CORS middleware that doesn't interfere with WebSocket upgrades
+    """
+    # Check if this is a WebSocket upgrade request
+    if request.headers.get("upgrade") == "websocket":
+        # Pass through without CORS processing
+        return await call_next(request)
+    
+    # Handle regular HTTP CORS
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 
 # Add authentication middleware - only for HTTP requests, not WebSockets
 app.middleware("http")(auth_middleware)
