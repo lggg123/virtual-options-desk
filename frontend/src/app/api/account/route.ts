@@ -2,6 +2,18 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 
+// TypeScript interface for user_accounts table
+interface UserAccount {
+  id: string;
+  user_id: string;
+  cash_balance: number;
+  portfolio_value: number;
+  total_pnl: number;
+  total_pnl_percent: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // Service role client for admin operations (bypasses RLS)
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,20 +36,18 @@ export async function GET() {
       );
     }
 
-    // Fetch user account using admin client (bypasses RLS, TypeScript types)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // Fetch user account using admin client (bypasses RLS)
     const { data: account, error: accountError } = await supabaseAdmin
-      .from('user_accounts' as any)
-      .select('*')
+      .from('user_accounts')
+      .select<'*', UserAccount>('*')
       .eq('user_id', user.id)
       .single();
 
     if (accountError) {
       // If account doesn't exist, create one
       if (accountError.code === 'PGRST116') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: newAccount, error: createError } = await supabaseAdmin
-          .from('user_accounts' as any)
+          .from('user_accounts')
           .insert({
             user_id: user.id,
             cash_balance: 100000.00,
@@ -45,7 +55,7 @@ export async function GET() {
             total_pnl: 0.00,
             total_pnl_percent: 0.00
           })
-          .select()
+          .select<'*', UserAccount>('*')
           .single();
 
         if (createError) {
