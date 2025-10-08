@@ -128,6 +128,37 @@ const PLANS: Record<string, SubscriptionPlan> = {
 
 // ==================== ROUTES ====================
 
+// Root route - welcome message
+fastify.get('/', async (request, reply) => {
+  reply.code(200).send({
+    service: 'AI Stock Picks - Payment API',
+    version: '1.0.0',
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      plans: '/api/plans',
+      checkout: 'POST /api/checkout/create',
+      subscription: '/api/subscription/:userId',
+      portal: 'POST /api/portal/create',
+      webhook: 'POST /api/webhook/stripe'
+    },
+    stripe: {
+      configured: !!process.env.STRIPE_SECRET_KEY,
+      webhookConfigured: !!process.env.STRIPE_WEBHOOK_SECRET,
+      priceIds: {
+        premium: !!process.env.STRIPE_PREMIUM_PRICE_ID,
+        pro: !!process.env.STRIPE_PRO_PRICE_ID,
+        premiumYearly: !!process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID,
+        proYearly: !!process.env.STRIPE_PRO_YEARLY_PRICE_ID
+      }
+    },
+    supabase: {
+      configured: !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    }
+  });
+});
+
 // Health check - simple and fast for Railway
 fastify.get('/health', async (request, reply) => {
   reply.code(200).send({
