@@ -115,8 +115,8 @@ export default function PricingPage() {
 
   async function handleSubscribe(planId: string) {
     if (!user) {
-      // Redirect to sign up
-      router.push('/signup?redirect=/pricing');
+      // Redirect to login
+      router.push('/login?redirect=/pricing');
       return;
     }
 

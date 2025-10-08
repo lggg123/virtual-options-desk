@@ -36,9 +36,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                OptionSim
-              </h1>
+              <img src="/logo.svg" alt="AI Stock Desk Logo" className="h-10 w-10 mr-3" />
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">AI Stock Desk</span>
             </div>
             <div className="flex items-center space-x-4">
               {!loading && (
@@ -84,27 +83,22 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="mb-8 inline-flex items-center px-3 py-1 rounded-full bg-purple-900/30 border border-purple-700/50">
-            <Zap className="w-4 h-4 mr-2 text-purple-400" />
-            <span className="text-sm text-purple-300">Real-time options pricing with Black-Scholes</span>
+          <div className="mb-8 inline-flex items-center px-3 py-1 rounded-full bg-blue-900/30 border border-blue-700/50">
+            <Zap className="w-4 h-4 mr-2 text-blue-400" />
+            <span className="text-sm text-blue-200">AI-powered stock picks, options simulation, and market sentiment</span>
           </div>
-          
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            Master Options Trading
-            <br />Without the Risk
+            Your AI-Powered Stock & Options Desk
           </h1>
-          
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            Practice options strategies, understand Greeks, and build your trading skills with $100,000 
-            in virtual capital. Real market dynamics, zero financial risk.
+            Discover top AI stock picks, analyze real-time market sentiment, and practice options trading with $100,000 in virtual capital. All in one platform—no risk, just learning and growth.
           </p>
-          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleGetStarted}
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg font-semibold text-lg flex items-center justify-center transition transform hover:scale-105"
             >
-              Start Trading Now
+              Get Started Free
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
             <Link
@@ -114,23 +108,22 @@ export default function HomePage() {
               Learn More
             </Link>
           </div>
-          
           {/* Live Stats */}
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
               <TrendingUp className="w-8 h-8 text-green-500 mb-2 mx-auto" />
-              <h3 className="text-2xl font-bold">24/7</h3>
-              <p className="text-gray-400">Market Simulation</p>
+              <h3 className="text-2xl font-bold">AI Picks</h3>
+              <p className="text-gray-400">Top stocks daily</p>
             </div>
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
-              <DollarSign className="w-8 h-8 text-blue-500 mb-2 mx-auto" />
+              <BarChart3 className="w-8 h-8 text-blue-500 mb-2 mx-auto" />
+              <h3 className="text-2xl font-bold">Sentiment</h3>
+              <p className="text-gray-400">Market mood in real-time</p>
+            </div>
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
+              <DollarSign className="w-8 h-8 text-purple-500 mb-2 mx-auto" />
               <h3 className="text-2xl font-bold">$100K</h3>
-              <p className="text-gray-400">Starting Capital</p>
-            </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
-              <BarChart3 className="w-8 h-8 text-purple-500 mb-2 mx-auto" />
-              <h3 className="text-2xl font-bold">Real-time</h3>
-              <p className="text-gray-400">Greeks & Analytics</p>
+              <p className="text-gray-400">Virtual trading funds</p>
             </div>
           </div>
         </div>
@@ -140,47 +133,43 @@ export default function HomePage() {
       <section id="features" className="py-20 px-4 bg-gray-900/50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-16">
-            Everything You Need to
-            <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              {' '}Master Options
-            </span>
+            All-in-One AI Stock & Options Platform
           </h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard
               icon={<TrendingUp className="w-8 h-8" />}
-              title="Real-time Pricing"
-              description="Black-Scholes pricing engine with live Greeks calculation. See how option prices change with market movements."
+              title="AI Stock Picks"
+              description="Get daily AI-powered stock recommendations based on real market data and trends."
               gradient="from-green-600 to-emerald-600"
             />
             <FeatureCard
-              icon={<Shield className="w-8 h-8" />}
-              title="Risk-Free Trading"
-              description="Practice with virtual money. Test strategies, learn from mistakes, all without risking real capital."
+              icon={<BarChart3 className="w-8 h-8" />}
+              title="Market Sentiment"
+              description="Analyze real-time market mood and sentiment indicators to inform your trades."
               gradient="from-blue-600 to-cyan-600"
             />
             <FeatureCard
-              icon={<BarChart3 className="w-8 h-8" />}
-              title="Advanced Analytics"
-              description="Track your P&L, analyze your trades, and understand your risk exposure with professional tools."
+              icon={<DollarSign className="w-8 h-8" />}
+              title="Virtual Options Trading"
+              description="Practice options strategies with $100,000 in virtual funds. No risk, just learning."
               gradient="from-purple-600 to-pink-600"
             />
             <FeatureCard
               icon={<BookOpen className="w-8 h-8" />}
-              title="Educational Resources"
-              description="Learn options strategies, understand the Greeks, and master volatility with built-in tutorials."
+              title="Education & Tutorials"
+              description="Learn options, stocks, and sentiment analysis with built-in guides and resources."
               gradient="from-orange-600 to-red-600"
             />
             <FeatureCard
               icon={<Zap className="w-8 h-8" />}
-              title="Multi-leg Strategies"
-              description="Build complex strategies like iron condors, butterflies, and custom spreads with ease."
+              title="Advanced Analytics"
+              description="Track your P&L, analyze trades, and understand risk with professional tools."
               gradient="from-yellow-600 to-orange-600"
             />
             <FeatureCard
               icon={<Users className="w-8 h-8" />}
-              title="Compete & Learn"
-              description="Join trading competitions, compare strategies with others, and climb the leaderboard."
+              title="Community & Competition"
+              description="Join competitions, compare strategies, and learn with others."
               gradient="from-indigo-600 to-purple-600"
             />
           </div>

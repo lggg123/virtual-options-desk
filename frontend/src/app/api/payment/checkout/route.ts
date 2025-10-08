@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 
 const PAYMENT_API_URL = process.env.PAYMENT_API_URL || 'http://localhost:3001';
 
@@ -17,14 +18,15 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Get authenticated user
+    // Get authenticated user using cookies
+    const cookieStore = await cookies();
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         global: {
           headers: {
-            Authorization: request.headers.get('Authorization') || '',
+            cookie: cookieStore.toString(),
           },
         },
       }

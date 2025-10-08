@@ -3,11 +3,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/DashboardHeader';
+import DashboardMetrics from '@/components/DashboardMetrics';
 import OptionsChain from '@/components/OptionsChain';
 import PortfolioOverview from '@/components/PortfolioOverview';
 import RecentTrades from '@/components/RecentTrades';
 import MarketData from '@/components/MarketData';
-import { TrendingUp, TrendingDown, DollarSign, Activity } from 'lucide-react';
 
 export default function DashboardPage() {
   return (
@@ -15,66 +15,8 @@ export default function DashboardPage() {
       <DashboardHeader />
       
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Key Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">$45,231.89</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+2.5%</span> from last month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Daily P&L</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">+$1,234.56</div>
-              <div className="flex items-center justify-between mt-2">
-                <Badge variant="default" className="bg-green-100 text-green-800">
-                  +3.2% today
-                </Badge>
-                <Button variant="ghost" size="sm">
-                  View Details
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Open Positions</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">23</div>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="secondary">12 Calls</Badge>
-                <Badge variant="outline">11 Puts</Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Greeks Delta</CardTitle>
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">-0.15</div>
-              <p className="text-xs text-muted-foreground">
-                Portfolio delta exposure
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Key Metrics Cards - Now using real data */}
+        <DashboardMetrics />
 
         {/* Main Dashboard Content */}
         <div className="flex justify-between items-center mb-4">

@@ -1,38 +1,32 @@
 import { NextResponse } from 'next/server';
+import { createSupabaseServer } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
+// Service role client for admin operations (bypasses RLS)
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    // Get authorization header
-    const authHeader = request.headers.get('Authorization');
+    // Use server-side Supabase client that reads from cookies
+    const supabase = await createSupabaseServer();
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Get user from token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    // Fetch user account
-    const { data: account, error: accountError } = await supabase
-      .from('user_accounts')
+    // Fetch user account using admin client (bypasses RLS, TypeScript types)
+    const { data: account, error: accountError } = await supabaseAdmin
+      .from('user_accounts' as any)
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -40,8 +34,8 @@ export async function GET(request: Request) {
     if (accountError) {
       // If account doesn't exist, create one
       if (accountError.code === 'PGRST116') {
-        const { data: newAccount, error: createError } = await supabase
-          .from('user_accounts')
+        const { data: newAccount, error: createError } = await supabaseAdmin
+          .from('user_accounts' as any)
           .insert({
             user_id: user.id,
             cash_balance: 100000.00,
