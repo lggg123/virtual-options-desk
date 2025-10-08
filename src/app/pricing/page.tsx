@@ -123,6 +123,7 @@ export default function PricingPage() {
     setLoading(planId);
 
     try {
+      console.log('Creating checkout session for plan:', planId);
       const res = await fetch('/api/payment/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,16 +133,25 @@ export default function PricingPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to create checkout session');
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Checkout API error:', res.status, errorData);
+        throw new Error(errorData.error || `Failed to create checkout session (${res.status})`);
       }
 
-      const { url } = await res.json();
+      const data = await res.json();
+      console.log('Checkout session created:', data);
+      
+      if (!data.url) {
+        console.error('No checkout URL in response:', data);
+        throw new Error('No checkout URL received. Please contact support.');
+      }
 
       // Redirect to Stripe Checkout
-      window.location.href = url;
+      window.location.href = data.url;
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Failed to start checkout. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start checkout. Please try again.';
+      alert(`Error: ${errorMessage}\n\nIf this persists, please ensure the payment service is running.`);
       setLoading(null);
     }
   }

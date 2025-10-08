@@ -8,11 +8,13 @@
   "scripts": {
     "dev": "bun run --parallel dev:*",
     "dev:frontend": "cd frontend && bun run dev",
+    "dev:payment": "cd payment-api && bun run dev",
     "dev:crewai": "cd crewai-service && python3 -m uvicorn main:app --reload --port 8001",
     "build": "bun run build:frontend",
     "build:frontend": "cd frontend && bun run build",
     "start": "bun run --parallel start:*",
     "start:frontend": "cd frontend && bun run start",
+    "start:payment": "cd payment-api && bun run start",
     "start:crewai": "cd crewai-service && python3 main.py",
     "test": "bun run test:frontend",
     "test:frontend": "cd frontend && bun run test",
