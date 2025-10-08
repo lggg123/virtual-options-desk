@@ -66,6 +66,7 @@ ALTER TABLE user_trades ENABLE ROW LEVEL SECURITY;
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Users can view own account" ON user_accounts;
 DROP POLICY IF EXISTS "Users can update own account" ON user_accounts;
+DROP POLICY IF EXISTS "Service role can insert accounts" ON user_accounts;
 DROP POLICY IF EXISTS "Users can view own positions" ON user_positions;
 DROP POLICY IF EXISTS "Users can insert own positions" ON user_positions;
 DROP POLICY IF EXISTS "Users can update own positions" ON user_positions;
@@ -79,6 +80,10 @@ CREATE POLICY "Users can view own account" ON user_accounts
 
 CREATE POLICY "Users can update own account" ON user_accounts
   FOR UPDATE USING (auth.uid() = user_id);
+
+-- CRITICAL: Allow service role and triggers to INSERT (needed for auto-account creation)
+CREATE POLICY "Service role can insert accounts" ON user_accounts
+  FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Users can view own positions" ON user_positions
   FOR SELECT USING (auth.uid() = user_id);
@@ -100,13 +105,21 @@ CREATE POLICY "Users can insert own trades" ON user_trades
 
 -- Function to create account on user signup
 CREATE OR REPLACE FUNCTION create_user_account()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
-  INSERT INTO user_accounts (user_id, cash_balance, portfolio_value)
-  VALUES (NEW.id, 100000.00, 100000.00);
+  INSERT INTO public.user_accounts (user_id, cash_balance, portfolio_value, total_pnl, total_pnl_percent)
+  VALUES (NEW.id, 100000.00, 100000.00, 0.00, 0.00);
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log error but don't block user creation
+    RAISE LOG 'Error in create_user_account trigger: %', SQLERRM;
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 -- Trigger to auto-create account when user signs up
 -- Drop existing trigger if it exists
