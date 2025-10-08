@@ -155,11 +155,28 @@ fastify.post<{
 }>('/api/checkout/create', async (request, reply) => {
   const { planId, userId, successUrl, cancelUrl } = request.body;
 
+  // Map frontend plan IDs to backend plan IDs
+  const planIdMap: Record<string, string> = {
+    'premium': 'premium',
+    'pro': 'pro',
+    'premium_yearly': 'premiumYear',
+    'pro_yearly': 'proYear',
+  };
+
+  const mappedPlanId = planIdMap[planId] || planId;
+  
   // Validate plan
-  const plan = PLANS[planId];
-  if (!plan || planId === 'free') {
-    return reply.code(400).send({ error: 'Invalid plan ID' });
+  const plan = PLANS[mappedPlanId];
+  if (!plan || mappedPlanId === 'free') {
+    request.log.error({ planId, mappedPlanId }, 'Invalid plan ID');
+    return reply.code(400).send({ 
+      error: 'Invalid plan ID',
+      requestedPlan: planId,
+      availablePlans: Object.keys(PLANS)
+    });
   }
+  
+  request.log.info({ planId, mappedPlanId, stripePriceId: plan.stripePriceId }, 'Creating checkout session');
 
   // Check if user already has subscription
   const { data: existingSub } = await supabase
@@ -174,6 +191,15 @@ fastify.post<{
   }
 
   try {
+    // Check if Stripe price ID is configured
+    if (!plan.stripePriceId) {
+      request.log.error({ plan: mappedPlanId }, 'Stripe price ID not configured for plan');
+      return reply.code(500).send({ 
+        error: 'Plan not configured. Please set up Stripe price IDs.',
+        plan: mappedPlanId
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -188,20 +214,24 @@ fastify.post<{
       client_reference_id: userId,
       metadata: {
         userId,
-        planId,
+        planId: mappedPlanId,
       },
       subscription_data: {
         metadata: {
           userId,
-          planId,
+          planId: mappedPlanId,
         },
       },
     });
 
+    request.log.info({ sessionId: session.id }, 'Checkout session created successfully');
     return { sessionId: session.id, url: session.url };
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Failed to create checkout session' });
+    request.log.error(error, 'Failed to create checkout session');
+    return reply.code(500).send({ 
+      error: 'Failed to create checkout session',
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 

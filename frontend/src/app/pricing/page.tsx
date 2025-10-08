@@ -132,16 +132,25 @@ export default function PricingPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to create checkout session');
+        const errorData = await res.json();
+        console.error('Checkout error response:', errorData);
+        throw new Error(errorData.error || 'Failed to create checkout session');
       }
 
-      const { url } = await res.json();
+      const data = await res.json();
+      console.log('Checkout response:', data);
+      
+      if (!data.url) {
+        console.error('No URL in response:', data);
+        throw new Error('No checkout URL received');
+      }
 
       // Redirect to Stripe Checkout
-      window.location.href = url;
+      window.location.href = data.url;
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Failed to start checkout. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start checkout. Please try again.';
+      alert(errorMessage);
       setLoading(null);
     }
   }
