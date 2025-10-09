@@ -1,6 +1,28 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
+
 export default function DiagnosePage() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+      if (error) console.error('Auth error:', error);
+    } catch (err) {
+      console.error('Error checking user:', err);
+      setLoading(false);
+    }
+  };
+
   const testFetch = async () => {
     try {
       const res = await fetch('/api/payment/health');
@@ -12,6 +34,11 @@ export default function DiagnosePage() {
   };
 
   const testCheckout = async () => {
+    if (!user) {
+      alert('❌ You must be logged in to test checkout!\n\nPlease login first at /login');
+      return;
+    }
+    
     try {
       const res = await fetch('/api/payment/checkout', {
         method: 'POST',
@@ -44,8 +71,35 @@ export default function DiagnosePage() {
           🔍 Ultra-Simple Diagnostics
         </h1>
         <p style={{ marginBottom: '2rem', opacity: 0.8 }}>
-          This page has ZERO dependencies - it will always work!
+          This page checks your authentication and payment API connection!
         </p>
+
+        {/* User Status */}
+        <div style={{
+          padding: '1rem',
+          backgroundColor: user ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)',
+          borderRadius: '8px',
+          marginBottom: '1.5rem',
+          border: user ? '2px solid #4CAF50' : '2px solid #f44336'
+        }}>
+          <h2 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>
+            {loading ? '⏳ Checking...' : user ? '✅ Logged In' : '❌ Not Logged In'}
+          </h2>
+          {!loading && (
+            <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+              {user ? (
+                <>
+                  <strong>Email:</strong> {user.email}<br/>
+                  <strong>User ID:</strong> {user.id?.substring(0, 20)}...
+                </>
+              ) : (
+                <>
+                  You need to <a href="/login" style={{ color: '#4CAF50', textDecoration: 'underline' }}>login first</a> to test checkout!
+                </>
+              )}
+            </p>
+          )}
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <button
@@ -66,18 +120,20 @@ export default function DiagnosePage() {
 
           <button
             onClick={testCheckout}
+            disabled={!user}
             style={{
               padding: '1rem',
-              backgroundColor: '#2196F3',
+              backgroundColor: user ? '#2196F3' : '#666',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
               fontSize: '1rem',
-              cursor: 'pointer',
-              fontWeight: 'bold'
+              cursor: user ? 'pointer' : 'not-allowed',
+              fontWeight: 'bold',
+              opacity: user ? 1 : 0.6
             }}
           >
-            Test Checkout Endpoint
+            Test Checkout Endpoint {!user && '(Login Required)'}
           </button>
 
           <button

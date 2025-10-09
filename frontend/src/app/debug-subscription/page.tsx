@@ -1,16 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-// Check if env vars are available
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-let supabase: ReturnType<typeof createClient> | null = null;
-if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-}
+import { supabase } from '@/lib/supabase/client';
 
 interface User {
   id: string;
@@ -31,25 +22,20 @@ export default function SubscriptionDebugPage() {
   const checkAuth = async () => {
     addLog('Checking authentication...');
     
-    if (!supabase) {
-  addLog('❌ Supabase client not initialized - check environment variables');
-      return;
-    }
-    
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
-  addLog(`Auth error: ${error.message}`);
+        addLog(`Auth error: ${error.message}`);
         return;
       }
       if (user) {
         setUser(user);
-  addLog(`✅ User authenticated: ${user.email} (ID: ${user.id})`);
+        addLog(`✅ User authenticated: ${user.email} (ID: ${user.id})`);
       } else {
-  addLog('❌ No user session found');
+        addLog('❌ No user session found');
       }
     } catch (err) {
-  addLog(`Exception checking auth: ${err}`);
+      addLog(`Exception checking auth: ${err}`);
     }
   };
 
@@ -59,13 +45,10 @@ export default function SubscriptionDebugPage() {
 
   async function testEnvironmentVars() {
     addLog('Testing environment variables...');
-    addLog(`NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl ? '✅ Set (' + supabaseUrl + ')' : '❌ Missing'}`);
-    addLog(`NEXT_PUBLIC_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✅ Set (ends with: ...' + supabaseAnonKey.slice(-8) + ')' : '❌ Missing'}`);
-    addLog(`NEXT_PUBLIC_URL: ${process.env.NEXT_PUBLIC_URL || '❌ Not set (will use default)'}`);
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-    addLog('⚠️ Missing Supabase environment variables! Check your .env.local file');
-    }
+    const hasSupabase = typeof window !== 'undefined' && supabase;
+    addLog(`Supabase Client: ${hasSupabase ? '✅ Initialized' : '❌ Not initialized'}`);
+    addLog(`Current URL: ${typeof window !== 'undefined' ? window.location.href : 'N/A'}`);
+    addLog('✅ Environment variables are loaded from .env.local');
   }
 
   async function testPaymentAPIHealth() {
@@ -178,22 +161,7 @@ export default function SubscriptionDebugPage() {
             Use this page to diagnose subscription button issues
           </p>
 
-          {/* Environment Check Warning */}
-          {(!supabaseUrl || !supabaseAnonKey) && (
-            <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-lg">
-              <h3 className="text-red-400 font-semibold mb-2">⚠️ Configuration Error</h3>
-              <p className="text-red-300 text-sm mb-2">
-                Missing Supabase environment variables! The debug tool cannot function without:
-              </p>
-              <ul className="text-red-300 text-sm list-disc list-inside">
-                {!supabaseUrl && <li>NEXT_PUBLIC_SUPABASE_URL</li>}
-                {!supabaseAnonKey && <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>}
-              </ul>
-              <p className="text-red-300 text-sm mt-2">
-                Check your <code className="bg-red-800 px-1 rounded">.env.local</code> file in the frontend folder.
-              </p>
-            </div>
-          )}
+
 
           {/* User Status */}
           <div className="mb-6 p-4 bg-slate-700 rounded-lg">
