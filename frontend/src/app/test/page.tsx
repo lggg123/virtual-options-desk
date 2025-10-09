@@ -1,3 +1,5 @@
+'use client';
+
 export default function TestPage() {
   return (
     <div style={{ padding: '2rem', backgroundColor: '#1a1a2e', minHeight: '100vh', color: 'white' }}>
