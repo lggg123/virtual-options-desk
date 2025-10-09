@@ -62,9 +62,9 @@ const PLANS: Record<string, SubscriptionPlan> = {
     features: ['10 AI stock picks/month', 'Basic pattern detection', 'Community support'],
     stripePriceId: '', // No Stripe price for free plan
   },
-  premium: {
-    id: 'premium',
-    name: 'Premium',
+  pro: {
+    id: 'pro',
+    name: 'Pro',
     price: 29,
     interval: 'month',
     features: [
@@ -74,11 +74,11 @@ const PLANS: Record<string, SubscriptionPlan> = {
       'Real-time alerts',
       'Priority support',
     ],
-    stripePriceId: process.env.STRIPE_PREMIUM_PRICE_ID!,
+    stripePriceId: process.env.STRIPE_PRO_PRICE_ID!,
   },
-  pro: {
-    id: 'pro',
-    name: 'Pro',
+  premium: {
+    id: 'premium',
+    name: 'Premium',
     price: 99,
     interval: 'month',
     features: [
@@ -90,11 +90,11 @@ const PLANS: Record<string, SubscriptionPlan> = {
       'API access',
       '24/7 Priority support',
     ],
-    stripePriceId: process.env.STRIPE_PRO_PRICE_ID!,
+    stripePriceId: process.env.STRIPE_PREMIUM_PRICE_ID!,
   },
-  premiumYear: {
-    id: 'premium-yearly',
-    name: 'Premium (Yearly)',
+  proYear: {
+    id: 'pro-yearly',
+    name: 'Pro (Yearly)',
     price: 290, // 2 months free
     interval: 'year',
     features: [
@@ -105,11 +105,11 @@ const PLANS: Record<string, SubscriptionPlan> = {
       'Priority support',
       '2 months free',
     ],
-    stripePriceId: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID!,
+    stripePriceId: process.env.STRIPE_PRO_YEARLY_PRICE_ID!,
   },
-  proYear: {
-    id: 'pro-yearly',
-    name: 'Pro (Yearly)',
+  premiumYear: {
+    id: 'premium-yearly',
+    name: 'Premium (Yearly)',
     price: 990, // 2 months free
     interval: 'year',
     features: [
@@ -122,7 +122,7 @@ const PLANS: Record<string, SubscriptionPlan> = {
       '24/7 Priority support',
       '2 months free',
     ],
-    stripePriceId: process.env.STRIPE_PRO_YEARLY_PRICE_ID!,
+    stripePriceId: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID!,
   },
 };
 

@@ -33,8 +33,8 @@ const plans: PricingPlan[] = [
     ]
   },
   {
-    id: 'premium',
-    name: 'Premium',
+    id: 'pro',
+    name: 'Pro',
     price: 29,
     interval: 'month',
     description: 'For serious traders',
@@ -51,8 +51,8 @@ const plans: PricingPlan[] = [
     ]
   },
   {
-    id: 'pro',
-    name: 'Pro',
+    id: 'premium',
+    name: 'Premium',
     price: 99,
     interval: 'month',
     description: 'For professional traders',

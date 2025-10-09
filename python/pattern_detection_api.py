@@ -1,6 +1,7 @@
 """
 FastAPI service for AI Candlestick Pattern Detection
 Exposes pattern detection endpoints for Flutter app and Svelte chart app to it
+
 """
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
