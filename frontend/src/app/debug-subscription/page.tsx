@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
 interface User {
@@ -13,13 +13,13 @@ export default function SubscriptionDebugPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const addLog = (message: string) => {
+  const addLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
     console.log(`[${timestamp}] ${message}`);
-  };
+  }, []);
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     addLog('Checking authentication...');
     
     try {
@@ -49,7 +49,7 @@ export default function SubscriptionDebugPage() {
     } catch (err) {
       addLog(`Exception checking auth: ${err}`);
     }
-  };
+  }, [addLog]);
 
   useEffect(() => {
     // Check auth immediately
@@ -70,7 +70,7 @@ export default function SubscriptionDebugPage() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [checkAuth, addLog]);
 
   async function testEnvironmentVars() {
     addLog('Testing environment variables...');

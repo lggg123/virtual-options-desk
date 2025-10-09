@@ -50,7 +50,8 @@ export default function PortfolioPage() {
             total_return: 0
           });
         } else {
-          // Merge profile data with user data
+          // Use profile data if available, with defaults as fallback
+          console.log('Profile loaded:', profile);
           setUserProfile({
             id: user.id,
             email: user.email,
