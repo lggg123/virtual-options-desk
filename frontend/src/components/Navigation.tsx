@@ -33,14 +33,24 @@ export default function Navigation() {
 
   const handleSignOut = async () => {
     try {
+      console.log('Starting sign out...');
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
+        // Even if there's an error, still redirect to clear client state
+      } else {
+        console.log('Sign out successful');
+      }
+      // Clear any local storage
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
       }
       // Force a hard redirect to clear all client state
       window.location.href = '/login';
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error('Sign out exception:', error);
+      // Force redirect anyway
       window.location.href = '/login';
     }
   };

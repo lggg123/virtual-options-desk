@@ -130,21 +130,24 @@ export default function PricingPage() {
   }
 
   async function handleSubscribe(planId: string) {
-    console.log('handleSubscribe called with planId:', planId);
-    console.log('Current user:', user);
+    console.log('🛒 handleSubscribe called with planId:', planId);
+    console.log('👤 Current user:', user);
     
     if (!user) {
       // Redirect to login
-      console.log('No user, redirecting to login');
+      console.log('❌ No user authenticated, redirecting to login');
+      alert('Please log in to subscribe');
       router.push('/login?redirect=/pricing');
       return;
     }
 
     setLoading(planId);
+    console.log('⏳ Loading state set for plan:', planId);
 
     try {
       const finalPlanId = billingInterval === 'year' ? `${planId}_yearly` : planId;
-      console.log('Sending checkout request for plan:', finalPlanId);
+      console.log('📦 Sending checkout request for plan:', finalPlanId);
+      console.log('🍪 Including credentials in request');
       
       const res = await fetch('/api/payment/checkout', {
         method: 'POST',
@@ -155,29 +158,29 @@ export default function PricingPage() {
         })
       });
 
-      console.log('Checkout response status:', res.status);
+      console.log('📡 Checkout response status:', res.status);
 
       if (!res.ok) {
-        const errorData = await res.json();
-        console.error('Checkout error response:', errorData);
-        throw new Error(errorData.error || 'Failed to create checkout session');
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Checkout error response:', errorData);
+        throw new Error(errorData.error || `Server error: ${res.status}`);
       }
 
       const data = await res.json();
-      console.log('Checkout response data:', data);
+      console.log('✅ Checkout response data:', data);
       
       if (!data.url) {
-        console.error('No URL in response:', data);
-        throw new Error('No checkout URL received');
+        console.error('❌ No URL in response:', data);
+        throw new Error('No checkout URL received from server');
       }
 
       // Redirect to Stripe Checkout
-      console.log('Redirecting to Stripe checkout:', data.url);
+      console.log('🚀 Redirecting to Stripe checkout:', data.url);
       window.location.href = data.url;
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error('💥 Checkout error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to start checkout. Please try again.';
-      alert(`❌ Checkout Error:\n\n${errorMessage}\n\nCheck browser console (F12) for details.`);
+      alert(`❌ Checkout Error:\n\n${errorMessage}\n\nPlease check:\n1. You are logged in\n2. Browser console (F12) for details\n3. Payment API is running`);
       setLoading(null);
     }
   }
@@ -346,12 +349,14 @@ export default function PricingPage() {
                 <button
                   onClick={() => plan.id === 'free' ? router.push('/signup') : handleSubscribe(plan.id)}
                   disabled={loading === plan.id || isCurrentPlan}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all transform ${
+                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all transform duration-200 ${
                     isCurrentPlan
                       ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                       : plan.popular
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:scale-105 hover:shadow-lg text-white active:scale-100'
-                      : 'bg-slate-700 hover:bg-slate-600 hover:scale-105 hover:shadow-lg text-white active:scale-100'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 text-white active:scale-100'
+                      : plan.id === 'pro'
+                      ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/50 text-white active:scale-100'
+                      : 'bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 hover:scale-105 hover:shadow-xl hover:shadow-slate-500/30 text-white active:scale-100'
                   } ${loading === plan.id ? 'opacity-70 cursor-wait' : ''}`}
                 >
                   {loading === plan.id
