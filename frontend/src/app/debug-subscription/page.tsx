@@ -7,28 +7,28 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-let supabase: any = null;
+let supabase: ReturnType<typeof createClient> | null = null;
 if (supabaseUrl && supabaseAnonKey) {
   supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
 
+interface User {
+  id: string;
+  email?: string;
+}
+
 export default function SubscriptionDebugPage() {
   const [logs, setLogs] = useState<string[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const addLog = (message: string, type: 'info' | 'error' | 'success' = 'info') => {
+  const addLog = (message: string, _type: 'info' | 'error' | 'success' = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
-    const colorClass = type === 'error' ? 'text-red-400' : type === 'success' ? 'text-green-400' : 'text-blue-400';
     setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
     console.log(`[${timestamp}] ${message}`);
   };
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  async function checkAuth() {
+  const checkAuth = async () => {
     addLog('Checking authentication...');
     
     if (!supabase) {
@@ -51,7 +51,11 @@ export default function SubscriptionDebugPage() {
     } catch (err) {
       addLog(`Exception checking auth: ${err}`, 'error');
     }
-  }
+  };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   async function testEnvironmentVars() {
     addLog('Testing environment variables...');
@@ -276,7 +280,7 @@ export default function SubscriptionDebugPage() {
           <div className="mt-6 p-4 bg-slate-700 rounded-lg">
             <h3 className="text-lg font-semibold text-white mb-2">How to Use:</h3>
             <ol className="text-gray-300 space-y-2 list-decimal list-inside">
-              <li>Make sure you're logged in</li>
+              <li>Make sure you&apos;re logged in</li>
               <li>Click each test button in order</li>
               <li>Check the logs for any ❌ errors</li>
               <li>Copy any error messages and share them if you need help</li>
