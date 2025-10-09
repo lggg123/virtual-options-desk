@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const PAYMENT_API_URL = process.env.PAYMENT_API_URL || 'http://localhost:3001';
+const PAYMENT_API_URL = (process.env.PAYMENT_API_URL || 'http://localhost:3001').replace(/\/$/, '');
 
 export async function GET() {
   try {

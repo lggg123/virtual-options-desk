@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-const PAYMENT_API_URL = process.env.PAYMENT_API_URL || 'http://localhost:3001';
+const PAYMENT_API_URL = (process.env.PAYMENT_API_URL || 'http://localhost:3001').replace(/\/$/, '');
 
 // Payment checkout API route - handles Stripe checkout session creation
 export async function POST(request: NextRequest) {

@@ -88,12 +88,14 @@ export default function PricingPage() {
   useEffect(() => {
     async function checkAuth() {
       try {
+        console.log('🔍 Checking auth on pricing page...');
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error) {
-          console.error('Auth check error:', error);
+          console.error('❌ Auth check error:', error);
           setUser(null);
           return;
         }
+        console.log('✅ Auth check result:', user ? `Logged in as ${user.email}` : 'Not logged in');
         setUser(user);
         
         // Only fetch subscription if user is authenticated
@@ -101,11 +103,25 @@ export default function PricingPage() {
           await fetchSubscription();
         }
       } catch (error) {
-        console.error('Error checking auth:', error);
+        console.error('💥 Error checking auth:', error);
+        setUser(null);
       }
     }
     
     checkAuth();
+    
+    // Also listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔄 Auth state changed:', event, session?.user?.email);
+      setUser(session?.user || null);
+      if (session?.user) {
+        fetchSubscription();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function fetchSubscription() {
@@ -131,14 +147,25 @@ export default function PricingPage() {
 
   async function handleSubscribe(planId: string) {
     console.log('🛒 handleSubscribe called with planId:', planId);
-    console.log('👤 Current user:', user);
+    console.log('👤 Current user state:', user);
+    console.log('👤 User object:', JSON.stringify(user, null, 2));
     
-    if (!user) {
+    // Double-check auth status
+    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+    console.log('🔍 Double-checking auth:', currentUser ? `Logged in as ${currentUser.email}` : 'Not logged in', authError);
+    
+    if (!user && !currentUser) {
       // Redirect to login
       console.log('❌ No user authenticated, redirecting to login');
       alert('Please log in to subscribe');
       router.push('/login?redirect=/pricing');
       return;
+    }
+    
+    // Update user state if it was null but currentUser exists
+    if (!user && currentUser) {
+      console.log('✅ Found user on double-check, updating state');
+      setUser(currentUser);
     }
 
     setLoading(planId);
