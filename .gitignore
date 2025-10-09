@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/frontend/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -133,3 +134,4 @@ Thumbs.db
 desktop.ini
 
 ACTUAL_API_KEYS.md
+frontend/node_modules/
