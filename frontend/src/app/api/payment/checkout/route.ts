@@ -29,11 +29,11 @@ export async function POST(request: NextRequest) {
           get(name: string) {
             return cookieStore.get(name)?.value;
           },
-          set(name: string, value: string, options: any) {
-            // No-op in API routes
+          set() {
+            // No-op in API routes - cookies are read-only
           },
-          remove(name: string, options: any) {
-            // No-op in API routes
+          remove() {
+            // No-op in API routes - cookies are read-only
           },
         },
       }
