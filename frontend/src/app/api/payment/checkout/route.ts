@@ -62,6 +62,12 @@ export async function POST(request: NextRequest) {
     // Call payment API to create checkout session
     const paymentApiUrl = `${PAYMENT_API_URL}/api/checkout/create`;
     console.log('Calling payment API:', paymentApiUrl);
+    console.log('Request payload:', {
+      planId,
+      userId: user.id,
+      successUrl: `${process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_URL}/pricing`,
+    });
     
     const response = await fetch(paymentApiUrl, {
       method: 'POST',
@@ -75,25 +81,30 @@ export async function POST(request: NextRequest) {
         cancelUrl: `${process.env.NEXT_PUBLIC_URL}/pricing`,
       }),
     });
-    
+
+    console.log('Payment API response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Payment API error:', response.status, errorText);
+      console.error('❌ Payment API error:', response.status, errorText);
       
       let errorData;
       try {
         errorData = JSON.parse(errorText);
+        console.error('❌ Parsed error data:', errorData);
       } catch {
         errorData = { error: errorText };
       }
       
       return NextResponse.json(
-        { error: errorData.error || 'Failed to create checkout session' },
+        { 
+          error: errorData.error || 'Failed to create checkout session',
+          details: errorData.details || errorText,
+          hint: 'Check if Stripe price IDs are configured in payment API environment variables'
+        },
         { status: response.status }
       );
-    }
-    
-    const data = await response.json();
+    }    const data = await response.json();
     console.log('Checkout session created successfully');
     return NextResponse.json(data);
     
