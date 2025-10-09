@@ -24,11 +24,35 @@ export default function AIPicksPage() {
 
   async function fetchAIPicks() {
     try {
+      // Expanded stock universe for AI screening
+      const stockUniverse = [
+        // Tech Giants
+        'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'NFLX',
+        // Semiconductors
+        'AMD', 'INTC', 'QCOM', 'AVGO', 'TXN', 'MU', 'AMAT', 'TSM',
+        // Software & Cloud
+        'ORCL', 'ADBE', 'CRM', 'NOW', 'INTU', 'SNOW', 'WDAY', 'TEAM',
+        // Finance
+        'JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'V', 'MA', 'PYPL',
+        // Healthcare
+        'JNJ', 'UNH', 'PFE', 'ABBV', 'TMO', 'ABT', 'LLY', 'MRK',
+        // Consumer & Retail
+        'WMT', 'HD', 'COST', 'TGT', 'NKE', 'SBUX', 'MCD', 'DIS',
+        // Energy
+        'XOM', 'CVX', 'COP', 'SLB', 'OXY', 'EOG',
+        // Industrial
+        'BA', 'CAT', 'GE', 'UPS', 'RTX', 'HON', 'UNP', 'DE',
+        // Growth Stocks
+        'PLTR', 'COIN', 'ROKU', 'SHOP', 'UBER', 'ABNB', 'DASH', 'SPOT',
+        // ETFs
+        'SPY', 'QQQ', 'IWM', 'DIA', 'VOO', 'VTI'
+      ];
+
       const response = await fetch('/api/ml/screen', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          symbols: ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'NVDA', 'AMD', 'META', 'AMZN'],
+          symbols: stockUniverse,
           threshold: 0.6
         })
       });

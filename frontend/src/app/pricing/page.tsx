@@ -315,10 +315,10 @@ export default function PricingPage() {
             return (
               <div
                 key={plan.id}
-                className={`relative bg-slate-800 rounded-2xl p-8 border-2 transition-all hover:scale-105 flex flex-col ${
+                className={`relative bg-slate-800 rounded-2xl p-8 border-2 transition-all duration-300 hover:scale-[1.03] hover:-translate-y-2 flex flex-col ${
                   plan.popular
-                    ? 'border-purple-500 shadow-xl shadow-purple-500/20'
-                    : 'border-slate-700'
+                    ? 'border-purple-500 shadow-xl shadow-purple-500/20 hover:shadow-purple-500/40'
+                    : 'border-slate-700 hover:border-slate-600 hover:shadow-xl hover:shadow-slate-700/30'
                 }`}
               >
                 {/* Popular Badge */}
@@ -376,14 +376,14 @@ export default function PricingPage() {
                 <button
                   onClick={() => plan.id === 'free' ? router.push('/signup') : handleSubscribe(plan.id)}
                   disabled={loading === plan.id || isCurrentPlan}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all transform duration-200 ${
+                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all transform duration-300 ${
                     isCurrentPlan
                       ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                       : plan.popular
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 text-white active:scale-100'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:scale-[1.07] hover:shadow-2xl hover:shadow-purple-500/60 hover:-translate-y-1 text-white active:scale-100 active:translate-y-0'
                       : plan.id === 'pro'
-                      ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/50 text-white active:scale-100'
-                      : 'bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 hover:scale-105 hover:shadow-xl hover:shadow-slate-500/30 text-white active:scale-100'
+                      ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 hover:scale-[1.07] hover:shadow-2xl hover:shadow-indigo-500/60 hover:-translate-y-1 text-white active:scale-100 active:translate-y-0 ring-2 ring-transparent hover:ring-indigo-400/50'
+                      : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 hover:scale-[1.07] hover:shadow-2xl hover:shadow-green-500/60 hover:-translate-y-1 text-white active:scale-100 active:translate-y-0 ring-2 ring-transparent hover:ring-green-400/50'
                   } ${loading === plan.id ? 'opacity-70 cursor-wait' : ''}`}
                 >
                   {loading === plan.id
