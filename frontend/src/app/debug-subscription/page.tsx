@@ -3,10 +3,14 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Check if env vars are available
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+let supabase: any = null;
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+}
 
 export default function SubscriptionDebugPage() {
   const [logs, setLogs] = useState<string[]>([]);
@@ -26,6 +30,12 @@ export default function SubscriptionDebugPage() {
 
   async function checkAuth() {
     addLog('Checking authentication...');
+    
+    if (!supabase) {
+      addLog('❌ Supabase client not initialized - check environment variables', 'error');
+      return;
+    }
+    
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
@@ -45,9 +55,13 @@ export default function SubscriptionDebugPage() {
 
   async function testEnvironmentVars() {
     addLog('Testing environment variables...');
-    addLog(`NEXT_PUBLIC_SUPABASE_URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing'}`);
-    addLog(`NEXT_PUBLIC_SUPABASE_ANON_KEY: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}`);
+    addLog(`NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl ? '✅ Set (' + supabaseUrl + ')' : '❌ Missing'}`);
+    addLog(`NEXT_PUBLIC_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✅ Set (ends with: ...' + supabaseAnonKey.slice(-8) + ')' : '❌ Missing'}`);
     addLog(`NEXT_PUBLIC_URL: ${process.env.NEXT_PUBLIC_URL || '❌ Not set (will use default)'}`);
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      addLog('⚠️ Missing Supabase environment variables! Check your .env.local file', 'error');
+    }
   }
 
   async function testPaymentAPIHealth() {
@@ -159,6 +173,23 @@ export default function SubscriptionDebugPage() {
           <p className="text-gray-400 mb-6">
             Use this page to diagnose subscription button issues
           </p>
+
+          {/* Environment Check Warning */}
+          {(!supabaseUrl || !supabaseAnonKey) && (
+            <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-lg">
+              <h3 className="text-red-400 font-semibold mb-2">⚠️ Configuration Error</h3>
+              <p className="text-red-300 text-sm mb-2">
+                Missing Supabase environment variables! The debug tool cannot function without:
+              </p>
+              <ul className="text-red-300 text-sm list-disc list-inside">
+                {!supabaseUrl && <li>NEXT_PUBLIC_SUPABASE_URL</li>}
+                {!supabaseAnonKey && <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>}
+              </ul>
+              <p className="text-red-300 text-sm mt-2">
+                Check your <code className="bg-red-800 px-1 rounded">.env.local</code> file in the frontend folder.
+              </p>
+            </div>
+          )}
 
           {/* User Status */}
           <div className="mb-6 p-4 bg-slate-700 rounded-lg">
