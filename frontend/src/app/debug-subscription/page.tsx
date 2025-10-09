@@ -23,6 +23,18 @@ export default function SubscriptionDebugPage() {
     addLog('Checking authentication...');
     
     try {
+      // First check session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        addLog(`Session error: ${sessionError.message}`);
+      }
+      
+      if (!session) {
+        addLog('❌ No session found');
+        addLog('Trying to get user anyway...');
+      }
+      
+      // Then get user
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
         addLog(`Auth error: ${error.message}`);
@@ -32,7 +44,7 @@ export default function SubscriptionDebugPage() {
         setUser(user);
         addLog(`✅ User authenticated: ${user.email} (ID: ${user.id})`);
       } else {
-        addLog('❌ No user session found');
+        addLog('❌ No user found - Please login first');
       }
     } catch (err) {
       addLog(`Exception checking auth: ${err}`);
@@ -40,7 +52,24 @@ export default function SubscriptionDebugPage() {
   };
 
   useEffect(() => {
+    // Check auth immediately
     checkAuth();
+    
+    // Also listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      addLog(`Auth state changed: ${event}`);
+      if (session?.user) {
+        setUser(session.user);
+        addLog(`✅ User updated: ${session.user.email}`);
+      } else {
+        setUser(null);
+        addLog('❌ User logged out');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function testEnvironmentVars() {
