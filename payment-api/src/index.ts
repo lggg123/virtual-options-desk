@@ -231,12 +231,20 @@ fastify.post<{
       });
     }
 
+    // Log the exact price ID we're about to use
+    request.log.info({ 
+      stripePriceId: plan.stripePriceId,
+      priceIdType: typeof plan.stripePriceId,
+      priceIdLength: plan.stripePriceId.length,
+      trimmedPriceId: plan.stripePriceId.trim(),
+    }, 'About to create Stripe checkout with price ID');
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [
         {
-          price: plan.stripePriceId,
+          price: plan.stripePriceId.trim(), // Trim any whitespace
           quantity: 1,
         },
       ],
@@ -258,10 +266,17 @@ fastify.post<{
     request.log.info({ sessionId: session.id }, 'Checkout session created successfully');
     return { sessionId: session.id, url: session.url };
   } catch (error) {
-    request.log.error(error, 'Failed to create checkout session');
+    request.log.error({ 
+      error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      stripePriceId: plan.stripePriceId,
+      stripeKey: process.env.STRIPE_SECRET_KEY ? `${process.env.STRIPE_SECRET_KEY.substring(0, 7)}...` : 'NOT SET'
+    }, 'Failed to create checkout session');
     return reply.code(500).send({ 
       error: 'Failed to create checkout session',
-      details: error instanceof Error ? error.message : String(error)
+      details: error instanceof Error ? error.message : String(error),
+      priceIdUsed: plan.stripePriceId,
+      isTestMode: process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') || false
     });
   }
 });
@@ -530,6 +545,20 @@ try {
   fastify.log.info(`🚀 Payment API running on http://${host}:${port}`);
   fastify.log.info(`📊 Health check available at http://${host}:${port}/health`);
   fastify.log.info(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Log Stripe configuration (masked for security)
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  fastify.log.info({
+    stripeConfigured: !!stripeKey,
+    stripeMode: stripeKey?.startsWith('sk_test_') ? 'TEST' : stripeKey?.startsWith('sk_live_') ? 'LIVE' : 'UNKNOWN',
+    stripeKeyPrefix: stripeKey ? `${stripeKey.substring(0, 7)}...` : 'NOT SET',
+    priceIds: {
+      premium: process.env.STRIPE_PREMIUM_PRICE_ID ? `${process.env.STRIPE_PREMIUM_PRICE_ID.substring(0, 10)}...` : 'NOT SET',
+      pro: process.env.STRIPE_PRO_PRICE_ID ? `${process.env.STRIPE_PRO_PRICE_ID.substring(0, 10)}...` : 'NOT SET',
+      premiumYearly: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID ? `${process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID.substring(0, 10)}...` : 'NOT SET',
+      proYearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID ? `${process.env.STRIPE_PRO_YEARLY_PRICE_ID.substring(0, 10)}...` : 'NOT SET',
+    }
+  }, '💳 Stripe Configuration');
 } catch (err) {
   fastify.log.error(err);
   process.exit(1);

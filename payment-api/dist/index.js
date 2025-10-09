@@ -105,6 +105,36 @@ const PLANS = {
     },
 };
 // ==================== ROUTES ====================
+// Root route - welcome message
+fastify.get('/', async (request, reply) => {
+    reply.code(200).send({
+        service: 'AI Stock Picks - Payment API',
+        version: '1.0.0',
+        status: 'running',
+        timestamp: new Date().toISOString(),
+        endpoints: {
+            health: '/health',
+            plans: '/api/plans',
+            checkout: 'POST /api/checkout/create',
+            subscription: '/api/subscription/:userId',
+            portal: 'POST /api/portal/create',
+            webhook: 'POST /api/webhook/stripe'
+        },
+        stripe: {
+            configured: !!process.env.STRIPE_SECRET_KEY,
+            webhookConfigured: !!process.env.STRIPE_WEBHOOK_SECRET,
+            priceIds: {
+                premium: !!process.env.STRIPE_PREMIUM_PRICE_ID,
+                pro: !!process.env.STRIPE_PRO_PRICE_ID,
+                premiumYearly: !!process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID,
+                proYearly: !!process.env.STRIPE_PRO_YEARLY_PRICE_ID
+            }
+        },
+        supabase: {
+            configured: !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY
+        }
+    });
+});
 // Health check - simple and fast for Railway
 fastify.get('/health', async (request, reply) => {
     reply.code(200).send({
@@ -122,11 +152,25 @@ fastify.get('/api/plans', async () => {
 // Create checkout session
 fastify.post('/api/checkout/create', async (request, reply) => {
     const { planId, userId, successUrl, cancelUrl } = request.body;
+    // Map frontend plan IDs to backend plan IDs
+    const planIdMap = {
+        'premium': 'premium',
+        'pro': 'pro',
+        'premium_yearly': 'premiumYear',
+        'pro_yearly': 'proYear',
+    };
+    const mappedPlanId = planIdMap[planId] || planId;
     // Validate plan
-    const plan = PLANS[planId];
-    if (!plan || planId === 'free') {
-        return reply.code(400).send({ error: 'Invalid plan ID' });
+    const plan = PLANS[mappedPlanId];
+    if (!plan || mappedPlanId === 'free') {
+        request.log.error({ planId, mappedPlanId }, 'Invalid plan ID');
+        return reply.code(400).send({
+            error: 'Invalid plan ID',
+            requestedPlan: planId,
+            availablePlans: Object.keys(PLANS)
+        });
     }
+    request.log.info({ planId, mappedPlanId, stripePriceId: plan.stripePriceId }, 'Creating checkout session');
     // Check if user already has subscription
     const { data: existingSub } = await supabase
         .from('subscriptions')
@@ -138,12 +182,27 @@ fastify.post('/api/checkout/create', async (request, reply) => {
         return reply.code(400).send({ error: 'User already has an active subscription' });
     }
     try {
+        // Check if Stripe price ID is configured
+        if (!plan.stripePriceId) {
+            request.log.error({ plan: mappedPlanId }, 'Stripe price ID not configured for plan');
+            return reply.code(500).send({
+                error: 'Plan not configured. Please set up Stripe price IDs.',
+                plan: mappedPlanId
+            });
+        }
+        // Log the exact price ID we're about to use
+        request.log.info({
+            stripePriceId: plan.stripePriceId,
+            priceIdType: typeof plan.stripePriceId,
+            priceIdLength: plan.stripePriceId.length,
+            trimmedPriceId: plan.stripePriceId.trim(),
+        }, 'About to create Stripe checkout with price ID');
         const session = await stripe.checkout.sessions.create({
             mode: 'subscription',
             payment_method_types: ['card'],
             line_items: [
                 {
-                    price: plan.stripePriceId,
+                    price: plan.stripePriceId.trim(), // Trim any whitespace
                     quantity: 1,
                 },
             ],
@@ -152,20 +211,31 @@ fastify.post('/api/checkout/create', async (request, reply) => {
             client_reference_id: userId,
             metadata: {
                 userId,
-                planId,
+                planId: mappedPlanId,
             },
             subscription_data: {
                 metadata: {
                     userId,
-                    planId,
+                    planId: mappedPlanId,
                 },
             },
         });
+        request.log.info({ sessionId: session.id }, 'Checkout session created successfully');
         return { sessionId: session.id, url: session.url };
     }
     catch (error) {
-        request.log.error(error);
-        return reply.code(500).send({ error: 'Failed to create checkout session' });
+        request.log.error({
+            error,
+            errorMessage: error instanceof Error ? error.message : String(error),
+            stripePriceId: plan.stripePriceId,
+            stripeKey: process.env.STRIPE_SECRET_KEY ? `${process.env.STRIPE_SECRET_KEY.substring(0, 7)}...` : 'NOT SET'
+        }, 'Failed to create checkout session');
+        return reply.code(500).send({
+            error: 'Failed to create checkout session',
+            details: error instanceof Error ? error.message : String(error),
+            priceIdUsed: plan.stripePriceId,
+            isTestMode: process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') || false
+        });
     }
 });
 // Get subscription status
@@ -379,6 +449,19 @@ try {
     fastify.log.info(`🚀 Payment API running on http://${host}:${port}`);
     fastify.log.info(`📊 Health check available at http://${host}:${port}/health`);
     fastify.log.info(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+    // Log Stripe configuration (masked for security)
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    fastify.log.info({
+        stripeConfigured: !!stripeKey,
+        stripeMode: stripeKey?.startsWith('sk_test_') ? 'TEST' : stripeKey?.startsWith('sk_live_') ? 'LIVE' : 'UNKNOWN',
+        stripeKeyPrefix: stripeKey ? `${stripeKey.substring(0, 7)}...` : 'NOT SET',
+        priceIds: {
+            premium: process.env.STRIPE_PREMIUM_PRICE_ID ? `${process.env.STRIPE_PREMIUM_PRICE_ID.substring(0, 10)}...` : 'NOT SET',
+            pro: process.env.STRIPE_PRO_PRICE_ID ? `${process.env.STRIPE_PRO_PRICE_ID.substring(0, 10)}...` : 'NOT SET',
+            premiumYearly: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID ? `${process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID.substring(0, 10)}...` : 'NOT SET',
+            proYearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID ? `${process.env.STRIPE_PRO_YEARLY_PRICE_ID.substring(0, 10)}...` : 'NOT SET',
+        }
+    }, '💳 Stripe Configuration');
 }
 catch (err) {
     fastify.log.error(err);
