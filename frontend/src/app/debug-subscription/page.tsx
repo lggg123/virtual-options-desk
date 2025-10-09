@@ -22,7 +22,7 @@ export default function SubscriptionDebugPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const addLog = (message: string, _type: 'info' | 'error' | 'success' = 'info') => {
+  const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
     console.log(`[${timestamp}] ${message}`);
@@ -32,24 +32,24 @@ export default function SubscriptionDebugPage() {
     addLog('Checking authentication...');
     
     if (!supabase) {
-      addLog('❌ Supabase client not initialized - check environment variables', 'error');
+  addLog('❌ Supabase client not initialized - check environment variables');
       return;
     }
     
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
-        addLog(`Auth error: ${error.message}`, 'error');
+  addLog(`Auth error: ${error.message}`);
         return;
       }
       if (user) {
         setUser(user);
-        addLog(`✅ User authenticated: ${user.email} (ID: ${user.id})`, 'success');
+  addLog(`✅ User authenticated: ${user.email} (ID: ${user.id})`);
       } else {
-        addLog('❌ No user session found', 'error');
+  addLog('❌ No user session found');
       }
     } catch (err) {
-      addLog(`Exception checking auth: ${err}`, 'error');
+  addLog(`Exception checking auth: ${err}`);
     }
   };
 
@@ -64,7 +64,7 @@ export default function SubscriptionDebugPage() {
     addLog(`NEXT_PUBLIC_URL: ${process.env.NEXT_PUBLIC_URL || '❌ Not set (will use default)'}`);
     
     if (!supabaseUrl || !supabaseAnonKey) {
-      addLog('⚠️ Missing Supabase environment variables! Check your .env.local file', 'error');
+    addLog('⚠️ Missing Supabase environment variables! Check your .env.local file');
     }
   }
 
@@ -80,14 +80,14 @@ export default function SubscriptionDebugPage() {
       
       if (healthResponse.ok) {
         const healthData = await healthResponse.json();
-        addLog(`✅ Payment API health: ${JSON.stringify(healthData)}`, 'success');
+  addLog(`✅ Payment API health: ${JSON.stringify(healthData)}`);
       } else {
-        addLog(`❌ Payment API health check failed: ${healthResponse.status}`, 'error');
+  addLog(`❌ Payment API health check failed: ${healthResponse.status}`);
         const errorText = await healthResponse.text();
-        addLog(`Error details: ${errorText}`, 'error');
+  addLog(`Error details: ${errorText}`);
       }
     } catch (err) {
-      addLog(`❌ Failed to reach payment API: ${err}`, 'error');
+  addLog(`❌ Failed to reach payment API: ${err}`);
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ export default function SubscriptionDebugPage() {
     
     try {
       if (!user) {
-        addLog('❌ Cannot test checkout: User not authenticated', 'error');
+  addLog('❌ Cannot test checkout: User not authenticated');
         return;
       }
 
@@ -114,25 +114,25 @@ export default function SubscriptionDebugPage() {
         }),
       });
 
-      addLog(`Response status: ${response.status}`);
+  addLog(`Response status: ${response.status}`);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        addLog(`❌ Checkout failed: ${JSON.stringify(errorData)}`, 'error');
+  addLog(`❌ Checkout failed: ${JSON.stringify(errorData)}`);
         return;
       }
 
       const data = await response.json();
-      addLog(`✅ Checkout response: ${JSON.stringify(data, null, 2)}`, 'success');
+  addLog(`✅ Checkout response: ${JSON.stringify(data, null, 2)}`);
       
       if (data.url) {
-        addLog(`✅ Stripe checkout URL received: ${data.url}`, 'success');
-        addLog('Would redirect to Stripe now (not doing it in debug mode)');
+  addLog(`✅ Stripe checkout URL received: ${data.url}`);
+  addLog('Would redirect to Stripe now (not doing it in debug mode)');
       } else {
-        addLog('❌ No URL in response', 'error');
+  addLog('❌ No URL in response');
       }
     } catch (err) {
-      addLog(`❌ Exception during checkout test: ${err}`, 'error');
+  addLog(`❌ Exception during checkout test: ${err}`);
     } finally {
       setLoading(false);
     }
@@ -144,20 +144,20 @@ export default function SubscriptionDebugPage() {
     
     try {
       if (!user) {
-        addLog('❌ Cannot test: User not authenticated', 'error');
+  addLog('❌ Cannot test: User not authenticated');
         return;
       }
 
       // Try to call the payment API directly (will fail due to CORS, but shows connectivity)
       const paymentApiUrl = process.env.NEXT_PUBLIC_PAYMENT_API_URL || 'http://localhost:3001';
-      addLog(`Attempting to reach: ${paymentApiUrl}/health`);
+  addLog(`Attempting to reach: ${paymentApiUrl}/health`);
       
       const response = await fetch(`${paymentApiUrl}/health`);
       const data = await response.json();
-      addLog(`✅ Payment API is reachable: ${JSON.stringify(data)}`, 'success');
+  addLog(`✅ Payment API is reachable: ${JSON.stringify(data)}`);
     } catch (err) {
-      addLog(`⚠️ Cannot reach payment API directly (expected if deployed): ${err}`, 'info');
-      addLog('This is normal if payment API is on a different domain');
+  addLog(`⚠️ Cannot reach payment API directly (expected if deployed): ${err}`);
+  addLog('This is normal if payment API is on a different domain');
     } finally {
       setLoading(false);
     }
