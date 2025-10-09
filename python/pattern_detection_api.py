@@ -595,33 +595,28 @@ async def fetch_latest_candle(symbol: str, timeframe: str) -> Optional[Dict]:
 async def websocket_endpoint(websocket: WebSocket, symbol: str, timeframe: str = "1d"):
     """WebSocket endpoint for real-time chart data - for Svelte chart app
     
-    NOTE: This endpoint allows connections from any origin for development/testing.
-    In production, implement proper origin validation if needed.
+    NOTE: This endpoint is PUBLIC and allows connections from any origin.
+    No authentication required for development/testing.
     """
-    print(f"🔵 WebSocket connection attempt for {symbol} (timeframe: {timeframe})")
-    print(f"🔵 Client: {websocket.client}")
-    print(f"🔵 URL: {websocket.url}")
+    # CRITICAL: Accept connection IMMEDIATELY as first action
+    # Any code before accept() can cause 403 errors
+    await websocket.accept()
     
-    # Accept connection immediately without any checks
-    # WebSocket connections bypass CORS in the traditional sense
+    # Now log after successful connection
+    print(f"✅ WebSocket CONNECTED: {symbol} (timeframe: {timeframe})")
+    print(f"📊 Client: {websocket.client}")
+    
+    # Debug: Log connection info and headers
     try:
-        await websocket.accept()
-        print(f"✅ WebSocket connection ACCEPTED for {symbol}")
-        # Debug: Log connection info and headers
         headers = dict(websocket.headers)
-        print(f"📊 Client connected for {symbol} ({timeframe}) via WebSocket")
         print(f"WebSocket headers: {headers}")
-        print(f"WebSocket client host: {websocket.client.host if websocket.client else 'unknown'}")
-        
-        # Optional: Check for Authorization header or token (for debugging, not enforced)
         auth_header = headers.get('authorization')
         if auth_header:
             print(f"WebSocket Authorization header: {auth_header}")
         else:
-            print("WebSocket Authorization header not provided.")
+            print("WebSocket Authorization header not provided (public connection)")
     except Exception as e:
-        print(f"❌ Error accepting WebSocket connection: {e}")
-        raise
+        print(f"⚠️ Error reading headers: {e}")
     
     try:
         # Send historical data first
