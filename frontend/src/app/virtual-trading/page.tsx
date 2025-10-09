@@ -39,7 +39,7 @@ export default function VirtualTradingPage() {
           <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm mb-1">Today's P&L</p>
+                <p className="text-gray-400 text-sm mb-1">Today&apos;s P&L</p>
                 <p className="text-3xl font-bold text-green-400">
                   +$0.00
                 </p>
