@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 
 const PAYMENT_API_URL = process.env.PAYMENT_API_URL || 'http://localhost:3001';
 
+// Payment checkout API route - handles Stripe checkout session creation
 export async function POST(request: NextRequest) {
   try {
     const { planId } = await request.json();
