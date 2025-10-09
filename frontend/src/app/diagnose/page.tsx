@@ -3,8 +3,14 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
+interface SupabaseUser {
+  id: string;
+  email?: string;
+  [key: string]: unknown;
+}
+
 export default function DiagnosePage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,7 +20,7 @@ export default function DiagnosePage() {
   const checkUser = async () => {
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
-      setUser(user);
+      setUser(user as SupabaseUser | null);
       setLoading(false);
       if (error) console.error('Auth error:', error);
     } catch (err) {

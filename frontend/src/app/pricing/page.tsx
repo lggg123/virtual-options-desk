@@ -2,14 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase/client';
 import { Check, Zap, Crown, Sparkles } from 'lucide-react';
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface PricingPlan {
   id: string;
@@ -136,8 +130,12 @@ export default function PricingPage() {
   }
 
   async function handleSubscribe(planId: string) {
+    console.log('handleSubscribe called with planId:', planId);
+    console.log('Current user:', user);
+    
     if (!user) {
       // Redirect to login
+      console.log('No user, redirecting to login');
       router.push('/login?redirect=/pricing');
       return;
     }
@@ -145,13 +143,19 @@ export default function PricingPage() {
     setLoading(planId);
 
     try {
+      const finalPlanId = billingInterval === 'year' ? `${planId}_yearly` : planId;
+      console.log('Sending checkout request for plan:', finalPlanId);
+      
       const res = await fetch('/api/payment/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Important: include cookies for auth
         body: JSON.stringify({ 
-          planId: billingInterval === 'year' ? `${planId}_yearly` : planId 
+          planId: finalPlanId
         })
       });
+
+      console.log('Checkout response status:', res.status);
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -160,7 +164,7 @@ export default function PricingPage() {
       }
 
       const data = await res.json();
-      console.log('Checkout response:', data);
+      console.log('Checkout response data:', data);
       
       if (!data.url) {
         console.error('No URL in response:', data);
@@ -168,11 +172,12 @@ export default function PricingPage() {
       }
 
       // Redirect to Stripe Checkout
+      console.log('Redirecting to Stripe checkout:', data.url);
       window.location.href = data.url;
     } catch (error) {
       console.error('Checkout error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to start checkout. Please try again.';
-      alert(errorMessage);
+      alert(`❌ Checkout Error:\n\n${errorMessage}\n\nCheck browser console (F12) for details.`);
       setLoading(null);
     }
   }

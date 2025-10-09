@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 const PAYMENT_API_URL = process.env.PAYMENT_API_URL || 'http://localhost:3001';
@@ -8,6 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     const { planId } = await request.json();
     
+    console.log('=== Checkout API Route ===');
     console.log('Checkout request received for plan:', planId);
     console.log('Payment API URL:', PAYMENT_API_URL);
     
@@ -18,15 +19,21 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Get authenticated user using cookies
+    // Get authenticated user using SSR client
     const cookieStore = await cookies();
-    const supabase = createClient(
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
-        global: {
-          headers: {
-            cookie: cookieStore.toString(),
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            // No-op in API routes
+          },
+          remove(name: string, options: any) {
+            // No-op in API routes
           },
         },
       }
@@ -34,15 +41,22 @@ export async function POST(request: NextRequest) {
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
+    console.log('Auth check result:', { 
+      hasUser: !!user, 
+      userId: user?.id,
+      email: user?.email,
+      error: authError?.message 
+    });
+    
     if (authError || !user) {
-      console.error('Auth error:', authError);
+      console.error('❌ Auth error:', authError);
       return NextResponse.json(
-        { error: 'Not authenticated' },
+        { error: 'Auth session is missing. Please log in again.' },
         { status: 401 }
       );
     }
     
-    console.log('User authenticated:', user.id);
+    console.log('✅ User authenticated:', user.id, user.email);
     
     // Call payment API to create checkout session
     const paymentApiUrl = `${PAYMENT_API_URL}/api/checkout/create`;
