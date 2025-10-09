@@ -32,9 +32,9 @@ export default function PortfolioPage() {
           return;
         }
 
-        // Try to fetch user profile from database
+        // Try to fetch user profile from profiles table
         const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
+          .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
@@ -50,10 +50,18 @@ export default function PortfolioPage() {
             total_return: 0
           });
         } else {
-          setUserProfile(profile);
+          // Merge profile data with user data
+          setUserProfile({
+            id: user.id,
+            email: user.email,
+            portfolio_value: 100000, // TODO: Calculate from positions table
+            open_positions: 0, // TODO: Count from positions table
+            total_return: 0 // TODO: Calculate from portfolios table
+          });
         }
       } catch (err) {
         console.error('Exception fetching profile:', err);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
