@@ -1,0 +1,20 @@
+# Trained ML models - INCLUDED FOR DEPLOYMENT
+# *.pkl
+# *.pth
+# *.h5
+# *.ckpt
+
+# Keep metadata for version tracking
+!metadata.json
+!README.md
+
+# Note: Models ARE committed for Railway deployment
+# Total size: ~12MB (acceptable for git repo)
+
+# Training logs
+training_logs/
+*.log
+
+# Temporary files
+*.tmp
+__pycache__/

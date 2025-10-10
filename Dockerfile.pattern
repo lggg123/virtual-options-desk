@@ -22,7 +22,7 @@ COPY python/requirements-ml.txt ./
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements-ml.txt
 
-# Copy application code to root (not /app/python/)
+# Copy application code to root (includes ml_models/ subdirectory)
 COPY python/ ./
 
 # Set Python path (current directory)

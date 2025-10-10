@@ -9,12 +9,11 @@ xgboost>=2.0.0,<3.0.0
 lightgbm>=4.1.0,<5.0.0
 joblib>=1.3.0,<2.0.0
 
-# Deep Learning (Optional)
-# Uncomment if you want LSTM support and CNN pattern detection
-# torch>=2.1.0,<3.0.0
+# Deep Learning (LSTM support for Premium tier)
+torch>=2.1.0,<3.0.0
 
-# Computer Vision (for pattern detection)
-opencv-python>=4.8.0,<5.0.0
+# Computer Vision (for pattern detection - optional, made optional in code)
+opencv-python-headless>=4.8.0,<5.0.0
 
 # API Server
 fastapi>=0.104.0,<1.0.0
