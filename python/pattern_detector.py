@@ -8,7 +8,13 @@ import pandas as pd
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
-import cv2
+
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+    print("Warning: OpenCV (cv2) not available. Pattern rendering disabled.")
 
 try:
     import torch
@@ -431,13 +437,14 @@ class PatternDetector:
             high_y = 31 - int(((candle['high'] - min_price) / price_range) * 31)
             low_y = 31 - int(((candle['low'] - min_price) / price_range) * 31)
             
-            # Draw wick
-            cv2.line(image, (x, high_y), (x, low_y), 255, 1)
+            # Draw wick (if cv2 available)
+            if CV2_AVAILABLE:
+                cv2.line(image, (x, high_y), (x, low_y), 255, 1)
             
-            # Draw body
-            body_top = min(open_y, close_y)
-            body_bottom = max(open_y, close_y)
-            cv2.rectangle(image, (x-1, body_top), (x+1, body_bottom), 255, -1)
+                # Draw body
+                body_top = min(open_y, close_y)
+                body_bottom = max(open_y, close_y)
+                cv2.rectangle(image, (x-1, body_top), (x+1, body_bottom), 255, -1)
         
         return image
 

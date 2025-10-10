@@ -79,7 +79,7 @@ async def auth_middleware_wrapper(request: Request, call_next):
     return await auth_middleware(request, call_next)
 
 # Global pattern detector instance
-detector = PatternDetector(use_ml=False)  # Set to True when ML model is trained
+detector = PatternDetector(use_ml=True)  # ML models trained and loaded ✅
 
 # ==================== REQUEST/RESPONSE MODELS ====================
 
