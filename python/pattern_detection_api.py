@@ -27,8 +27,8 @@ from subscription_middleware import (
 
 # Import ML ensemble for stock screening
 try:
-    from ml_ensemble import MLEnsemble
-    ensemble = MLEnsemble()
+    from ml_ensemble import StockScreeningEnsemble
+    ensemble = StockScreeningEnsemble()
     ensemble.load_models('ml_models')  # Load XGBoost, RF, LightGBM
     ML_AVAILABLE = True
     print("✅ ML Ensemble models loaded successfully!")
