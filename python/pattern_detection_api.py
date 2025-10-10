@@ -1,50 +1,10 @@
-# ==================== BREAKOUT STOCK ENDPOINT ====================
-
-from fastapi import Body
-import joblib
-import numpy as np
-
-# Load breakout classifier model (update path as needed)
-try:
-    breakout_model = joblib.load('ml_models/breakout_classifier_xgb.pkl')
-    breakout_features = ['open', 'high', 'low', 'close', 'volume']  # Update as needed
-    BREAKOUT_MODEL_AVAILABLE = True
-    print("✅ Breakout classifier loaded!")
-except Exception as e:
-    breakout_model = None
-    breakout_features = []
-    BREAKOUT_MODEL_AVAILABLE = False
-    print(f"⚠️  Breakout classifier not available: {e}")
-
-@app.post("/api/ml/breakouts")
-async def get_breakout_predictions(
-    stocks: list = Body(..., example=[{"symbol": "AAPL", "open": 100, "high": 105, "low": 99, "close": 104, "volume": 1000000}]),
-    top_n: int = 10
-):
-    """
-    Get top N breakout stock predictions.
-    Expects a list of stock dicts with required features.
-    """
-    if not BREAKOUT_MODEL_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Breakout model not available")
-
-    # Prepare feature matrix
-    X = np.array([[s.get(f, 0) for f in breakout_features] for s in stocks])
-    probs = breakout_model.predict_proba(X)[:, 1]
-    results = [
-        {"symbol": s["symbol"], "breakout_prob": float(p)}
-        for s, p in zip(stocks, probs)
-    ]
-    # Sort by probability descending
-    results = sorted(results, key=lambda x: x["breakout_prob"], reverse=True)[:top_n]
-    return {"breakouts": results, "count": len(results)}
 """
 FastAPI service for AI Candlestick Pattern Detection
 Exposes pattern detection endpoints for Flutter app and Svelte chart app to it
 
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request, Body
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import pandas as pd
@@ -54,6 +14,8 @@ import json
 import sys
 import os
 import yfinance as yf
+import joblib
+import numpy as np
 
 # Import pattern detector - works when running from python/ directory (Railway)
 from pattern_detector import PatternDetector, DetectedPattern
@@ -76,6 +38,18 @@ except Exception as e:
     ML_AVAILABLE = False
     ensemble = None
     print(f"⚠️  ML Ensemble not available: {e}")
+
+# Load breakout classifier model (optional)
+try:
+    breakout_model = joblib.load('ml_models/breakout_classifier_xgb.pkl')
+    breakout_features = ['open', 'high', 'low', 'close', 'volume']
+    BREAKOUT_MODEL_AVAILABLE = True
+    print("✅ Breakout classifier loaded!")
+except Exception as e:
+    breakout_model = None
+    breakout_features = []
+    BREAKOUT_MODEL_AVAILABLE = False
+    print(f"⚠️  Breakout classifier not available: {e}")
 
 app = FastAPI(
     title="AI Candlestick Pattern Detection API",
@@ -502,11 +476,35 @@ async def ml_status():
         "models_loaded": {
             "xgboost": ensemble.is_trained if ML_AVAILABLE else False,
             "random_forest": ensemble.is_trained if ML_AVAILABLE else False,
-            "lightgbm": ensemble.is_trained if ML_AVAILABLE else False
+            "lightgbm": ensemble.is_trained if ML_AVAILABLE else False,
+            "breakout_classifier": BREAKOUT_MODEL_AVAILABLE
         },
         "models_path": "ml_models/",
         "features": 19 if ML_AVAILABLE and ensemble.is_trained else 0
     }
+
+@app.post("/api/ml/breakouts")
+async def get_breakout_predictions(
+    stocks: list = Body(..., example=[{"symbol": "AAPL", "open": 100, "high": 105, "low": 99, "close": 104, "volume": 1000000}]),
+    top_n: int = 10
+):
+    """
+    Get top N breakout stock predictions using XGBoost classifier.
+    Expects a list of stock dicts with required features: open, high, low, close, volume.
+    """
+    if not BREAKOUT_MODEL_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Breakout model not available")
+
+    # Prepare feature matrix
+    X = np.array([[s.get(f, 0) for f in breakout_features] for s in stocks])
+    probs = breakout_model.predict_proba(X)[:, 1]
+    results = [
+        {"symbol": s["symbol"], "breakout_prob": float(p)}
+        for s, p in zip(stocks, probs)
+    ]
+    # Sort by probability descending
+    results = sorted(results, key=lambda x: x["breakout_prob"], reverse=True)[:top_n]
+    return {"breakouts": results, "count": len(results)}
 
 # ==================== SVELTE CHART APP ENDPOINTS ====================
 
