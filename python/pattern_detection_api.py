@@ -1,3 +1,43 @@
+# ==================== BREAKOUT STOCK ENDPOINT ====================
+
+from fastapi import Body
+import joblib
+import numpy as np
+
+# Load breakout classifier model (update path as needed)
+try:
+    breakout_model = joblib.load('ml_models/breakout_classifier_xgb.pkl')
+    breakout_features = ['open', 'high', 'low', 'close', 'volume']  # Update as needed
+    BREAKOUT_MODEL_AVAILABLE = True
+    print("✅ Breakout classifier loaded!")
+except Exception as e:
+    breakout_model = None
+    breakout_features = []
+    BREAKOUT_MODEL_AVAILABLE = False
+    print(f"⚠️  Breakout classifier not available: {e}")
+
+@app.post("/api/ml/breakouts")
+async def get_breakout_predictions(
+    stocks: list = Body(..., example=[{"symbol": "AAPL", "open": 100, "high": 105, "low": 99, "close": 104, "volume": 1000000}]),
+    top_n: int = 10
+):
+    """
+    Get top N breakout stock predictions.
+    Expects a list of stock dicts with required features.
+    """
+    if not BREAKOUT_MODEL_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Breakout model not available")
+
+    # Prepare feature matrix
+    X = np.array([[s.get(f, 0) for f in breakout_features] for s in stocks])
+    probs = breakout_model.predict_proba(X)[:, 1]
+    results = [
+        {"symbol": s["symbol"], "breakout_prob": float(p)}
+        for s, p in zip(stocks, probs)
+    ]
+    # Sort by probability descending
+    results = sorted(results, key=lambda x: x["breakout_prob"], reverse=True)[:top_n]
+    return {"breakouts": results, "count": len(results)}
 """
 FastAPI service for AI Candlestick Pattern Detection
 Exposes pattern detection endpoints for Flutter app and Svelte chart app to it
@@ -413,29 +453,42 @@ async def ml_screen_stocks(request: Request, symbols: Optional[List[str]] = None
     """
     if not ML_AVAILABLE:
         raise HTTPException(status_code=503, detail="ML models not available")
-    
-    # Get user subscription (for tier-based features)
-    try:
-        user = request.state.user if hasattr(request.state, 'user') else None
-        subscription = get_user_subscription(user) if user else None
-    except:
-        subscription = None
-    
+
+    # Get user_id and subscription
+    user_id = getattr(request.state, 'user_id', None) or request.query_params.get('user_id')
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required. Please provide user_id or Authorization header.")
+
+    # Get subscription details
+    subscription = await get_user_subscription(user_id)
+    plan_id = subscription.get('plan_id', 'free')
+
     # Default symbols if none provided
     if not symbols:
         symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "AMD"]
-    
+
+    # Enforce per-request stock limits
+    if plan_id == 'pro' and len(symbols) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                'error': 'Pro plan allows screening up to 100 stocks per request.',
+                'limit': 100,
+                'symbols_requested': len(symbols),
+                'upgrade_url': '/pricing'
+            }
+        )
+    # Premium: unlimited, Free: should be blocked elsewhere
+
     try:
-        # Screen stocks with ensemble
         predictions = ensemble.screen_stocks(symbols, top_n=len(symbols))
-        
         return {
             "success": True,
             "ml_enabled": True,
             "model_type": "ensemble",
             "models_used": ["xgboost", "random_forest", "lightgbm"],
             "predictions": [pred.to_dict() for pred in predictions],
-            "subscription_tier": subscription.get("tier") if subscription else "free",
+            "subscription_tier": plan_id,
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:

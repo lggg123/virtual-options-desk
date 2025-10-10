@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -27,6 +27,11 @@ export default function DashboardPage() {
             <Button size="sm">
               New Trade
             </Button>
+            <Link href="/dashboard/breakouts">
+              <Button size="sm" variant="secondary">
+                Breakout Picks
+              </Button>
+            </Link>
           </div>
         </div>
 

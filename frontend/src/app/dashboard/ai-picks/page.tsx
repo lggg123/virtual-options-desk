@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase/client';
 import { TrendingUp, TrendingDown, Zap, Activity, DollarSign } from 'lucide-react';
 
 interface StockPick {
@@ -48,11 +49,28 @@ export default function AIPicksPage() {
         'SPY', 'QQQ', 'IWM', 'DIA', 'VOO', 'VTI'
       ];
 
+      // Fetch user session and plan
+      const { data: { session } } = await supabase.auth.getSession();
+      let plan = 'free';
+      if (session?.user) {
+        // Call backend to get plan
+        const res = await fetch(`/api/subscription/status?user_id=${session.user.id}`);
+        if (res.ok) {
+          const sub = await res.json();
+          plan = sub.plan || 'free';
+        }
+      }
+
+      let symbolsToSend = stockUniverse;
+      if (plan === 'pro' && stockUniverse.length > 100) {
+        symbolsToSend = stockUniverse.slice(0, 100);
+      }
+
       const response = await fetch('/api/ml/screen', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          symbols: stockUniverse,
+          symbols: symbolsToSend,
           threshold: 0.6
         })
       });
