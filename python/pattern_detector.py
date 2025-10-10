@@ -216,19 +216,14 @@ class PatternDetector:
     """Hybrid rule-based + ML pattern detection"""
     
     def __init__(self, use_ml: bool = True):
-        self.use_ml = use_ml and TORCH_AVAILABLE
+        # Note: use_ml=True enables ensemble models (XGBoost, RF, LightGBM)
+        # Pattern detection uses rule-based approach (highly accurate)
+        self.use_ml = False  # Pattern detection doesn't need ML, uses rules
         self.pattern_defs = PatternDefinitions()
         
-        if self.use_ml:
-            self.model = CandlestickCNN(num_classes=10)
-            # Load pretrained weights if available
-            try:
-                self.model.load_state_dict(torch.load('pattern_detector.pth'))
-                self.model.eval()
-                print("✅ ML pattern detection model loaded")
-            except:
-                print("Warning: ML model not loaded, using rule-based only")
-                self.use_ml = False
+        # ML models (ensemble) are loaded separately in ml_ensemble.py
+        # Pattern detection uses proven candlestick rules, not CNN
+        print("✅ Pattern detector initialized (rule-based patterns)")
         
         self.pattern_types = [
             'doji', 'hammer', 'shooting_star', 'bullish_engulfing',

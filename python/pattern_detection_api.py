@@ -25,6 +25,18 @@ from subscription_middleware import (
     auth_middleware
 )
 
+# Import ML ensemble for stock screening
+try:
+    from ml_ensemble import MLEnsemble
+    ensemble = MLEnsemble()
+    ensemble.load_models('ml_models')  # Load XGBoost, RF, LightGBM
+    ML_AVAILABLE = True
+    print("✅ ML Ensemble models loaded successfully!")
+except Exception as e:
+    ML_AVAILABLE = False
+    ensemble = None
+    print(f"⚠️  ML Ensemble not available: {e}")
+
 app = FastAPI(
     title="AI Candlestick Pattern Detection API",
     description="Real-time pattern detection for candlestick charts",
@@ -385,10 +397,62 @@ async def get_statistics():
     """Get service statistics"""
     return {
         "service": "Pattern Detection API",
-        "ml_enabled": detector.use_ml,
+        "ml_enabled": ML_AVAILABLE,
         "patterns_tracked": len(detector.pattern_types),
         "uptime": "N/A",  # Implement uptime tracking if needed
         "version": "1.0.0"
+    }
+
+# ==================== ML SCREENING ENDPOINTS ====================
+
+@app.post("/api/ml/screen")
+async def ml_screen_stocks(request: Request, symbols: Optional[List[str]] = None):
+    """
+    Screen stocks using ML ensemble (XGBoost + Random Forest + LightGBM)
+    Requires Pro or Premium subscription
+    """
+    if not ML_AVAILABLE:
+        raise HTTPException(status_code=503, detail="ML models not available")
+    
+    # Get user subscription (for tier-based features)
+    try:
+        user = request.state.user if hasattr(request.state, 'user') else None
+        subscription = get_user_subscription(user) if user else None
+    except:
+        subscription = None
+    
+    # Default symbols if none provided
+    if not symbols:
+        symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "AMD"]
+    
+    try:
+        # Screen stocks with ensemble
+        predictions = ensemble.screen_stocks(symbols, top_n=len(symbols))
+        
+        return {
+            "success": True,
+            "ml_enabled": True,
+            "model_type": "ensemble",
+            "models_used": ["xgboost", "random_forest", "lightgbm"],
+            "predictions": [pred.to_dict() for pred in predictions],
+            "subscription_tier": subscription.get("tier") if subscription else "free",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ML screening failed: {str(e)}")
+
+@app.get("/api/ml/status")
+async def ml_status():
+    """Check ML models status"""
+    return {
+        "ml_available": ML_AVAILABLE,
+        "models_loaded": {
+            "xgboost": ensemble.is_trained if ML_AVAILABLE else False,
+            "random_forest": ensemble.is_trained if ML_AVAILABLE else False,
+            "lightgbm": ensemble.is_trained if ML_AVAILABLE else False
+        },
+        "models_path": "ml_models/",
+        "features": 19 if ML_AVAILABLE and ensemble.is_trained else 0
     }
 
 # ==================== SVELTE CHART APP ENDPOINTS ====================
