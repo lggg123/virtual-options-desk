@@ -63,7 +63,7 @@ export default function BreakoutPicksPage() {
       const data = await res.json();
       setBreakouts(data.breakouts || []);
       setNotification({ message: "Breakout picks loaded successfully!", type: "success" });
-    } catch (e) {
+    } catch {
       setError("Failed to fetch breakout picks.");
       setNotification({ message: "Failed to fetch breakout picks.", type: "error" });
     } finally {
