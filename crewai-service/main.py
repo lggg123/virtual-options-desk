@@ -8,6 +8,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
+import joblib
+import pandas as pd
 import json
 import sys
 import os
@@ -29,6 +31,23 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# --- Breakout Classifier Model Loader ---
+class BreakoutStockClassifier:
+    def __init__(self):
+        self.model = None
+    def load(self, path):
+        self.model = joblib.load(path)
+    def predict(self, X):
+        return self.model.predict_proba(X)[:, 1] if self.model else None
+
+# Load the trained model at startup
+MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "python", "ml_models", "breakout_classifier_xgb_stockslist.pkl")
+breakout_clf = BreakoutStockClassifier()
+if os.path.exists(MODEL_PATH):
+    breakout_clf.load(MODEL_PATH)
+else:
+    print(f"Warning: Model file not found at {MODEL_PATH}")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -38,12 +57,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Request/Response models
 class MarketDataPoint(BaseModel):
     price: float
     volume: Optional[float] = 1000
     timestamp: str
     symbol: Optional[str] = "SPY"
+
+# For breakout prediction
+class BreakoutDataPoint(BaseModel):
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+# Existing endpoints ...
+
+# --- New endpoint: Breakout prediction using trained model ---
+@app.post("/predict_breakout")
+async def predict_breakout(data: BreakoutDataPoint):
+    """Predict breakout probability for a single data point using the trained model."""
+    if breakout_clf.model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded.")
+    # Prepare input as DataFrame
+    X = pd.DataFrame([{k: getattr(data, k) for k in ['open', 'high', 'low', 'close', 'volume']}])
+    prob = breakout_clf.predict(X)
+    return {"breakout_probability": float(prob[0])}
 
 class AnalysisRequest(BaseModel):
     marketData: List[MarketDataPoint]
