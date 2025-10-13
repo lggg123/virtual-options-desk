@@ -30,7 +30,7 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Comprehensive stock list with names and categories
-  const stockDatabase: Stock[] = [
+  const stockDatabase = useRef<Stock[]>([
     // Mega Cap Tech
     { symbol: 'AAPL', name: 'Apple Inc.', category: 'Tech' },
     { symbol: 'MSFT', name: 'Microsoft Corporation', category: 'Tech' },
@@ -93,7 +93,7 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
     { symbol: 'QQQ', name: 'Nasdaq-100 ETF', category: 'ETF' },
     { symbol: 'IWM', name: 'Russell 2000 ETF', category: 'ETF' },
     { symbol: 'DIA', name: 'Dow Jones ETF', category: 'ETF' },
-  ];
+  ]);
 
   // Popular stocks for quick access
   const popularStocks = [
@@ -109,7 +109,7 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
   // Handle search
   useEffect(() => {
     if (searchQuery.length > 0) {
-      const filtered = stockDatabase.filter(stock =>
+      const filtered = stockDatabase.current.filter(stock =>
         stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
         stock.name.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 10);
@@ -119,7 +119,7 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [searchQuery, stockDatabase]);
+  }, [searchQuery]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -157,7 +157,7 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
           volume: data.regularMarketVolume,
         });
       })
-      .catch((err) => {
+      .catch(() => {
         setLiveError('Could not load live data');
       })
       .finally(() => setLiveLoading(false));
