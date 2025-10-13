@@ -24,6 +24,9 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Stock[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [liveData, setLiveData] = useState<{ price?: number; change?: number; volume?: number } | null>(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [liveError, setLiveError] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Comprehensive stock list with names and categories
@@ -116,7 +119,7 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, stockDatabase]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -135,6 +138,30 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
     setSearchQuery('');
     setShowSuggestions(false);
   };
+
+  // Fetch live price/volume when currentSymbol changes
+  useEffect(() => {
+    if (!currentSymbol) return;
+    setLiveLoading(true);
+    setLiveError(null);
+    setLiveData(null);
+    fetch(`/api/market/quote?symbol=${encodeURIComponent(currentSymbol)}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to fetch market data');
+        return res.json();
+      })
+      .then((data) => {
+        setLiveData({
+          price: data.regularMarketPrice,
+          change: data.regularMarketChangePercent,
+          volume: data.regularMarketVolume,
+        });
+      })
+      .catch((err) => {
+        setLiveError('Could not load live data');
+      })
+      .finally(() => setLiveLoading(false));
+  }, [currentSymbol]);
 
   return (
     <Card>
@@ -187,7 +214,20 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
         <div className="bg-muted p-4 rounded-lg">
           <div className="text-sm text-muted-foreground mb-1">Currently Selected</div>
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold">{currentSymbol}</div>
+            <div>
+              <div className="text-2xl font-bold">{currentSymbol}</div>
+              {liveLoading ? (
+                <div className="text-xs text-gray-400 mt-1">Loading price...</div>
+              ) : liveError ? (
+                <div className="text-xs text-red-500 mt-1">{liveError}</div>
+              ) : liveData && (
+                <div className="text-xs text-gray-400 mt-1 flex gap-4">
+                  <span>Price: <span className="text-white font-semibold">${liveData.price?.toFixed(2) ?? '--'}</span></span>
+                  <span>Change: <span className={liveData.change && liveData.change >= 0 ? 'text-green-500' : 'text-red-500'}>{liveData.change !== undefined ? `${liveData.change >= 0 ? '+' : ''}${liveData.change.toFixed(2)}%` : '--'}</span></span>
+                  <span>Vol: <span className="text-white font-semibold">{liveData.volume?.toLocaleString() ?? '--'}</span></span>
+                </div>
+              )}
+            </div>
             <Badge variant="outline">Active</Badge>
           </div>
         </div>

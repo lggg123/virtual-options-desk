@@ -27,6 +27,7 @@ export default function AIPicksPage() {
   const [picks, setPicks] = useState<StockPick[]>([]);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
+  const [liveQuotes, setLiveQuotes] = useState<Record<string, { price?: number; change?: number; volume?: number }> >({});
 
   useEffect(() => {
     fetchAIPicks();
@@ -82,6 +83,32 @@ export default function AIPicksPage() {
       setLoading(false);
     }
   }
+
+  // Fetch live quotes for all picks when picks change
+  useEffect(() => {
+    if (!picks.length) return;
+    let cancelled = false;
+    async function fetchQuotes() {
+      const results: Record<string, { price?: number; change?: number; volume?: number }> = {};
+      await Promise.all(
+        picks.map(async (pick) => {
+          try {
+            const res = await fetch(`/api/market/quote?symbol=${encodeURIComponent(pick.symbol)}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            results[pick.symbol] = {
+              price: data.regularMarketPrice,
+              change: data.regularMarketChangePercent,
+              volume: data.regularMarketVolume,
+            };
+          } catch {}
+        })
+      );
+      if (!cancelled) setLiveQuotes(results);
+    }
+    fetchQuotes();
+    return () => { cancelled = true; };
+  }, [picks]);
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -205,55 +232,73 @@ export default function AIPicksPage() {
             </div>
           ) : (
             <div className="divide-y divide-slate-800">
-              {picks.map((pick, index) => (
-                <div key={index} className="p-6 hover:bg-slate-800/50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-sm font-semibold text-gray-400">#{index + 1}</span>
-                        <h3 className="text-lg font-bold text-white">{pick.symbol}</h3>
-                        <span className="text-sm text-gray-400">{pick.name}</span>
-                        <span className={`
-                          px-3 py-1 rounded-full text-xs font-medium
-                          ${pick.prediction === 'bullish' ? 'bg-green-500/20 text-green-400' :
-                            pick.prediction === 'bearish' ? 'bg-red-500/20 text-red-400' :
-                            'bg-gray-500/20 text-gray-400'}
-                        `}>
-                          {pick.prediction === 'bullish' && <TrendingUp className="w-3 h-3 inline mr-1" />}
-                          {pick.prediction === 'bearish' && <TrendingDown className="w-3 h-3 inline mr-1" />}
-                          {pick.prediction}
-                        </span>
-                      </div>
-
-                      <p className="text-gray-400 text-sm mb-3">{pick.reasoning}</p>
-
-                      <div className="flex items-center gap-6 text-sm">
-                        <div>
-                          <span className="text-gray-400">Current: </span>
-                          <span className="text-white font-medium">${pick.current_price.toFixed(2)}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Target: </span>
-                          <span className="text-white font-medium">${pick.target_price.toFixed(2)}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Potential: </span>
-                          <span className={`font-medium ${pick.potential_return > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {pick.potential_return > 0 ? '+' : ''}{pick.potential_return.toFixed(1)}%
+              {picks.map((pick, index) => {
+                const quote = liveQuotes[pick.symbol];
+                return (
+                  <div key={index} className="p-6 hover:bg-slate-800/50 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-sm font-semibold text-gray-400">#{index + 1}</span>
+                          <h3 className="text-lg font-bold text-white">{pick.symbol}</h3>
+                          <span className="text-sm text-gray-400">{pick.name}</span>
+                          <span className={`
+                            px-3 py-1 rounded-full text-xs font-medium
+                            ${pick.prediction === 'bullish' ? 'bg-green-500/20 text-green-400' :
+                              pick.prediction === 'bearish' ? 'bg-red-500/20 text-red-400' :
+                              'bg-gray-500/20 text-gray-400'}
+                          `}>
+                            {pick.prediction === 'bullish' && <TrendingUp className="w-3 h-3 inline mr-1" />}
+                            {pick.prediction === 'bearish' && <TrendingDown className="w-3 h-3 inline mr-1" />}
+                            {pick.prediction}
                           </span>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="ml-6 text-right">
-                      <div className="text-sm text-gray-400 mb-1">Confidence</div>
-                      <div className="text-2xl font-bold text-indigo-400">
-                        {(pick.confidence * 100).toFixed(0)}%
+                        <p className="text-gray-400 text-sm mb-3">{pick.reasoning}</p>
+
+                        <div className="flex items-center gap-6 text-sm flex-wrap">
+                          <div>
+                            <span className="text-gray-400">Current: </span>
+                            <span className="text-white font-medium">${pick.current_price.toFixed(2)}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Target: </span>
+                            <span className="text-white font-medium">${pick.target_price.toFixed(2)}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Potential: </span>
+                            <span className={`font-medium ${pick.potential_return > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {pick.potential_return > 0 ? '+' : ''}{pick.potential_return.toFixed(1)}%
+                            </span>
+                          </div>
+                          {/* Live quote info */}
+                          <div>
+                            <span className="text-gray-400">Live Price: </span>
+                            <span className="text-white font-semibold">{quote && quote.price !== undefined ? `$${quote.price.toFixed(2)}` : '--'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Change: </span>
+                            <span className={quote && quote.change !== undefined ? (quote.change >= 0 ? 'text-green-500' : 'text-red-500') : ''}>
+                              {quote && quote.change !== undefined ? `${quote.change >= 0 ? '+' : ''}${quote.change.toFixed(2)}%` : '--'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Vol: </span>
+                            <span className="text-white font-semibold">{quote && quote.volume !== undefined ? quote.volume.toLocaleString() : '--'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="ml-6 text-right">
+                        <div className="text-sm text-gray-400 mb-1">Confidence</div>
+                        <div className="text-2xl font-bold text-indigo-400">
+                          {(pick.confidence * 100).toFixed(0)}%
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

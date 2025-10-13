@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const csvPath = path.resolve(process.cwd(), 'data/top25_pro.csv');
   try {
     const csv = fs.readFileSync(csvPath, 'utf8');
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       return Object.fromEntries(values.map((v, i) => [columns[i], v]));
     });
     return NextResponse.json({ picks: data });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'Could not read pro picks.' }, { status: 500 });
   }
 }
