@@ -32,6 +32,7 @@ export default function AIPicksPage() {
     fetchAIPicks();
   }, []);
 
+
   async function fetchAIPicks() {
     try {
       // Fetch user session and subscription
@@ -53,9 +54,9 @@ export default function AIPicksPage() {
 
         // Set limits based on plan
         if (plan === 'premium') {
-          picksLimit = 100;
+          picksLimit = 50;
         } else if (plan === 'pro') {
-          picksLimit = -1; // unlimited
+          picksLimit = 25;
         }
 
         setSubscription({
@@ -65,75 +66,15 @@ export default function AIPicksPage() {
         });
       }
 
-      // For free tier, use a curated list of 10 popular stocks
-      // For paid tiers, use ML screening
-      let stocksToScreen = [];
+      // Fetch picks from new tiered API endpoints
+      let apiUrl = '/api/ai-picks/free';
+      if (plan === 'pro') apiUrl = '/api/ai-picks/pro';
+      if (plan === 'premium') apiUrl = '/api/ai-picks/premium';
 
-      if (plan === 'free') {
-        // Curated list of 10 popular, liquid stocks for free users
-        stocksToScreen = [
-          'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA',
-          'META', 'NVDA', 'AMD', 'NFLX', 'DIS'
-        ];
-      } else if (plan === 'premium') {
-        // Premium: 100 stocks across sectors
-        stocksToScreen = [
-          // Tech Giants
-          'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'NFLX',
-          // Semiconductors
-          'AMD', 'INTC', 'QCOM', 'AVGO', 'TXN', 'MU', 'AMAT', 'TSM',
-          // Software & Cloud
-          'ORCL', 'ADBE', 'CRM', 'NOW', 'INTU', 'SNOW', 'WDAY', 'TEAM',
-          // Finance
-          'JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'V', 'MA', 'PYPL',
-          // Healthcare
-          'JNJ', 'UNH', 'PFE', 'ABBV', 'TMO', 'ABT', 'LLY', 'MRK',
-          // Consumer & Retail
-          'WMT', 'HD', 'COST', 'TGT', 'NKE', 'SBUX', 'MCD', 'DIS',
-          // Energy
-          'XOM', 'CVX', 'COP', 'SLB', 'OXY', 'EOG',
-          // Industrial
-          'BA', 'CAT', 'GE', 'UPS', 'RTX', 'HON', 'UNP', 'DE',
-          // Growth Stocks
-          'PLTR', 'COIN', 'ROKU', 'SHOP', 'UBER', 'ABNB', 'DASH', 'SPOT',
-          // ETFs
-          'SPY', 'QQQ', 'IWM', 'DIA', 'VOO', 'VTI'
-        ].slice(0, 100);
-      } else {
-        // Pro: unlimited (use expanded universe)
-        stocksToScreen = [
-          // All from premium plus more
-          'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'NFLX',
-          'AMD', 'INTC', 'QCOM', 'AVGO', 'TXN', 'MU', 'AMAT', 'TSM',
-          'ORCL', 'ADBE', 'CRM', 'NOW', 'INTU', 'SNOW', 'WDAY', 'TEAM',
-          'JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'V', 'MA', 'PYPL',
-          'JNJ', 'UNH', 'PFE', 'ABBV', 'TMO', 'ABT', 'LLY', 'MRK',
-          'WMT', 'HD', 'COST', 'TGT', 'NKE', 'SBUX', 'MCD', 'DIS',
-          'XOM', 'CVX', 'COP', 'SLB', 'OXY', 'EOG',
-          'BA', 'CAT', 'GE', 'UPS', 'RTX', 'HON', 'UNP', 'DE',
-          'PLTR', 'COIN', 'ROKU', 'SHOP', 'UBER', 'ABNB', 'DASH', 'SPOT',
-          'SPY', 'QQQ', 'IWM', 'DIA', 'VOO', 'VTI',
-          // Additional stocks for pro
-          'SQ', 'PANW', 'DDOG', 'NET', 'ZS', 'CRWD', 'OKTA'
-        ];
-      }
-
-      const response = await fetch('/api/ml/screen', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          symbols: stocksToScreen,
-          threshold: 0.6
-        })
-      });
-
+      const response = await fetch(apiUrl);
       if (response.ok) {
         const data = await response.json();
-        const results = data.results || [];
-
-        // For free tier, strictly limit to 10 picks
-        const limitedResults = plan === 'free' ? results.slice(0, 10) : results;
-        setPicks(limitedResults);
+        setPicks(data.picks || []);
       }
     } catch (error) {
       console.error('Error fetching AI picks:', error);
