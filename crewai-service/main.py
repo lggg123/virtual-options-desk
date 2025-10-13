@@ -1,3 +1,30 @@
+# --- New endpoint: Top 10 AI stock picks ---
+@app.get("/top_breakout_picks")
+async def top_breakout_picks(csv_path: str = "data/latest_stock_data.csv", n: int = 10):
+    """Return the top N stocks with highest breakout probability using the trained model."""
+    if breakout_clf.model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded.")
+    if not os.path.exists(csv_path):
+        raise HTTPException(status_code=404, detail=f"CSV file not found: {csv_path}")
+    try:
+        df = pd.read_csv(csv_path)
+        # Ensure required columns exist and are numeric
+        for col in ['open', 'high', 'low', 'close', 'volume']:
+            if col not in df.columns:
+                raise HTTPException(status_code=400, detail=f"Missing column: {col}")
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+        df = df.dropna(subset=['open', 'high', 'low', 'close', 'volume'])
+        # Predict breakout probability for each row
+        X = df[['open', 'high', 'low', 'close', 'volume']]
+        probs = breakout_clf.predict(X)
+        df['breakout_probability'] = probs
+        # Sort and select top N
+        top = df.sort_values('breakout_probability', ascending=False).head(n)
+        # Return as list of dicts (symbol, probability, and optionally other info)
+        picks = top[['symbol', 'breakout_probability']].to_dict(orient='records') if 'symbol' in top.columns else top.head(n).to_dict(orient='records')
+        return {"top_picks": picks}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate picks: {str(e)}")
 #!/usr/bin/env python3
 """
 CrewAI Service for Virtual Options Desk
