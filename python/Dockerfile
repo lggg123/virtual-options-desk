@@ -24,6 +24,8 @@ RUN pip install --no-cache-dir -r requirements-ml.txt
 
 # Copy all application code (includes ml_models/ subdirectory)
 COPY . /app
+# Ensure both model filenames are present for legacy and new code compatibility
+RUN cp ml_models/breakout_classifier_xgb_stockslist.pkl ml_models/breakout_classifier_xgb.pkl || true
 
 # Set environment
 ENV PYTHONPATH=/app
