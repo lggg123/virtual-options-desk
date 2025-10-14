@@ -140,6 +140,12 @@ export default function AIPicksPage() {
   return (
     <div className="min-h-screen bg-slate-950 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-900/80 border border-red-700 text-red-200 rounded-lg">
+            <strong>Error:</strong> {error}
+          </div>
+        )}
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
