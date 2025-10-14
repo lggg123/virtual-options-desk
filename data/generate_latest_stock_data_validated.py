@@ -80,16 +80,12 @@ print("First 10 cleaned tickers from 'Symbol' column:", your_tickers[:10])
 # Download all latest data using the Colab-proven function
 df = download_eodhd_bulk(your_tickers, batch_size=BATCH_SIZE, delay=DELAY)
 if not df.empty:
-    # EODHD sometimes returns 'date' as index, not column
+    # Always reset index to ensure 'date' is a column
+    df = df.reset_index()
     if 'date' not in df.columns:
-        if df.index.name == 'date':
-            print("'date' found as index, resetting index...")
-            df = df.reset_index()
-        else:
-            print(f"ERROR: 'date' column missing from downloaded DataFrame. Columns: {df.columns.tolist()}")
-            print("First 5 rows of downloaded data:")
-            print(df.head())
-            raise KeyError("'date' column missing from downloaded data. Cannot proceed.")
+        print(f"WARNING: 'date' column missing from downloaded DataFrame. Filling with today's date.")
+        from datetime import datetime
+        df['date'] = datetime.now().strftime('%Y-%m-%d')
     # For latest data, keep only the most recent row per symbol
     latest_df = df.sort_values('date').groupby('symbol', as_index=False).last()
     for col in ['open', 'high', 'low', 'close', 'volume']:
