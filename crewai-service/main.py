@@ -35,28 +35,37 @@ app = FastAPI(
 @app.get("/top_breakout_picks")
 async def top_breakout_picks(csv_path: str = "data/latest_stock_data.csv", n: int = 10):
     """Return the top N stocks with highest breakout probability using the trained model."""
+    import traceback
     if breakout_clf.model is None:
+        print("[ERROR] Model not loaded.")
         raise HTTPException(status_code=503, detail="Model not loaded.")
     if not os.path.exists(csv_path):
+        print(f"[ERROR] CSV file not found: {csv_path}")
         raise HTTPException(status_code=404, detail=f"CSV file not found: {csv_path}")
     try:
         df = pd.read_csv(csv_path)
+        print(f"[DEBUG] DataFrame columns: {df.columns.tolist()}")
+        print(f"[DEBUG] DataFrame shape: {df.shape}")
         # Ensure required columns exist and are numeric
         for col in ['open', 'high', 'low', 'close', 'volume']:
             if col not in df.columns:
+                print(f"[ERROR] Missing column: {col}")
                 raise HTTPException(status_code=400, detail=f"Missing column: {col}")
             df[col] = pd.to_numeric(df[col], errors='coerce')
         df = df.dropna(subset=['open', 'high', 'low', 'close', 'volume'])
-        # Predict breakout probability for each row
+        print(f"[DEBUG] DataFrame after dropna shape: {df.shape}")
         X = df[['open', 'high', 'low', 'close', 'volume']]
+        print(f"[DEBUG] Predict input shape: {X.shape}")
         probs = breakout_clf.predict(X)
+        print(f"[DEBUG] Prediction output shape: {probs.shape}")
         df['breakout_probability'] = probs
-        # Sort and select top N
         top = df.sort_values('breakout_probability', ascending=False).head(n)
-        # Return as list of dicts (symbol, probability, and optionally other info)
         picks = top[['symbol', 'breakout_probability']].to_dict(orient='records') if 'symbol' in top.columns else top.head(n).to_dict(orient='records')
+        print(f"[DEBUG] Top picks: {picks}")
         return {"top_picks": picks}
     except Exception as e:
+        print(f"[ERROR] Exception in /top_breakout_picks: {e}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to generate picks: {str(e)}")
 #!/usr/bin/env python3
 """

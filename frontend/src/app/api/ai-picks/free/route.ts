@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 
 export async function GET() {
-  const csvPath = path.resolve(process.cwd(), 'data/top10_free.csv');
+  const apiUrl = process.env.NEXT_PUBLIC_CREWAI_API_URL || '';
+  if (!apiUrl) {
+    return NextResponse.json({ error: 'CREWAI API URL not set.' }, { status: 500 });
+  }
   try {
-    const csv = fs.readFileSync(csvPath, 'utf8');
-    const [header, ...rows] = csv.trim().split('\n');
-    const columns = header.split(',');
-    const data = rows.map(row => {
-      const values = row.split(',');
-      return Object.fromEntries(values.map((v, i) => [columns[i], v]));
-    });
-    return NextResponse.json({ picks: data });
-  } catch {
-    return NextResponse.json({ error: 'Could not read free picks.' }, { status: 500 });
+    const res = await fetch(`${apiUrl}/top_breakout_picks?n=10`);
+    if (!res.ok) {
+      const err = await res.text();
+      return NextResponse.json({ error: `CrewAI API error: ${err}` }, { status: 500 });
+    }
+    const data = await res.json();
+    return NextResponse.json({ picks: data.top_picks || [] });
+  } catch (e) {
+    return NextResponse.json({ error: `Failed to fetch from CrewAI: ${e}` }, { status: 500 });
   }
 }
