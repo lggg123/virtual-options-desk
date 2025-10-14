@@ -28,57 +28,86 @@ export default function AIPicksPage() {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [liveQuotes, setLiveQuotes] = useState<Record<string, { price?: number; change?: number; volume?: number }> >({});
+  const [error, setError] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     fetchAIPicks();
   }, []);
 
-
   async function fetchAIPicks() {
+    setError(null);
     try {
       // Fetch user session and subscription
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.user) {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        setError('Error fetching session: ' + sessionError.message);
         setLoading(false);
+        setAuthChecked(true);
         return;
       }
+      if (!session?.user) {
+        setError('You must be logged in to view AI Picks.');
+        setLoading(false);
+        setAuthChecked(true);
+        return;
+      }
+      setAuthChecked(true);
+      console.log('[AIPicks] User session:', session.user);
 
       // Get subscription details
-      const subRes = await fetch(`/api/subscription/status?user_id=${session.user.id}`);
       let plan = 'free';
       let picksLimit = 10; // Free tier default
-
-      if (subRes.ok) {
-        const subData = await subRes.json();
-        plan = subData.plan || 'free';
-
-        // Set limits based on plan
-        if (plan === 'premium') {
-          picksLimit = 50;
-        } else if (plan === 'pro') {
-          picksLimit = 25;
+      let subStatus = 'inactive';
+      try {
+        const subRes = await fetch(`/api/subscription/status?user_id=${session.user.id}`);
+        if (subRes.ok) {
+          const subData = await subRes.json();
+          plan = subData.plan || 'free';
+          subStatus = subData.status || 'active';
+          // Set limits based on plan
+          if (plan === 'premium') {
+            picksLimit = 50;
+          } else if (plan === 'pro') {
+            picksLimit = 25;
+          }
+          setSubscription({ plan, status: subStatus, picks_limit: picksLimit });
+          console.log('[AIPicks] Subscription:', { plan, subStatus, picksLimit });
+        } else {
+          setSubscription({ plan: 'free', status: 'inactive', picks_limit: 10 });
+          setError('Could not fetch subscription status. Defaulting to Free plan.');
+          console.warn('[AIPicks] Subscription API error:', subRes.status);
         }
-
-        setSubscription({
-          plan,
-          status: subData.status || 'active',
-          picks_limit: picksLimit
-        });
+      } catch (subErr) {
+        setSubscription({ plan: 'free', status: 'inactive', picks_limit: 10 });
+        setError('Error fetching subscription. Defaulting to Free plan.');
+        console.error('[AIPicks] Subscription fetch error:', subErr);
       }
 
       // Fetch picks from new tiered API endpoints
       let apiUrl = '/api/ai-picks/free';
       if (plan === 'pro') apiUrl = '/api/ai-picks/pro';
       if (plan === 'premium') apiUrl = '/api/ai-picks/premium';
-
-      const response = await fetch(apiUrl);
-      if (response.ok) {
-        const data = await response.json();
-        setPicks(data.picks || []);
+      try {
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+          const data = await response.json();
+          setPicks(data.picks || []);
+          console.log('[AIPicks] Picks:', data.picks);
+        } else {
+          setError('Failed to fetch AI picks. API error: ' + response.status);
+          setPicks([]);
+          console.error('[AIPicks] Picks API error:', response.status);
+        }
+      } catch (picksErr) {
+        setError('Error fetching AI picks.');
+        setPicks([]);
+        console.error('[AIPicks] Picks fetch error:', picksErr);
       }
     } catch (error) {
-      console.error('Error fetching AI picks:', error);
+      setError('Unexpected error: ' + (error instanceof Error ? error.message : String(error)));
+      setPicks([]);
+      console.error('[AIPicks] Unexpected error:', error);
     } finally {
       setLoading(false);
     }
@@ -101,7 +130,9 @@ export default function AIPicksPage() {
               change: data.regularMarketChangePercent,
               volume: data.regularMarketVolume,
             };
-          } catch {}
+          } catch (err) {
+            console.warn('[AIPicks] Live quote fetch error:', err);
+          }
         })
       );
       if (!cancelled) setLiveQuotes(results);
