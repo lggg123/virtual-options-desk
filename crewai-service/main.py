@@ -101,12 +101,12 @@ class BreakoutStockClassifier:
         return self.model.predict_proba(X)[:, 1] if self.model else None
 
 # Load the trained model at startup
-MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "python", "ml_models", "breakout_classifier_xgb_stockslist.pkl")
+MODEL_PATH = os.path.join("python", "ml_models", "breakout_classifier_xgb_stockslist.pkl")
 breakout_clf = BreakoutStockClassifier()
 if os.path.exists(MODEL_PATH):
     breakout_clf.load(MODEL_PATH)
 else:
-    print(f"Warning: Model file not found at {MODEL_PATH}")
+    print(f"Warning: Model file not found at {os.path.abspath(MODEL_PATH)}")
 
 # Add CORS middleware
 app.add_middleware(
