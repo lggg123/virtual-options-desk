@@ -29,7 +29,6 @@ export default function AIPicksPage() {
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [liveQuotes, setLiveQuotes] = useState<Record<string, { price?: number; change?: number; volume?: number }> >({});
   const [error, setError] = useState<string | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     fetchAIPicks();
@@ -43,16 +42,13 @@ export default function AIPicksPage() {
       if (sessionError) {
         setError('Error fetching session: ' + sessionError.message);
         setLoading(false);
-        setAuthChecked(true);
         return;
       }
       if (!session?.user) {
         setError('You must be logged in to view AI Picks.');
         setLoading(false);
-        setAuthChecked(true);
         return;
       }
-      setAuthChecked(true);
       console.log('[AIPicks] User session:', session.user);
 
       // Get subscription details
