@@ -1,3 +1,36 @@
+#!/usr/bin/env python3
+"""
+CrewAI Service for Virtual Options Desk
+Advanced market analysis using AI agents
+"""
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List, Dict, Any, Optional
+import joblib
+import pandas as pd
+import json
+import sys
+import os
+from datetime import datetime
+
+# Add the python directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), 'python'))
+
+try:
+    from python.crewai_analysis import MarketAnalysisAgent
+    CREWAI_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: CrewAI not available: {e}")
+    CREWAI_AVAILABLE = False
+
+app = FastAPI(
+    title="CrewAI Market Analysis Service",
+    description="Advanced AI-powered market analysis using CrewAI agents",
+    version="1.0.0"
+)
+
 # --- New endpoint: Top 10 AI stock picks ---
 @app.get("/top_breakout_picks")
 async def top_breakout_picks(csv_path: str = "data/latest_stock_data.csv", n: int = 10):
