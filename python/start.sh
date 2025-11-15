@@ -13,9 +13,19 @@ if [ -d "/opt/venv" ]; then
     echo "Using virtual environment at /opt/venv"
     export PATH="/opt/venv/bin:$PATH"
     echo "Python version: $(python --version)"
-    exec python -m uvicorn pattern_detection_api:app --host 0.0.0.0 --port "${PORT}"
+    # Use uvicorn with WebSocket support explicitly enabled
+    exec python -m uvicorn pattern_detection_api:app \
+        --host 0.0.0.0 \
+        --port "${PORT}" \
+        --ws websockets \
+        --log-level info
 else
     echo "Using system Python"
     echo "Python version: $(python3 --version)"
-    exec python3 -m uvicorn pattern_detection_api:app --host 0.0.0.0 --port "${PORT}"
+    # Use uvicorn with WebSocket support explicitly enabled
+    exec python3 -m uvicorn pattern_detection_api:app \
+        --host 0.0.0.0 \
+        --port "${PORT}" \
+        --ws websockets \
+        --log-level info
 fi

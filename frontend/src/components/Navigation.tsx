@@ -13,16 +13,24 @@ import {
   LogIn,
   Menu,
   X,
-  Newspaper
+  Newspaper,
+  LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
-const navigation = [
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  external?: boolean;
+}
+
+const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'AI Stock Picks', href: '/dashboard/ai-picks', icon: TrendingUp },
   { name: 'Virtual Options', href: '/trading', icon: CandlestickChart },
-  { name: 'Pattern Detection', href: '/dashboard/patterns', icon: LineChart },
+  { name: 'Pattern Detection', href: 'https://svelte-chart-app.vercel.app/', icon: LineChart, external: true },
   { name: 'AI Insights Blog', href: '/dashboard/blog', icon: Newspaper },
   { name: 'Portfolio', href: '/portfolio', icon: Wallet },
   { name: 'Pricing', href: '/pricing', icon: Crown },
@@ -87,7 +95,23 @@ export default function Navigation() {
           {/* Navigation Links */}
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+              const isActive = !item.external && (pathname === item.href || pathname?.startsWith(item.href + '/'));
+              
+              if (item.external) {
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-300 hover:bg-slate-800 hover:text-white"
+                  >
+                    <item.icon className="w-5 h-5 mr-3" />
+                    {item.name}
+                  </a>
+                );
+              }
+              
               return (
                 <Link
                   key={item.name}
@@ -156,7 +180,24 @@ export default function Navigation() {
         <div className="lg:hidden fixed inset-0 z-40 bg-slate-900 pt-16">
           <nav className="px-4 py-6 space-y-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+              const isActive = !item.external && (pathname === item.href || pathname?.startsWith(item.href + '/'));
+              
+              if (item.external) {
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-300 hover:bg-slate-800 hover:text-white"
+                  >
+                    <item.icon className="w-5 h-5 mr-3" />
+                    {item.name}
+                  </a>
+                );
+              }
+              
               return (
                 <Link
                   key={item.name}

@@ -74,6 +74,7 @@ async def custom_cors_middleware(request: Request, call_next):
         print(f"🔵 Origin: {request.headers.get('origin', 'none')}")
         print(f"🔵 Path: {request.url.path}")
         print(f"🔵 Host: {request.headers.get('host', 'none')}")
+        print(f"🔵 All Headers: {dict(request.headers)}")
         # Pass through immediately without ANY processing
         return await call_next(request)
     
@@ -714,13 +715,18 @@ async def websocket_endpoint(websocket: WebSocket, symbol: str, timeframe: str =
     NOTE: This endpoint is PUBLIC and allows connections from any origin.
     No authentication required for development/testing.
     """
+    print(f"🔵 WebSocket connection attempt for {symbol}")
+    print(f"🔵 Client: {websocket.client}")
+    print(f"🔵 Timeframe: {timeframe}")
+    
     # CRITICAL: Accept connection IMMEDIATELY as first action
     # Any code before accept() can cause 403 errors
-    await websocket.accept()
-    
-    # Now log after successful connection
-    print(f"✅ WebSocket CONNECTED: {symbol} (timeframe: {timeframe})")
-    print(f"📊 Client: {websocket.client}")
+    try:
+        await websocket.accept()
+        print(f"✅ WebSocket ACCEPTED: {symbol} (timeframe: {timeframe})")
+    except Exception as e:
+        print(f"❌ WebSocket accept failed: {e}")
+        raise
     
     # Debug: Log connection info and headers
     try:

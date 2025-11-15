@@ -1,0 +1,11 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "bash start.sh"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+
+[networking]
+# Railway automatically handles WebSocket upgrades on HTTP/HTTPS connections
+# No special configuration needed - WebSockets work over the same port
