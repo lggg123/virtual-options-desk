@@ -10,11 +10,12 @@ import {
   Wallet,
   Crown,
   LogOut,
+  LogIn,
   Menu,
   X,
   Newspaper
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
 const navigation = [
@@ -30,6 +31,23 @@ const navigation = [
 export default function Navigation() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check initial auth state
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -98,13 +116,23 @@ export default function Navigation() {
               <Crown className="w-5 h-5 mr-2" />
               Upgrade to Pro
             </Link>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center justify-center w-full px-4 py-3 mt-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-            >
-              <LogOut className="w-5 h-5 mr-2" />
-              Sign Out
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={handleSignOut}
+                className="flex items-center justify-center w-full px-4 py-3 mt-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <LogOut className="w-5 h-5 mr-2" />
+                Sign Out
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center justify-center w-full px-4 py-3 mt-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <LogIn className="w-5 h-5 mr-2" />
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </aside>
@@ -155,16 +183,27 @@ export default function Navigation() {
               <Crown className="w-5 h-5 mr-2" />
               Upgrade to Pro
             </Link>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                handleSignOut();
-              }}
-              className="flex items-center justify-center w-full px-4 py-3 mt-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg"
-            >
-              <LogOut className="w-5 h-5 mr-2" />
-              Sign Out
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleSignOut();
+                }}
+                className="flex items-center justify-center w-full px-4 py-3 mt-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg"
+              >
+                <LogOut className="w-5 h-5 mr-2" />
+                Sign Out
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center w-full px-4 py-3 mt-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg"
+              >
+                <LogIn className="w-5 h-5 mr-2" />
+                Sign In
+              </Link>
+            )}
           </nav>
         </div>
       )}
