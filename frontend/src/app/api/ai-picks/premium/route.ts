@@ -25,7 +25,7 @@ interface StockPick {
   reasoning: string;
 }
 
-async function enrichPickWithMarketData(symbol: string, confidence: number, industry?: string, volatility?: string): Promise<Partial<StockPick>> {
+async function enrichPickWithMarketData(symbol: string, confidence: number): Promise<Partial<StockPick>> {
   try {
     const quoteRes = await fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/market/quote?symbol=${symbol}`);
     if (quoteRes.ok) {
@@ -69,7 +69,7 @@ export async function GET() {
     const picks: StockPick[] = await Promise.all(
       rawData.slice(0, 50).map(async (row) => {
         const confidence = parseFloat(row.breakout_probability);
-        const enriched = await enrichPickWithMarketData(row.symbol, confidence, row.Industry, row.volatility_30d);
+        const enriched = await enrichPickWithMarketData(row.symbol, confidence);
         
         const vol = row.volatility_30d ? parseFloat(row.volatility_30d) : null;
         const volText = vol ? (vol > 0.5 ? 'High volatility' : vol > 0.3 ? 'Moderate volatility' : 'Low volatility') : '';
