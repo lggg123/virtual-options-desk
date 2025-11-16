@@ -20,8 +20,8 @@ interface StockPick {
 }
 
 export async function GET() {
-  // Read from CSV
-  const csvPath = path.resolve(process.cwd(), 'data/top10_free.csv');
+  // Read from CSV in public/data directory (accessible in Vercel)
+  const csvPath = path.join(process.cwd(), 'public', 'data', 'top10_free.csv');
   try {
     const csv = fs.readFileSync(csvPath, 'utf8');
     const [header, ...rows] = csv.trim().split('\n');

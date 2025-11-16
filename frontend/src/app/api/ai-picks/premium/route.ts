@@ -26,7 +26,7 @@ interface StockPick {
 }
 
 export async function GET() {
-  const csvPath = path.resolve(process.cwd(), 'data/top50_premium.csv');
+  const csvPath = path.join(process.cwd(), 'public', 'data', 'top50_premium.csv');
   try {
     const csv = fs.readFileSync(csvPath, 'utf8');
     const [header, ...rows] = csv.trim().split('\n');
