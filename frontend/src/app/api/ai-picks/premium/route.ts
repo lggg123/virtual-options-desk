@@ -63,7 +63,7 @@ export async function GET() {
     
     const rawData: CSVRow[] = rows.map(row => {
       const values = row.split(',');
-      return Object.fromEntries(values.map((v, i) => [columns[i], v])) as CSVRow;
+      return Object.fromEntries(values.map((v, i) => [columns[i], v])) as unknown as CSVRow;
     });
     
     const picks: StockPick[] = await Promise.all(
