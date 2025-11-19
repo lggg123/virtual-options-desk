@@ -4,8 +4,8 @@
 CREATE TABLE IF NOT EXISTS user_accounts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
-  cash_balance DECIMAL(15, 2) DEFAULT 100000.00 NOT NULL,
-  portfolio_value DECIMAL(15, 2) DEFAULT 100000.00 NOT NULL,
+  cash_balance DECIMAL(15, 2) DEFAULT 2000000.00 NOT NULL,
+  portfolio_value DECIMAL(15, 2) DEFAULT 2000000.00 NOT NULL,
   total_pnl DECIMAL(15, 2) DEFAULT 0.00 NOT NULL,
   total_pnl_percent DECIMAL(8, 4) DEFAULT 0.00 NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -111,7 +111,7 @@ SET search_path = public
 AS $$
 BEGIN
   INSERT INTO public.user_accounts (user_id, cash_balance, portfolio_value, total_pnl, total_pnl_percent)
-  VALUES (NEW.id, 100000.00, 100000.00, 0.00, 0.00);
+  VALUES (NEW.id, 2000000.00, 2000000.00, 0.00, 0.00);
   RETURN NEW;
 EXCEPTION
   WHEN OTHERS THEN

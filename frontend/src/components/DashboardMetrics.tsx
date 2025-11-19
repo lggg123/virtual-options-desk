@@ -75,8 +75,8 @@ export default function DashboardMetrics() {
     );
   }
 
-  const portfolioValue = account.portfolio_value || 100000;
-  const cashBalance = account.cash_balance || 100000;
+  const portfolioValue = account.portfolio_value || 2000000;
+  const cashBalance = account.cash_balance || 2000000;
   const totalPnL = account.total_pnl || 0;
   const totalPnLPercent = account.total_pnl_percent || 0;
   const investedAmount = portfolioValue - cashBalance;

@@ -72,7 +72,7 @@ If you see users without `account_id`, create accounts for them:
 ```sql
 -- Create accounts for existing users who don't have one
 INSERT INTO user_accounts (user_id, cash_balance, portfolio_value, total_pnl, total_pnl_percent)
-SELECT u.id, 100000.00, 100000.00, 0.00, 0.00
+SELECT u.id, 2000000.00, 2000000.00, 0.00, 0.00
 FROM auth.users u
 WHERE NOT EXISTS (
   SELECT 1 FROM user_accounts WHERE user_id = u.id
@@ -164,7 +164,7 @@ SET search_path = public
 AS $$
 BEGIN
   INSERT INTO public.user_accounts (user_id, cash_balance, portfolio_value, total_pnl, total_pnl_percent)
-  VALUES (NEW.id, 100000.00, 100000.00, 0.00, 0.00);
+  VALUES (NEW.id, 2000000.00, 2000000.00, 0.00, 0.00);
   RETURN NEW;
 EXCEPTION
   WHEN OTHERS THEN
@@ -250,7 +250,7 @@ SET search_path = public
 AS $$
 BEGIN
   INSERT INTO public.user_accounts (user_id, cash_balance, portfolio_value, total_pnl, total_pnl_percent)
-  VALUES (NEW.id, 100000.00, 100000.00, 0.00, 0.00);
+  VALUES (NEW.id, 2000000.00, 2000000.00, 0.00, 0.00);
   RETURN NEW;
 EXCEPTION
   WHEN OTHERS THEN
@@ -270,7 +270,7 @@ GRANT SELECT, INSERT, UPDATE ON user_accounts TO authenticated;
 
 -- 7. Create accounts for existing users
 INSERT INTO user_accounts (user_id, cash_balance, portfolio_value, total_pnl, total_pnl_percent)
-SELECT u.id, 100000.00, 100000.00, 0.00, 0.00
+SELECT u.id, 2000000.00, 2000000.00, 0.00, 0.00
 FROM auth.users u
 WHERE NOT EXISTS (
   SELECT 1 FROM user_accounts WHERE user_id = u.id

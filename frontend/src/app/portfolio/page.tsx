@@ -45,7 +45,7 @@ export default function PortfolioPage() {
           setUserProfile({
             id: user.id,
             email: user.email,
-            portfolio_value: 100000, // Default $100k
+            portfolio_value: 2000000, // Default $2M
             open_positions: 0,
             total_return: 0
           });
@@ -55,7 +55,7 @@ export default function PortfolioPage() {
           setUserProfile({
             id: user.id,
             email: user.email,
-            portfolio_value: 100000, // TODO: Calculate from positions table
+            portfolio_value: 2000000, // TODO: Calculate from positions table
             open_positions: 0, // TODO: Count from positions table
             total_return: 0 // TODO: Calculate from portfolios table
           });
@@ -71,7 +71,7 @@ export default function PortfolioPage() {
     fetchUserProfile();
   }, []);
 
-  const portfolioValue = userProfile?.portfolio_value ?? 100000;
+  const portfolioValue = userProfile?.portfolio_value ?? 2000000;
   const openPositions = userProfile?.open_positions ?? 0;
   const totalReturn = userProfile?.total_return ?? 0;
 

@@ -108,7 +108,7 @@ export default function AuthCallbackPage() {
                 <AlertDescription className="text-green-800">
                   ✅ Your email has been confirmed! You now have access to:
                   <ul className="mt-2 space-y-1 text-left">
-                    <li>• $100,000 in virtual trading funds</li>
+                    <li>• $2,000,000 in virtual trading funds</li>
                     <li>• AI Stock Picks</li>
                     <li>• Market Sentiment Analysis</li>
                     <li>• Virtual Options Trading</li>

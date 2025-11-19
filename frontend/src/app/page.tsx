@@ -100,7 +100,7 @@ export default function HomePage() {
             Your AI-Powered Stock & Options Desk
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            Discover top AI stock picks, analyze real-time market sentiment, and practice options trading with $100,000 in virtual capital. All in one platform—no risk, just learning and growth.
+            Discover top AI stock picks, analyze real-time market sentiment, and practice options trading with $2,000,000 in virtual capital. All in one platform—no risk, just learning and growth.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
@@ -131,7 +131,7 @@ export default function HomePage() {
             </div>
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
               <DollarSign className="w-8 h-8 text-purple-500 mb-2 mx-auto" />
-              <h3 className="text-2xl font-bold">$100K</h3>
+              <h3 className="text-2xl font-bold">$2M</h3>
               <p className="text-gray-400">Virtual trading funds</p>
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function HomePage() {
             <FeatureCard
               icon={<DollarSign className="w-8 h-8" />}
               title="Virtual Options Trading"
-              description="Practice options strategies with $100,000 in virtual funds. No risk, just learning."
+              description="Practice options strategies with $2,000,000 in virtual funds. No risk, just learning."
               gradient="from-purple-600 to-pink-600"
             />
             <FeatureCard
@@ -194,7 +194,7 @@ export default function HomePage() {
             <StepCard
               step="1"
               title="Sign Up"
-              description="Create your free account and get $100,000 in virtual capital instantly."
+              description="Create your free account and get $2,000,000 in virtual capital instantly."
             />
             <StepCard
               step="2"

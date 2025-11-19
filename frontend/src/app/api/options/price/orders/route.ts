@@ -124,8 +124,8 @@ export async function POST(request: NextRequest) {
           .from('portfolios')
           .insert({
             user_id: mockUser.id,
-            cash_balance: 10000, // $10,000 starting balance
-            total_value: 10000,
+            cash_balance: 2000000, // $2,000,000 starting balance
+            total_value: 2000000,
           })
           .select()
           .single();

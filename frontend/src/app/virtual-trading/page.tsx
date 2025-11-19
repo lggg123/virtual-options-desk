@@ -7,7 +7,7 @@ import { TrendingUp, DollarSign, Activity } from 'lucide-react';
 export default function VirtualTradingPage() {
   const [selectedStock, setSelectedStock] = useState('');
   const [portfolio] = useState({
-    cash: 100000,
+    cash: 2000000,
     positions: []
   });
 
@@ -18,7 +18,7 @@ export default function VirtualTradingPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Virtual Options Trading</h1>
           <p className="text-gray-300 text-lg">
-            Practice with $100,000 virtual capital - Choose from 150+ stocks
+            Practice with $2,000,000 virtual capital - Choose from 150+ stocks
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export default function VirtualTradingPage() {
           <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
             <h3 className="text-xl font-bold text-white mb-3">Risk-Free Practice</h3>
             <p className="text-gray-400">
-              Learn options trading with $100,000 virtual capital. No real money risk, just pure learning experience.
+              Learn options trading with $2,000,000 virtual capital. No real money risk, just pure learning experience.
             </p>
           </div>
         </div>

@@ -68,8 +68,8 @@ CREATE TABLE IF NOT EXISTS public.portfolios (
     description TEXT,
     
     -- Portfolio value
-    cash_balance NUMERIC DEFAULT 100000.00, -- Starting balance
-    total_value NUMERIC DEFAULT 100000.00,
+    cash_balance NUMERIC DEFAULT 2000000.00, -- Starting balance
+    total_value NUMERIC DEFAULT 2000000.00,
     unrealized_pl NUMERIC DEFAULT 0,
     realized_pl NUMERIC DEFAULT 0,
     

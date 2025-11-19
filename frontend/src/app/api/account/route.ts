@@ -50,8 +50,8 @@ export async function GET() {
           .from('user_accounts')
           .insert({
             user_id: user.id,
-            cash_balance: 100000.00,
-            portfolio_value: 100000.00,
+            cash_balance: 2000000.00,
+            portfolio_value: 2000000.00,
             total_pnl: 0.00,
             total_pnl_percent: 0.00
           })
@@ -68,7 +68,7 @@ export async function GET() {
 
         return NextResponse.json({
           account: newAccount,
-          message: 'New account created with $100,000 virtual cash'
+          message: 'New account created with $2,000,000 virtual cash'
         });
       }
 
