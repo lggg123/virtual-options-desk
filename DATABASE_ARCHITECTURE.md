@@ -174,7 +174,7 @@ const { data: { user } } = await supabase.auth.signUp({
 
 // 1. Get trading data (Supabase)
 const account = await fetch('/api/account');
-// Returns: { cash_balance: 100000, portfolio_value: 100000 }
+// Returns: { cash_balance: 2000000, portfolio_value: 2000000 }
 
 // 2. Get subscription (Payment API)
 const subscription = await fetch('/api/payment/subscription');
@@ -199,7 +199,7 @@ const subscription = await fetch('/api/payment/subscription');
    ↓
 4. Trigger fires in Supabase
    ├─ Creates: user_accounts record
-   ├─ Sets: cash_balance = 100000
+   ├─ Sets: cash_balance = 2000000
    └─ Sets: user_id = "abc-123"
    ↓
 5. User subscribes to Premium
@@ -214,7 +214,7 @@ const subscription = await fetch('/api/payment/subscription');
    └─ Fetches: subscription data (Payment API)
    ↓
 8. Shows unified view:
-   "Premium Plan • $100,000 Balance"
+   "Premium Plan • $2,000,000 Balance"
 ```
 
 ---

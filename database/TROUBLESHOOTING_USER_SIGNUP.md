@@ -212,8 +212,8 @@ Run this complete script to fix all common issues:
 CREATE TABLE IF NOT EXISTS user_accounts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
-  cash_balance DECIMAL(15, 2) DEFAULT 100000.00 NOT NULL,
-  portfolio_value DECIMAL(15, 2) DEFAULT 100000.00 NOT NULL,
+  cash_balance DECIMAL(15, 2) DEFAULT 2000000.00 NOT NULL,
+  portfolio_value DECIMAL(15, 2) DEFAULT 2000000.00 NOT NULL,
   total_pnl DECIMAL(15, 2) DEFAULT 0.00 NOT NULL,
   total_pnl_percent DECIMAL(8, 4) DEFAULT 0.00 NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
