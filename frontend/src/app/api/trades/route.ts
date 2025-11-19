@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createSupabaseServer } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createSupabaseServer();
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch recent trades for the user
     const { data: trades, error: tradesError } = await supabase
-      .from('user_trades')
+      .from('options_trades')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createSupabaseServer();
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -79,21 +79,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert trade
+    // Insert trade (map to correct column names)
     const { data: trade, error: insertError } = await supabase
-      .from('user_trades')
+      .from('options_trades')
       .insert({
         user_id: user.id,
-        symbol,
-        type,
-        action,
-        strike,
-        expiry,
+        symbol: symbol.toUpperCase(),
+        option_type: type.toLowerCase() as 'call' | 'put',
+        action: action.toLowerCase() as 'buy' | 'sell',
+        strike_price: strike,
+        expiry_date: expiry,
         quantity,
-        price,
-        total_cost: total_cost || price * quantity * 100,
-        fees: fees || 0,
-        status: 'filled'
+        premium: price
       })
       .select()
       .single();

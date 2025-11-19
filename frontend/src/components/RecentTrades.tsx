@@ -8,16 +8,14 @@ import { Loader2 } from 'lucide-react';
 interface Trade {
   id: string;
   symbol: string;
-  type: string;
-  strike: number;
-  expiry: string;
-  action: string;
+  option_type: 'call' | 'put';
+  strike_price: number;
+  expiry_date: string;
+  action: 'buy' | 'sell';
   quantity: number;
-  price: number;
-  total_cost: number;
-  fees: number;
+  premium: number;
   created_at: string;
-  status: string;
+  updated_at: string;
 }
 
 export default function RecentTrades() {
@@ -96,28 +94,22 @@ export default function RecentTrades() {
               <div key={trade.id} className="flex items-center justify-between border-b pb-2 last:border-0">
                 <div>
                   <div className="font-medium">
-                    {trade.symbol} ${trade.strike}{trade.type.charAt(0)} {formatDate(trade.expiry)}
+                    {trade.symbol} ${trade.strike_price}{trade.option_type === 'call' ? 'C' : 'P'} {formatDate(trade.expiry_date)}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {trade.quantity} contracts @ ${trade.price.toFixed(2)}
+                    {trade.quantity} contracts @ ${trade.premium.toFixed(2)}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Total: ${trade.total_cost.toFixed(2)}
-                    {trade.fees > 0 && ` (Fees: $${trade.fees.toFixed(2)})`}
+                    Total: ${(trade.premium * trade.quantity * 100).toFixed(2)}
                   </div>
                 </div>
                 <div className="text-right">
-                  <Badge variant={trade.action === 'Buy' ? 'default' : 'secondary'}>
+                  <Badge variant={trade.action === 'buy' ? 'default' : 'secondary'}>
                     {trade.action.toUpperCase()}
                   </Badge>
                   <div className="text-sm text-muted-foreground mt-1">
                     {formatTime(trade.created_at)}
                   </div>
-                  {trade.status !== 'filled' && (
-                    <Badge variant="outline" className="mt-1 text-xs">
-                      {trade.status}
-                    </Badge>
-                  )}
                 </div>
               </div>
             ))}
