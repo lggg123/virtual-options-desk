@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import DashboardHeader from '@/components/DashboardHeader';
 import DashboardMetrics from '@/components/DashboardMetrics';
-import OptionsChain from '@/components/OptionsChain';
+import LiveOptionsChain from '@/components/LiveOptionsChain';
 import PortfolioOverview from '@/components/PortfolioOverview';
 import RecentTrades from '@/components/RecentTrades';
 import MarketData from '@/components/MarketData';
@@ -53,7 +53,7 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="options" className="space-y-4">
-            <OptionsChain />
+            <LiveOptionsChain />
           </TabsContent>
 
           <TabsContent value="portfolio" className="space-y-4">
