@@ -289,11 +289,28 @@ async def delete_models():
 @app.on_event("startup")
 async def startup_event():
     """Try to load models on startup"""
-    try:
-        ensemble.load_models()
-        print("✅ Models loaded successfully on startup")
-    except FileNotFoundError:
-        print("⚠️  No pre-trained models found. Train models at /api/ml/train")
+    import os
+    
+    # Try multiple possible model paths
+    possible_paths = [
+        'ml_models',           # When running from python/ directory
+        'python/ml_models',    # When running from repo root
+        './ml_models',         # Relative to current directory
+        os.path.join(os.path.dirname(__file__), 'ml_models')  # Relative to this file
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            try:
+                ensemble.load_models(path)
+                print(f"✅ Models loaded successfully from: {path}")
+                return
+            except Exception as e:
+                print(f"⚠️  Failed to load models from {path}: {e}")
+                continue
+    
+    print("⚠️  No pre-trained models found. Train models at /api/ml/train")
+    print(f"   Searched paths: {possible_paths}")
 
 
 if __name__ == "__main__":
