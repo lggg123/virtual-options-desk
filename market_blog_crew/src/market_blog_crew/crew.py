@@ -103,7 +103,7 @@ class MarketBlogCrew():
     def write_blog_post_task(self) -> Task:
         return Task(
             config=self.tasks_config['write_blog_post_task'], # type: ignore[index]
-            output_pydantic=BlogPost  # Ensures output follows BlogPost schema
+            output_json=BlogPost  # More flexible JSON parsing
         )
 
     @crew

@@ -38,7 +38,32 @@ def run():
         output_dir.mkdir(exist_ok=True)
         
         # Extract blog post data from result
-        blog_data = result.pydantic.dict() if hasattr(result, 'pydantic') else result
+        # Handle both pydantic and json outputs
+        if hasattr(result, 'pydantic') and result.pydantic:
+            blog_data = result.pydantic.dict()
+        elif hasattr(result, 'json_dict') and result.json_dict:
+            blog_data = result.json_dict
+        elif isinstance(result.raw, str):
+            # Try to parse raw string as JSON
+            try:
+                blog_data = json.loads(result.raw)
+            except:
+                # If parsing fails, create a basic structure
+                blog_data = {
+                    'title': 'Market Analysis Blog Post',
+                    'meta_description': 'Comprehensive market analysis and options strategies',
+                    'content': result.raw,
+                    'tags': ['market-analysis', 'options-trading'],
+                    'target_keywords': ['options strategies', 'market analysis'],
+                    'market_data': {
+                        'date': current_date,
+                        'sp500_level': 0,
+                        'vix_level': 0,
+                        'top_sector': 'Unknown'
+                    }
+                }
+        else:
+            blog_data = result
         
         # Save as JSON
         json_file = output_dir / f'blog-{current_date}.json'
