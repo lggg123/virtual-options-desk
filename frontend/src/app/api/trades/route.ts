@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { symbol, type, action, strike, expiry, quantity, price, total_cost, fees } = body;
+    const { symbol, type, action, strike, expiry, quantity, price } = body;
 
     // Validate required fields
     if (!symbol || !type || !action || !strike || !expiry || !quantity || !price) {
