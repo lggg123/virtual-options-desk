@@ -109,10 +109,25 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
   // Handle search
   useEffect(() => {
     if (searchQuery.length > 0) {
+      // First, filter from our known database
       const filtered = stockDatabase.current.filter(stock =>
         stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
         stock.name.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 10);
+      
+      // If user typed an uppercase symbol that's not in database, add it as a custom option
+      const upperQuery = searchQuery.toUpperCase();
+      const isValidSymbol = /^[A-Z]{1,5}$/.test(upperQuery);
+      const alreadyInList = filtered.some(s => s.symbol === upperQuery);
+      
+      if (isValidSymbol && !alreadyInList && upperQuery.length >= 2) {
+        filtered.unshift({
+          symbol: upperQuery,
+          name: `${upperQuery} (Custom Symbol)`,
+          category: 'Custom'
+        });
+      }
+      
       setSuggestions(filtered);
       setShowSuggestions(true);
     } else {
@@ -179,10 +194,24 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               type="text"
-              placeholder="Search stocks by symbol or name..."
+              placeholder="Search stocks by symbol or name (e.g., QSI, AAPL)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => searchQuery && setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                // Allow Enter key to select the first suggestion or search directly
+                if (e.key === 'Enter' && searchQuery) {
+                  if (suggestions.length > 0) {
+                    handleSelectStock(suggestions[0].symbol);
+                  } else {
+                    // Try the uppercase search query as a symbol
+                    const upperQuery = searchQuery.toUpperCase();
+                    if (/^[A-Z]{1,5}$/.test(upperQuery)) {
+                      handleSelectStock(upperQuery);
+                    }
+                  }
+                }
+              }}
               className="pl-10"
             />
           </div>

@@ -42,7 +42,7 @@ export default function TradingPage() {
                 <CardDescription>Visualize price and technicals</CardDescription>
               </CardHeader>
               <CardContent>
-                <TradingChart />
+                <TradingChart symbol={selectedSymbol} />
               </CardContent>
             </Card>
           </div>

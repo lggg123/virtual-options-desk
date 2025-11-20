@@ -60,11 +60,24 @@ interface TooltipContext {
   };
 }
 
-export default function TradingChart() {
-  const [symbol, setSymbol] = useState('AAPL');
+interface TradingChartProps {
+  symbol?: string;
+}
+
+export default function TradingChart({ symbol: propSymbol }: TradingChartProps = {}) {
+  const [symbol, setSymbol] = useState(propSymbol || 'AAPL');
   const [timeframe, setTimeframe] = useState('1M');
   const [priceData, setPriceData] = useState<PriceData[]>([]);
   const [signals, setSignals] = useState<TradingSignal[]>([]);
+  
+  // Update symbol when prop changes
+  useEffect(() => {
+    if (propSymbol && propSymbol !== symbol) {
+      setSymbol(propSymbol);
+      setPriceData([]);
+      setSignals([]);
+    }
+  }, [propSymbol]);
   
   // Use real market data from simulator
   const { marketData, isConnected, getSymbolData } = useMarketData([symbol]);
