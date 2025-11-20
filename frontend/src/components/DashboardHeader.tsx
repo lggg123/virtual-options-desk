@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
-import { LogOut, Settings, User, TrendingUp, BarChart3, DollarSign, Sparkles } from 'lucide-react';
+import { LogOut, Settings, User, TrendingUp, BarChart3, DollarSign, Sparkles, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardHeader() {
@@ -50,6 +50,7 @@ export default function DashboardHeader() {
     { href: '/dashboard/ai-picks', label: 'AI Picks', icon: Sparkles },
     { href: '/trading', label: 'Trading', icon: TrendingUp },
     { href: '/portfolio', label: 'Portfolio', icon: DollarSign },
+    { href: '/blog', label: 'Blog', icon: FileText },
   ];
 
   return (
