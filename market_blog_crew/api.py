@@ -198,4 +198,19 @@ if __name__ == '__main__':
     print(f"📝 Environment: {'development' if debug else 'production'}")
     print(f"🔑 API Key configured: {bool(API_KEY and API_KEY != 'your-secret-api-key-here')}")
     
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    # Use gunicorn in production for better performance and stability
+    if os.getenv('FLASK_ENV') == 'production':
+        print("🔥 Using Gunicorn WSGI server (production mode)")
+        import subprocess
+        subprocess.run([
+            'gunicorn',
+            '-w', '4',  # 4 worker processes
+            '-b', f'0.0.0.0:{port}',
+            '--timeout', '300',  # 5 minute timeout for long-running AI tasks
+            '--access-logfile', '-',
+            '--error-logfile', '-',
+            'api:app'
+        ])
+    else:
+        print("⚠️  Using Flask development server (not for production)")
+        app.run(host='0.0.0.0', port=port, debug=debug)
