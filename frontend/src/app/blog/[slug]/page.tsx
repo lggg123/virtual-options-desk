@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import DashboardHeader from '@/components/DashboardHeader';
 import ReactMarkdown from 'react-markdown';
+import type { Database } from '@/lib/types';
 
-const supabase = createClient(
+const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );

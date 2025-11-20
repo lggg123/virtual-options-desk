@@ -17,6 +17,15 @@ export interface MarketData {
   symbol?: string;
 }
 
+// Blog Post Market Data Type
+export interface BlogMarketData {
+  trend?: string;
+  sentiment?: string;
+  confidence?: number;
+  keyStocks?: string[];
+  sectors?: string[];
+}
+
 export interface OptionsPricing {
   id: string;
   symbol: string;
@@ -367,12 +376,74 @@ export interface Database {
           }
         ]
       }
+      blog_posts: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          summary: string
+          content: string
+          author: string
+          reading_time: number
+          tags: string[]
+          published_at: string
+          view_count: number
+          status: 'draft' | 'published' | 'archived'
+          meta_description: string | null
+          meta_keywords: string[] | null
+          market_data: BlogMarketData | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          summary: string
+          content: string
+          author: string
+          reading_time: number
+          tags: string[]
+          published_at?: string
+          view_count?: number
+          status?: 'draft' | 'published' | 'archived'
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          market_data?: BlogMarketData | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          summary?: string
+          content?: string
+          author?: string
+          reading_time?: number
+          tags?: string[]
+          published_at?: string
+          view_count?: number
+          status?: 'draft' | 'published' | 'archived'
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          market_data?: BlogMarketData | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_blog_view_count: {
+        Args: {
+          post_slug: string
+        }
+        Returns: void
+      }
     }
     Enums: {
       [_ in never]: never
