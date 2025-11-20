@@ -14,9 +14,9 @@ const supabase = createClient(
 );
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 async function getBlogPost(slug: string) {
@@ -40,7 +40,8 @@ async function getBlogPost(slug: string) {
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  const post = await getBlogPost(params.slug);
+  const { slug } = await params;
+  const post = await getBlogPost(slug);
   
   if (!post) {
     return {
@@ -64,7 +65,8 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const post = await getBlogPost(params.slug);
+  const { slug } = await params;
+  const post = await getBlogPost(slug);
 
   if (!post) {
     notFound();
