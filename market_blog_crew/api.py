@@ -10,6 +10,7 @@ import os
 import sys
 import json
 import logging
+import time
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
@@ -121,9 +122,24 @@ def generate_blog():
             'current_date': current_date
         }
         
-        # Run the CrewAI crew with minimal verbosity
-        crew = MarketBlogCrew().crew()
-        result = crew.kickoff(inputs=inputs)
+        # Run the CrewAI crew with retry logic for API overload
+        max_retries = 3
+        retry_delay = 10  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                crew = MarketBlogCrew().crew()
+                result = crew.kickoff(inputs=inputs)
+                break  # Success, exit retry loop
+            except Exception as e:
+                error_msg = str(e)
+                if '503' in error_msg or 'overloaded' in error_msg.lower():
+                    if attempt < max_retries - 1:
+                        wait_time = retry_delay * (attempt + 1)
+                        logger.warning(f"API overloaded (attempt {attempt + 1}/{max_retries}). Retrying in {wait_time}s...")
+                        time.sleep(wait_time)
+                        continue
+                raise  # Re-raise if not a 503 or last attempt
         
         # Parse the structured text output
         output_text = str(result.raw) if hasattr(result, 'raw') else str(result)
