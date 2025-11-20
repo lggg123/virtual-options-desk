@@ -24,9 +24,11 @@ function calculateReadingTime(content: string): number {
 async function generateDailyBlog() {
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
-  // Call the CrewAI service to generate the blog post
+  // Call the market_blog_crew API service to generate the blog post
   const crewaiServiceUrl = process.env.CREWAI_SERVICE_URL || 'http://localhost:8000';
-  const crewaiApiKey = process.env.CREWAI_API_KEY;
+  const crewaiApiKey = process.env.CREWAI_API_KEY || 'your-secret-api-key-here';
+
+  console.log(`📡 Calling CrewAI service at ${crewaiServiceUrl}/generate-blog`);
 
   const response = await fetch(`${crewaiServiceUrl}/generate-blog`, {
     method: 'POST',
@@ -41,7 +43,7 @@ async function generateDailyBlog() {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(`CrewAI service error: ${errorData.message || response.statusText}`);
+    throw new Error(`CrewAI service error (${response.status}): ${errorData.message || response.statusText}`);
   }
 
   const result = await response.json();
@@ -55,19 +57,19 @@ async function generateDailyBlog() {
   return {
     title: blog.title,
     slug: generateSlug(blog.title),
-    summary: blog.meta_description,
+    summary: blog.meta_description || blog.summary,
     content: blog.content,
     tags: blog.tags || [],
     readingTime: calculateReadingTime(blog.content),
+    metaDescription: blog.meta_description,
+    metaKeywords: blog.target_keywords || blog.tags,
     marketData: {
-      trend: 'neutral', // Could be derived from market_data
+      trend: 'neutral',
       sentiment: 'mixed',
       confidence: 0.75,
-      sp500_level: blog.market_data?.sp500_level || 0,
-      vix_level: blog.market_data?.vix_level || 0,
-      top_sector: blog.market_data?.top_sector || '',
-      keyStocks: [], // Could be extracted from content
-      sectors: [blog.market_data?.top_sector || ''].filter(Boolean)
+      keyStocks: [],
+      sectors: [blog.market_data?.top_sector || ''].filter(Boolean),
+      ...blog.market_data
     }
   };
 }
@@ -96,8 +98,8 @@ export async function GET(request: NextRequest) {
         author: 'AI Market Analyst',
         reading_time: blogPost.readingTime,
         tags: blogPost.tags,
-        meta_description: blogPost.summary.substring(0, 160),
-        meta_keywords: blogPost.tags,
+        meta_description: (blogPost.metaDescription || blogPost.summary).substring(0, 160),
+        meta_keywords: blogPost.metaKeywords,
         market_data: blogPost.marketData,
         status: 'published',
         published_at: new Date().toISOString()

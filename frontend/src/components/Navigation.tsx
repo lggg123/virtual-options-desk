@@ -31,7 +31,7 @@ const navigation: NavigationItem[] = [
   { name: 'AI Stock Picks', href: '/dashboard/ai-picks', icon: TrendingUp },
   { name: 'Virtual Options', href: '/trading', icon: CandlestickChart },
   { name: 'Pattern Detection', href: 'https://svelte-chart-app.vercel.app/', icon: LineChart, external: true },
-  { name: 'AI Insights Blog', href: '/dashboard/blog', icon: Newspaper },
+  { name: 'AI Insights Blog', href: '/blog', icon: Newspaper },
   { name: 'Portfolio', href: '/portfolio', icon: Wallet },
   { name: 'Pricing', href: '/pricing', icon: Crown },
 ];
