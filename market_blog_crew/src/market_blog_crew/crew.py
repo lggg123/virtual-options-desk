@@ -103,7 +103,7 @@ class MarketBlogCrew():
     def write_blog_post_task(self) -> Task:
         return Task(
             config=self.tasks_config['write_blog_post_task'], # type: ignore[index]
-            output_json=BlogPost  # More flexible JSON parsing
+            # Remove output_json to let the agent output free-form text
         )
 
     @crew

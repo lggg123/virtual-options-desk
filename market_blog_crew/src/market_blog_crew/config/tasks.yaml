@@ -145,28 +145,30 @@ write_blog_post_task:
     - Length: 1800-2200 words
     
     **Output Format**:
-    Return valid JSON with this exact structure:
-    {{
-      "title": "Article Title Here",
-      "meta_description": "155 character meta description",
-      "content": "Full article in markdown format...",
-      "tags": ["options-trading", "market-analysis", "technical-analysis"],
-      "target_keywords": ["options trading strategy", "market analysis"],
-      "market_data": {{
-        "date": "{current_date}",
-        "sp500_level": 4500,
-        "vix_level": 15.5,
-        "top_sector": "Technology"
-      }}
-    }}
+    Output a structured blog post with clear sections separated by headers:
+    
+    TITLE: [Your engaging article title here]
+    
+    META_DESCRIPTION: [Your 155 character meta description here]
+    
+    TAGS: [Comma-separated tags like: options-trading, market-analysis, technical-analysis]
+    
+    KEYWORDS: [Comma-separated SEO keywords like: options trading strategy, market analysis, technical indicators]
+    
+    SP500_LEVEL: [Number like: 5321.45]
+    
+    VIX_LEVEL: [Number like: 14.85]
+    
+    TOP_SECTOR: [Sector name like: Technology]
+    
+    CONTENT:
+    [Your full 1800-2200 word markdown article starts here...]
     
     Date: {current_date}
   expected_output: >
-    A complete JSON object with the blog post content in markdown format (in the "content" field),
-    SEO metadata (title, meta_description, tags, target_keywords), and market_data summary.
-    The content must be 1800-2200 words, SEO-optimized, and professionally formatted with
-    headers, bullet points, and proper markdown syntax. Do NOT include markdown code fences
-    around the JSON (no ```json).
+    A complete blog post with TITLE, META_DESCRIPTION, TAGS, KEYWORDS, market data (SP500_LEVEL, 
+    VIX_LEVEL, TOP_SECTOR), and CONTENT sections clearly labeled. The content must be 1800-2200 words, 
+    SEO-optimized, and professionally formatted with markdown headers, bullet points, and proper syntax.
   agent: content_writer
   context:
     - research_market_task

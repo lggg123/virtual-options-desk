@@ -37,33 +37,58 @@ def run():
         output_dir = Path(__file__).parent.parent.parent / 'output'
         output_dir.mkdir(exist_ok=True)
         
-        # Extract blog post data from result
-        # Handle both pydantic and json outputs
-        if hasattr(result, 'pydantic') and result.pydantic:
-            blog_data = result.pydantic.dict()
-        elif hasattr(result, 'json_dict') and result.json_dict:
-            blog_data = result.json_dict
-        elif isinstance(result.raw, str):
-            # Try to parse raw string as JSON
-            try:
-                blog_data = json.loads(result.raw)
-            except:
-                # If parsing fails, create a basic structure
-                blog_data = {
-                    'title': 'Market Analysis Blog Post',
-                    'meta_description': 'Comprehensive market analysis and options strategies',
-                    'content': result.raw,
-                    'tags': ['market-analysis', 'options-trading'],
-                    'target_keywords': ['options strategies', 'market analysis'],
-                    'market_data': {
-                        'date': current_date,
-                        'sp500_level': 0,
-                        'vix_level': 0,
-                        'top_sector': 'Unknown'
-                    }
-                }
-        else:
-            blog_data = result
+        # Parse the structured text output
+        output_text = str(result.raw) if hasattr(result, 'raw') else str(result)
+        
+        # Extract fields using simple parsing
+        blog_data = {
+            'title': '',
+            'meta_description': '',
+            'content': '',
+            'tags': [],
+            'target_keywords': [],
+            'market_data': {
+                'date': current_date,
+                'sp500_level': 0.0,
+                'vix_level': 0.0,
+                'top_sector': ''
+            }
+        }
+        
+        # Parse the output
+        lines = output_text.split('\n')
+        current_section = None
+        content_lines = []
+        
+        for line in lines:
+            if line.startswith('TITLE:'):
+                blog_data['title'] = line.replace('TITLE:', '').strip()
+            elif line.startswith('META_DESCRIPTION:'):
+                blog_data['meta_description'] = line.replace('META_DESCRIPTION:', '').strip()
+            elif line.startswith('TAGS:'):
+                tags_str = line.replace('TAGS:', '').strip()
+                blog_data['tags'] = [t.strip() for t in tags_str.split(',') if t.strip()]
+            elif line.startswith('KEYWORDS:'):
+                keywords_str = line.replace('KEYWORDS:', '').strip()
+                blog_data['target_keywords'] = [k.strip() for k in keywords_str.split(',') if k.strip()]
+            elif line.startswith('SP500_LEVEL:'):
+                try:
+                    blog_data['market_data']['sp500_level'] = float(line.replace('SP500_LEVEL:', '').strip())
+                except:
+                    pass
+            elif line.startswith('VIX_LEVEL:'):
+                try:
+                    blog_data['market_data']['vix_level'] = float(line.replace('VIX_LEVEL:', '').strip())
+                except:
+                    pass
+            elif line.startswith('TOP_SECTOR:'):
+                blog_data['market_data']['top_sector'] = line.replace('TOP_SECTOR:', '').strip()
+            elif line.startswith('CONTENT:'):
+                current_section = 'content'
+            elif current_section == 'content':
+                content_lines.append(line)
+        
+        blog_data['content'] = '\n'.join(content_lines).strip()
         
         # Save as JSON
         json_file = output_dir / f'blog-{current_date}.json'
