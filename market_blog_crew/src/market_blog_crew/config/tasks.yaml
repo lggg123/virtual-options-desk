@@ -1,0 +1,175 @@
+research_market_task:
+  description: >
+    Conduct comprehensive market research for today's date ({current_date}). Your research should cover:
+    
+    1. **Major Market Indices**: S&P 500, Nasdaq, Dow Jones, Russell 2000 - current levels, daily/weekly performance
+    2. **Economic Calendar**: Key economic data releases (jobs report, inflation data, Fed meetings, etc.)
+    3. **Sector Performance**: Which sectors are leading/lagging (Technology, Healthcare, Energy, Financials, etc.)
+    4. **Top Market News**: Breaking news, earnings reports, geopolitical events affecting markets
+    5. **Volatility Environment**: VIX levels, whether we're in high/low volatility regime
+    6. **Notable Stock Movers**: Stocks with unusual volume, major price movements, or significant news
+    7. **Commodities & Currencies**: Gold, Oil, USD Index - anything affecting risk sentiment
+    8. **Market Sentiment**: Are investors bullish, bearish, or uncertain? What's the fear/greed index?
+    
+    Focus on actionable intelligence that will help identify options trading opportunities.
+    Provide specific data points, percentages, and context. Date: {current_date}
+  expected_output: >
+    A detailed market intelligence report with 8 sections covering all requested areas.
+    Include specific numbers, percentages, and dates. Format as structured markdown with
+    clear headers and bullet points. Minimum 800 words.
+  agent: market_researcher
+
+analyze_technicals_task:
+  description: >
+    Based on the market research provided, perform technical analysis on the most promising
+    opportunities identified. For each asset/ticker, analyze:
+    
+    1. **Trend Analysis**: Is the asset in an uptrend, downtrend, or consolidation?
+    2. **Chart Patterns**: Identify any bullish/bearish patterns (head & shoulders, triangles, flags, etc.)
+    3. **Support & Resistance**: Key price levels where the asset might bounce or break
+    4. **Technical Indicators**: 
+       - RSI (oversold/overbought conditions)
+       - MACD (momentum and trend direction)
+       - Moving Averages (20, 50, 200-day crossovers)
+       - Bollinger Bands (volatility and price extremes)
+    5. **Volume Analysis**: Is volume confirming the price action?
+    6. **Multiple Timeframes**: Validate signals across daily, weekly, monthly charts
+    7. **Breakout/Breakdown Levels**: Specific price points that could trigger major moves
+    
+    Focus on setups with high probability for options trades (strong trends, clear levels, momentum).
+    Date: {current_date}
+  expected_output: >
+    Technical analysis report covering 3-5 top opportunities. For each, provide specific
+    price levels, indicator readings, and chart pattern analysis. Include entry zones,
+    stop-loss levels, and price targets. Format as markdown with clear sections per asset.
+    Minimum 600 words.
+  agent: technical_analyst
+  context:
+    - research_market_task
+
+identify_options_opportunities_task:
+  description: >
+    Using the market research and technical analysis, design specific options strategies
+    for the top 2-3 opportunities. For each trade recommendation:
+    
+    1. **Underlying Asset & Rationale**: Why this specific stock/ETF/index?
+    2. **Market Outlook**: Bullish, bearish, or neutral? Expected magnitude of move?
+    3. **Strategy Selection**: 
+       - Directional: Long call, long put, call/put spread
+       - Volatility: Straddle, strangle, iron condor
+       - Income: Covered call, cash-secured put
+    4. **Specific Trade Details**:
+       - Strike prices (specific numbers)
+       - Expiration dates (provide actual dates, not just DTE)
+       - Entry price range
+       - Maximum profit potential ($ and %)
+       - Maximum loss ($ and %)
+    5. **Greeks Analysis**: Expected delta, theta decay, vega exposure
+    6. **Probability of Profit**: Realistic assessment based on volatility
+    7. **Exit Strategy**: When to take profits, when to cut losses, adjustment rules
+    8. **Capital Requirements**: How much buying power needed per contract
+    
+    Ensure all strategies are practical for retail traders (liquid options, reasonable strikes).
+    Date: {current_date}
+  expected_output: >
+    Options strategy report with 2-3 detailed trade recommendations. Each recommendation
+    must include all 8 elements listed above with specific numbers and dates. Format as
+    markdown with clear sections per trade. Include a summary table of all trades.
+    Minimum 800 words.
+  agent: options_strategist
+  context:
+    - research_market_task
+    - analyze_technicals_task
+
+assess_risks_task:
+  description: >
+    Review all proposed options strategies and conduct rigorous risk assessment. For each trade:
+    
+    1. **Downside Scenario Analysis**: What happens if the market moves against us?
+    2. **Maximum Loss Validation**: Confirm the stated max loss is accurate and acceptable
+    3. **Position Sizing Recommendation**: What % of portfolio should this trade represent?
+    4. **Correlation Risk**: Do multiple recommended trades have correlated risk?
+    5. **Liquidity Check**: Are the options liquid enough to enter/exit without major slippage?
+    6. **Volatility Risk**: Could IV crush hurt these positions after earnings/events?
+    7. **Time Decay Risk**: Is theta working for or against us? How fast?
+    8. **Black Swan Scenarios**: What unexpected events could cause catastrophic loss?
+    9. **Risk/Reward Validation**: Is the potential reward worth the risk being taken?
+    10. **Portfolio Heat**: If all trades go wrong, what's the total portfolio impact?
+    
+    Your job is to validate the strategies pass risk management standards OR identify
+    necessary modifications (tighter stops, smaller size, different strikes, etc.).
+    Be critical and thorough - capital preservation is paramount.
+    Date: {current_date}
+  expected_output: >
+    Risk assessment report covering all proposed trades. For each trade, provide:
+    - Risk rating (Low/Medium/High)
+    - Recommended position size (% of portfolio or $ amount)
+    - Key risks and mitigation strategies
+    - Final approval status (Approved / Approved with modifications / Rejected)
+    If rejecting or modifying any trade, explain why and suggest alternatives.
+    Format as markdown with clear sections. Minimum 500 words.
+  agent: risk_manager
+  context:
+    - research_market_task
+    - analyze_technicals_task
+    - identify_options_opportunities_task
+
+write_blog_post_task:
+  description: >
+    Transform all the research, technical analysis, options strategies, and risk assessment
+    into a compelling, SEO-optimized blog post. The blog should:
+    
+    **Structure**:
+    - Engaging headline (use power words, include key terms like "Options Strategy", "Market Analysis")
+    - Meta description (155 characters, compelling summary)
+    - Introduction (hook the reader, preview what they'll learn)
+    - Market Overview section (synthesize market research into narrative)
+    - Technical Analysis section (explain the setups in accessible language)
+    - Options Trade Ideas section (present 2-3 strategies with all details)
+    - Risk Management section (incorporate risk assessment findings)
+    - Conclusion (recap key points, call-to-action)
+    
+    **SEO Requirements**:
+    - Target keyword: "options trading strategy" or similar (use 3-5 times naturally)
+    - Include related keywords: "market analysis", "technical indicators", "risk management"
+    - Use H2 and H3 headers with keywords
+    - Include bullet points and numbered lists for readability
+    - Add internal link suggestions (e.g., [link to portfolio dashboard])
+    
+    **Style Guidelines**:
+    - Write for intermediate traders (explain concepts but don't over-simplify)
+    - Use specific numbers and data points from the research
+    - Make it actionable - readers should know exactly what to do
+    - Professional yet conversational tone
+    - Include proper risk disclaimers
+    - Length: 1800-2200 words
+    
+    **Output Format**:
+    Return valid JSON with this exact structure:
+    {{
+      "title": "Article Title Here",
+      "meta_description": "155 character meta description",
+      "content": "Full article in markdown format...",
+      "tags": ["options-trading", "market-analysis", "technical-analysis"],
+      "target_keywords": ["options trading strategy", "market analysis"],
+      "market_data": {{
+        "date": "{current_date}",
+        "sp500_level": 4500,
+        "vix_level": 15.5,
+        "top_sector": "Technology"
+      }}
+    }}
+    
+    Date: {current_date}
+  expected_output: >
+    A complete JSON object with the blog post content in markdown format (in the "content" field),
+    SEO metadata (title, meta_description, tags, target_keywords), and market_data summary.
+    The content must be 1800-2200 words, SEO-optimized, and professionally formatted with
+    headers, bullet points, and proper markdown syntax. Do NOT include markdown code fences
+    around the JSON (no ```json).
+  agent: content_writer
+  context:
+    - research_market_task
+    - analyze_technicals_task
+    - identify_options_opportunities_task
+    - assess_risks_task
