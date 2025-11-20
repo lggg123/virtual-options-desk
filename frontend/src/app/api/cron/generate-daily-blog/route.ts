@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 
 // Create Supabase admin client
@@ -7,11 +6,6 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-// Create OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!
-});
 
 function generateSlug(title: string): string {
   return title
@@ -28,67 +22,53 @@ function calculateReadingTime(content: string): number {
 }
 
 async function generateDailyBlog() {
-  const today = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+  // Call the CrewAI service to generate the blog post
+  const crewaiServiceUrl = process.env.CREWAI_SERVICE_URL || 'http://localhost:8000';
+  const crewaiApiKey = process.env.CREWAI_API_KEY;
+
+  const response = await fetch(`${crewaiServiceUrl}/generate-blog`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${crewaiApiKey}`
+    },
+    body: JSON.stringify({
+      date: today
+    })
   });
 
-  const prompt = `You are an expert market analyst and financial writer. Write a comprehensive, SEO-optimized blog post about today's market insights and trading opportunities.
-
-Today's Date: ${today}
-
-Requirements:
-1. Write an engaging, informative blog post (800-1200 words)
-2. Include current market trends, key sectors, and trading opportunities
-3. Discuss volatility, sentiment, and potential catalysts
-4. Provide actionable insights for options traders
-5. Use markdown formatting with headers, lists, and emphasis
-6. Include specific stock tickers and sectors
-7. Write in a professional yet accessible tone
-
-Format your response as JSON with the following structure:
-{
-  "title": "Compelling SEO-friendly title",
-  "summary": "2-3 sentence summary for preview",
-  "content": "Full blog post in markdown format",
-  "tags": ["tag1", "tag2", "tag3"],
-  "marketData": {
-    "trend": "bullish|bearish|neutral",
-    "sentiment": "positive|negative|mixed",
-    "confidence": 0.75,
-    "keyStocks": ["AAPL", "TSLA", "NVDA"],
-    "sectors": ["Technology", "Energy"]
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(`CrewAI service error: ${errorData.message || response.statusText}`);
   }
-}`;
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content: "You are an expert financial analyst and content writer. Always respond with valid JSON."
-      },
-      {
-        role: "user",
-        content: prompt
-      }
-    ],
-    temperature: 0.7,
-    response_format: { type: "json_object" }
-  });
+  const result = await response.json();
+  
+  if (!result.success) {
+    throw new Error(result.message || 'Blog generation failed');
+  }
 
-  const result = JSON.parse(completion.choices[0].message.content || '{}');
+  const blog = result.blog;
   
   return {
-    title: result.title,
-    slug: generateSlug(result.title),
-    summary: result.summary,
-    content: result.content,
-    tags: result.tags || [],
-    readingTime: calculateReadingTime(result.content),
-    marketData: result.marketData || {}
+    title: blog.title,
+    slug: generateSlug(blog.title),
+    summary: blog.meta_description,
+    content: blog.content,
+    tags: blog.tags || [],
+    readingTime: calculateReadingTime(blog.content),
+    marketData: {
+      trend: 'neutral', // Could be derived from market_data
+      sentiment: 'mixed',
+      confidence: 0.75,
+      sp500_level: blog.market_data?.sp500_level || 0,
+      vix_level: blog.market_data?.vix_level || 0,
+      top_sector: blog.market_data?.top_sector || '',
+      keyStocks: [], // Could be extracted from content
+      sectors: [blog.market_data?.top_sector || ''].filter(Boolean)
+    }
   };
 }
 
@@ -100,9 +80,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('🤖 Starting automated daily blog generation...');
+    console.log('🤖 Starting automated daily blog generation via CrewAI...');
 
-    // Generate blog post
+    // Generate blog post using CrewAI service
     const blogPost = await generateDailyBlog();
 
     // Save to Supabase
