@@ -7,7 +7,9 @@ This service generates daily market analysis blog posts using a 5-agent AI crew
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+import sys
 import json
+import logging
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
@@ -15,6 +17,27 @@ from dotenv import load_dotenv
 # Load environment variables
 env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
+
+# Configure logging to reduce verbosity
+logging.basicConfig(
+    level=logging.WARNING,  # Only show warnings and errors
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
+
+# Suppress verbose libraries
+logging.getLogger('crewai').setLevel(logging.WARNING)
+logging.getLogger('langchain').setLevel(logging.ERROR)
+logging.getLogger('langchain_core').setLevel(logging.ERROR)
+logging.getLogger('langchain_google_genai').setLevel(logging.ERROR)
+logging.getLogger('httpx').setLevel(logging.ERROR)
+logging.getLogger('httpcore').setLevel(logging.ERROR)
+logging.getLogger('urllib3').setLevel(logging.ERROR)
+logging.getLogger('google').setLevel(logging.ERROR)
+
+# Get Flask logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Import the CrewAI crew
 from src.market_blog_crew.crew import MarketBlogCrew
@@ -91,15 +114,16 @@ def generate_blog():
         else:
             current_date = datetime.now().strftime('%Y-%m-%d')
         
-        print(f"🤖 Starting CrewAI blog generation for {current_date}...")
+        logger.info(f"Starting blog generation for {current_date}")
         
         # Set up inputs for the crew
         inputs = {
             'current_date': current_date
         }
         
-        # Run the CrewAI crew
-        result = MarketBlogCrew().crew().kickoff(inputs=inputs)
+        # Run the CrewAI crew with minimal verbosity
+        crew = MarketBlogCrew().crew()
+        result = crew.kickoff(inputs=inputs)
         
         # Parse the structured text output
         output_text = str(result.raw) if hasattr(result, 'raw') else str(result)
@@ -163,8 +187,7 @@ def generate_blog():
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(blog_data, f, indent=2, ensure_ascii=False)
         
-        print(f"✅ Blog generated successfully: {blog_data['title']}")
-        print(f"📄 Saved to: {json_file}")
+        logger.info(f"Blog generated: {blog_data['title'][:50]}...")
         
         return jsonify({
             'success': True,
@@ -174,7 +197,7 @@ def generate_blog():
         }), 200
         
     except Exception as e:
-        print(f"❌ Error generating blog: {str(e)}")
+        logger.error(f"Blog generation failed: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Blog generation failed',
@@ -194,23 +217,24 @@ if __name__ == '__main__':
     port = int(os.getenv('PORT', 8000))
     debug = os.getenv('FLASK_ENV') == 'development'
     
-    print(f"🚀 Starting CrewAI Blog Generator API on port {port}")
-    print(f"📝 Environment: {'development' if debug else 'production'}")
-    print(f"🔑 API Key configured: {bool(API_KEY and API_KEY != 'your-secret-api-key-here')}")
+    logger.info(f"Starting CrewAI Blog Generator API on port {port}")
+    logger.info(f"Environment: {'development' if debug else 'production'}")
+    logger.info(f"API Key configured: {bool(API_KEY and API_KEY != 'your-secret-api-key-here')}")
     
     # Use gunicorn in production for better performance and stability
     if os.getenv('FLASK_ENV') == 'production':
-        print("🔥 Using Gunicorn WSGI server (production mode)")
+        logger.info("Using Gunicorn WSGI server (production mode)")
         import subprocess
         subprocess.run([
             'gunicorn',
             '-w', '4',  # 4 worker processes
             '-b', f'0.0.0.0:{port}',
             '--timeout', '300',  # 5 minute timeout for long-running AI tasks
+            '--log-level', 'warning',  # Reduce Gunicorn logging
             '--access-logfile', '-',
             '--error-logfile', '-',
             'api:app'
         ])
     else:
-        print("⚠️  Using Flask development server (not for production)")
+        logger.warning("Using Flask development server (not for production)")
         app.run(host='0.0.0.0', port=port, debug=debug)
