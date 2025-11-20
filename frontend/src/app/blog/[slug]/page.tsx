@@ -2,10 +2,9 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Calendar, Clock, Eye, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, Eye, ArrowLeft, Home, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import DashboardHeader from '@/components/DashboardHeader';
 import ReactMarkdown from 'react-markdown';
 import type { Database } from '@/lib/types';
 
@@ -83,7 +82,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader />
+      <PublicBlogHeader />
       
       <article className="container mx-auto px-4 py-12 max-w-4xl">
         {/* Back Button */}
@@ -220,5 +219,40 @@ export default async function BlogPostPage({ params }: PageProps) {
         </div>
       </article>
     </div>
+  );
+}
+
+// Public Blog Header Component (no auth required)
+function PublicBlogHeader() {
+  return (
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Link href="/">
+            <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition">
+              <h1 className="text-2xl font-bold">Virtual Options Desk</h1>
+            </div>
+          </Link>
+          <div className="hidden md:block text-sm text-muted-foreground">
+            AI Market Insights
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <Link href="/">
+            <Button variant="ghost" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Home
+            </Button>
+          </Link>
+          <Link href="/login">
+            <Button variant="default" className="flex items-center gap-2">
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </header>
   );
 }

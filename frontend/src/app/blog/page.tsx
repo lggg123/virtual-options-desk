@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Calendar, Clock, Eye, ArrowRight } from 'lucide-react';
-import DashboardHeader from '@/components/DashboardHeader';
+import { Calendar, Clock, Eye, ArrowRight, Home, LogIn } from 'lucide-react';
 
 interface BlogPost {
   id: string;
@@ -58,7 +57,7 @@ export default function BlogPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <DashboardHeader />
+        <PublicBlogHeader />
         <div className="container mx-auto px-4 py-12">
           <div className="text-center text-muted-foreground">Loading blog posts...</div>
         </div>
@@ -68,7 +67,7 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader />
+      <PublicBlogHeader />
       
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
@@ -143,5 +142,40 @@ export default function BlogPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Public Blog Header Component (no auth required)
+function PublicBlogHeader() {
+  return (
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Link href="/">
+            <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition">
+              <h1 className="text-2xl font-bold">Virtual Options Desk</h1>
+            </div>
+          </Link>
+          <div className="hidden md:block text-sm text-muted-foreground">
+            AI Market Insights
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <Link href="/">
+            <Button variant="ghost" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Home
+            </Button>
+          </Link>
+          <Link href="/login">
+            <Button variant="default" className="flex items-center gap-2">
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </header>
   );
 }

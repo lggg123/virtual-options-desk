@@ -71,6 +71,9 @@ export default function HomePage() {
                     </>
                   ) : (
                     <>
+                      <Link href="/blog" className="hover:text-gray-300 transition">
+                        Blog
+                      </Link>
                       <Link href="/login" className="hover:text-gray-300 transition">
                         Login
                       </Link>
@@ -252,7 +255,7 @@ export default function HomePage() {
               <h3 className="text-white font-semibold mb-4">Company</h3>
               <ul className="space-y-2">
                 <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link href="/dashboard/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
+                <li><Link href="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
                 <li><Link href="#features" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
               </ul>
             </div>
