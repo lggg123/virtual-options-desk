@@ -1,22 +1,52 @@
 research_market_task:
   description: >
-    Conduct comprehensive market research for today's date ({current_date}). Your research should cover:
+    Conduct comprehensive market research for today's date ({current_date}) using REAL-TIME web search tools.
     
-    1. **Major Market Indices**: S&P 500, Nasdaq, Dow Jones, Russell 2000 - current levels, daily/weekly performance
-    2. **Economic Calendar**: Key economic data releases (jobs report, inflation data, Fed meetings, etc.)
-    3. **Sector Performance**: Which sectors are leading/lagging (Technology, Healthcare, Energy, Financials, etc.)
-    4. **Top Market News**: Breaking news, earnings reports, geopolitical events affecting markets
-    5. **Volatility Environment**: VIX levels, whether we're in high/low volatility regime
-    6. **Notable Stock Movers**: Stocks with unusual volume, major price movements, or significant news
-    7. **Commodities & Currencies**: Gold, Oil, USD Index - anything affecting risk sentiment
-    8. **Market Sentiment**: Are investors bullish, bearish, or uncertain? What's the fear/greed index?
+    **IMPORTANT: You MUST use your SerperDevTool and WebsiteSearchTool to gather CURRENT data from today.**
     
-    Focus on actionable intelligence that will help identify options trading opportunities.
-    Provide specific data points, percentages, and context. Date: {current_date}
+    Search for and compile the following LIVE information:
+    
+    1. **Major Market Indices** (Search: "S&P 500 today", "Nasdaq today", "Dow Jones today")
+       - Current levels and performance for S&P 500, Nasdaq, Dow Jones, Russell 2000
+       - Search multiple financial websites (Yahoo Finance, MarketWatch, Bloomberg)
+    
+    2. **Economic Calendar** (Search: "economic calendar {current_date}", "market news today")
+       - Today's economic data releases
+       - Upcoming Fed meetings or policy announcements
+       - Recent inflation/jobs/GDP reports
+    
+    3. **Sector Performance** (Search: "sector performance today", "best performing sectors")
+       - Which sectors are leading/lagging TODAY
+       - Use live market data from financial websites
+    
+    4. **Top Market News** (Search: "market news today", "stock market breaking news")
+       - Breaking news affecting markets TODAY
+       - Major earnings reports
+       - Geopolitical events
+    
+    5. **Volatility Environment** (Search: "VIX today", "market volatility")
+       - Current VIX level
+       - Market sentiment indicators
+    
+    6. **Notable Stock Movers** (Search: "biggest stock movers today", "stocks with high volume")
+       - Stocks with unusual activity TODAY
+       - Major price movements
+    
+    7. **Commodities & Currencies** (Search: "gold price today", "oil price today", "dollar index")
+       - Current prices affecting risk sentiment
+    
+    8. **Market Sentiment** (Search: "market sentiment today", "fear and greed index")
+       - Investor mood and sentiment indicators
+    
+    **YOU MUST USE YOUR TOOLS** - Do not rely on training data. Search the web for current information.
+    Use SerperDevTool for broad searches and WebsiteSearchTool for specific financial sites.
+    
+    Date: {current_date}
   expected_output: >
     A detailed market intelligence report with 8 sections covering all requested areas.
-    Include specific numbers, percentages, and dates. Format as structured markdown with
-    clear headers and bullet points. Minimum 800 words.
+    Include SPECIFIC CURRENT numbers, percentages, and dates from TODAY's market data.
+    Cite sources (e.g., "According to Yahoo Finance at 2:30 PM EST...").
+    Format as structured markdown with clear headers and bullet points. Minimum 800 words.
   agent: market_researcher
 
 analyze_technicals_task:

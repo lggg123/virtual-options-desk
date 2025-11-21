@@ -4,6 +4,13 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 from pydantic import BaseModel, Field
 
+# Import crewAI tools for real-time research
+from crewai_tools import (
+    SerperDevTool,
+    WebsiteSearchTool,
+    ScrapeWebsiteTool
+)
+
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -31,6 +38,26 @@ class MarketBlogCrew():
     agents: List[BaseAgent]
     tasks: List[Task]
 
+    def __init__(self):
+        super().__init__()
+        # Initialize research tools
+        self.search_tool = SerperDevTool()
+        self.web_scraper = ScrapeWebsiteTool()
+        
+        # Financial news and data websites for targeted research
+        self.financial_websites = [
+            'https://finance.yahoo.com',
+            'https://www.marketwatch.com',
+            'https://www.cnbc.com/markets',
+            'https://www.bloomberg.com/markets',
+            'https://www.investing.com'
+        ]
+        
+        # Create website-specific search tools
+        self.web_rag_tools = [
+            WebsiteSearchTool(website=site) for site in self.financial_websites
+        ]
+
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
     # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
@@ -41,6 +68,7 @@ class MarketBlogCrew():
     def market_researcher(self) -> Agent:
         return Agent(
             config=self.agents_config['market_researcher'], # type: ignore[index]
+            tools=[self.search_tool, self.web_scraper] + self.web_rag_tools,
             verbose=True
         )
 
@@ -48,6 +76,7 @@ class MarketBlogCrew():
     def technical_analyst(self) -> Agent:
         return Agent(
             config=self.agents_config['technical_analyst'], # type: ignore[index]
+            tools=[self.search_tool, self.web_scraper],
             verbose=True
         )
 
@@ -55,6 +84,7 @@ class MarketBlogCrew():
     def options_strategist(self) -> Agent:
         return Agent(
             config=self.agents_config['options_strategist'], # type: ignore[index]
+            tools=[self.search_tool],
             verbose=True
         )
 
@@ -103,7 +133,6 @@ class MarketBlogCrew():
     def write_blog_post_task(self) -> Task:
         return Task(
             config=self.tasks_config['write_blog_post_task'], # type: ignore[index]
-            # Remove output_json to let the agent output free-form text
         )
 
     @crew
