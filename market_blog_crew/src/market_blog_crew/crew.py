@@ -35,11 +35,10 @@ class BlogPost(BaseModel):
 class MarketBlogCrew():
     """MarketBlogCrew crew"""
 
-    agents: List[BaseAgent]
-    tasks: List[Task]
+    agents_config = 'config/agents.yaml'
+    tasks_config = 'config/tasks.yaml'
 
     def __init__(self):
-        super().__init__()
         # Initialize research tools
         self.search_tool = SerperDevTool()
         self.web_scraper = ScrapeWebsiteTool()
