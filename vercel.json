@@ -6,7 +6,7 @@
   "crons": [
     {
       "path": "/api/cron/generate-daily-blog",
-      "schedule": "0 8 * * *"
+      "schedule": "0 22 * * 1-5"
     }
   ]
 }
