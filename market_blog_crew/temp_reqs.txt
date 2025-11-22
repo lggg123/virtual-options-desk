@@ -1,0 +1,6 @@
+chromadb==0.4.24
+crewai==0.70.1
+crewai-tools==0.12.1
+flask-cors==6.0.1
+numpy==1.26.4
+qdrant-client==1.16.0

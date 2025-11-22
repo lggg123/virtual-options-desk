@@ -46,7 +46,6 @@ class MarketBlogCrew():
         # Financial news and data websites for targeted research
         self.financial_websites = [
             'https://finance.yahoo.com',
-            'https://www.marketwatch.com',
             'https://www.cnbc.com/markets',
             'https://www.bloomberg.com/markets',
             'https://www.investing.com'
