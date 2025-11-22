@@ -1,6 +1,4 @@
-crewai[tools]==0.86.0
-crewai-tools==0.17.0
-langchain-google-genai>=2.0.5
+crewai[tools]==1.5.0
 flask>=3.0.0
 flask-cors>=4.0.0
 python-dotenv>=1.0.0
