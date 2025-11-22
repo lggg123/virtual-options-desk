@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TrendingUp, TrendingDown, BarChart3, Signal, Bell, Target } from 'lucide-react';
-import { useMarketData } from '@/lib/hooks/useMarketData';
-import { getMarketSimulator } from '@/lib/market-data';
+import { useLiveMarketData } from '@/hooks/useLiveMarketData';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -44,12 +43,13 @@ interface TradingSignal {
   type: 'buy' | 'sell' | 'neutral';
   strength: number;
   price: number;
-  message: string;
-  timestamp: number;
-}
-
-interface MarketDataPoint {
-  price: number;
+  // Use real market data from EODHD
+  const { data: marketData, loading: loadingMarket } = useLiveMarketData(symbol);
+  const [currentPrice, setCurrentPrice] = useState(marketData?.price || 182.45);
+  const [priceChange, setPriceChange] = useState(marketData?.change || 0);
+  const [priceChangePercent, setPriceChangePercent] = useState(marketData?.changePercent || 0);
+  const [isLive, setIsLive] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   changePercent: number;
   timestamp: string;
 }
@@ -70,7 +70,7 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
   const [priceData, setPriceData] = useState<PriceData[]>([]);
   const [signals, setSignals] = useState<TradingSignal[]>([]);
   
-  // Update symbol when prop changes
+    if (marketData) {
   useEffect(() => {
     if (propSymbol && propSymbol !== symbol) {
       setSymbol(propSymbol);
@@ -99,25 +99,7 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
     // Clear existing data when symbol changes
     setPriceData([]);
     setSignals([]);
-  };
-
-  // Toggle live data
-  const toggleLiveData = () => {
-    setIsLive(!isLive);
-    if (!isLive && intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
-
-  // Update price data when market data changes
-  useEffect(() => {
-    if (currentSymbolData) {
-      const newDataPoint: PriceData = {
-        timestamp: new Date(currentSymbolData.timestamp).getTime(),
-        price: currentSymbolData.price,
-        volume: currentSymbolData.volume
-      };
+      // Remove simulator-based historical data initialization
       
       setPriceData(prev => {
         const updated = [...prev.slice(-99), newDataPoint];

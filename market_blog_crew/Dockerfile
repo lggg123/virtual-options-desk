@@ -26,5 +26,6 @@ ENV PYTHONUNBUFFERED=1
 # Set Google credentials path (actual secret written at runtime)
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
 
-# Run the Flask API
-CMD ["python", "api.py"]
+# Run the Flask API with Gunicorn and longer timeout
+RUN pip install gunicorn
+CMD ["gunicorn", "api:app", "--bind", "0.0.0.0:8000", "--timeout", "1200"]

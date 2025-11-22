@@ -245,7 +245,7 @@ if __name__ == '__main__':
             'gunicorn',
             '-w', '2',  # Reduce worker processes
             '-b', f'0.0.0.0:{port}',
-            '--timeout', '600',  # Increase timeout to 10 minutes
+            '--timeout', '1200',  # Increase timeout to 20 minutes
             '--log-level', 'warning',
             '--access-logfile', '-',
             '--error-logfile', '-',

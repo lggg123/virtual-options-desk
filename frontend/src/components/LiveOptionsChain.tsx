@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useLiveMarketData, useOptionsChain } from '@/hooks/useLiveMarketData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,85 +12,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface OptionData {
-  strike: number;
-  bid: number;
-  ask: number;
-  last: number;
-  volume: number;
-  openInterest: number;
-  iv: number;
-  delta: number;
-  gamma: number;
-}
+import type { OptionsData } from '@/hooks/useLiveMarketData';
 
 export default function LiveOptionsChain() {
   const [symbol, setSymbol] = useState('AAPL');
-  const [expiry, setExpiry] = useState('2024-02-16');
-  const [isLoading, setIsLoading] = useState(false);
-  const [stockPrice, setStockPrice] = useState(182.45);
+  const [expiry, setExpiry] = useState('');
+  const { data: marketData, loading: loadingMarket } = useLiveMarketData(symbol);
+  const { options, loading: loadingOptions } = useOptionsChain(symbol, expiry);
 
-  // Mock options data
-  const [callOptions, setCallOptions] = useState([
-    { strike: 175, bid: 8.20, ask: 8.30, last: 8.25, volume: 1250, openInterest: 4580, iv: 28.5, delta: 0.75, gamma: 0.012 },
-    { strike: 180, bid: 4.80, ask: 4.90, last: 4.85, volume: 2150, openInterest: 6720, iv: 29.8, delta: 0.65, gamma: 0.015 },
-    { strike: 185, bid: 2.15, ask: 2.25, last: 2.20, volume: 1890, openInterest: 3240, iv: 31.2, delta: 0.45, gamma: 0.018 },
-    { strike: 190, bid: 0.85, ask: 0.95, last: 0.90, volume: 980, openInterest: 2140, iv: 32.8, delta: 0.28, gamma: 0.016 },
-  ]);
+  // ...existing code...
 
-  const [putOptions, setPutOptions] = useState([
-    { strike: 175, bid: 1.20, ask: 1.30, last: 1.25, volume: 850, openInterest: 2580, iv: 27.5, delta: -0.25, gamma: 0.012 },
-    { strike: 180, bid: 2.80, ask: 2.90, last: 2.85, volume: 1650, openInterest: 4720, iv: 28.8, delta: -0.35, gamma: 0.015 },
-    { strike: 185, bid: 5.15, ask: 5.25, last: 5.20, volume: 1390, openInterest: 5240, iv: 30.2, delta: -0.55, gamma: 0.018 },
-    { strike: 190, bid: 8.85, ask: 8.95, last: 8.90, volume: 780, openInterest: 3140, iv: 31.8, delta: -0.72, gamma: 0.016 },
-  ]);
-
-  const refreshChain = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock price updates
-      setStockPrice(prev => prev + (Math.random() - 0.5) * 2);
-      
-      // Update options data with small random changes to simulate real-time updates
-      setCallOptions(prev => prev.map(option => ({
-        ...option,
-        bid: option.bid + (Math.random() - 0.5) * 0.1,
-        ask: option.ask + (Math.random() - 0.5) * 0.1,
-        last: option.last + (Math.random() - 0.5) * 0.1,
-        volume: option.volume + Math.floor(Math.random() * 100),
-      })));
-      
-      setPutOptions(prev => prev.map(option => ({
-        ...option,
-        bid: option.bid + (Math.random() - 0.5) * 0.1,
-        ask: option.ask + (Math.random() - 0.5) * 0.1,
-        last: option.last + (Math.random() - 0.5) * 0.1,
-        volume: option.volume + Math.floor(Math.random() * 100),
-      })));
-      
-      toast.success(`Options chain refreshed for ${symbol}`);
-    } catch (error) {
-      console.error('Failed to refresh options chain:', error);
-      toast.error('Failed to refresh options chain');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [symbol]);
-
-  // Initialize component and set up auto-refresh
-  useEffect(() => {
-    // Auto-refresh the options chain every 30 seconds
-    const interval = setInterval(() => {
-      refreshChain();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [refreshChain]);
-
-  const handleTrade = (option: OptionData, type: 'call' | 'put', action: 'buy' | 'sell') => {
+  const handleTrade = (option: OptionsData, type: 'call' | 'put', action: 'buy' | 'sell') => {
     toast.success(`${action.toUpperCase()} ${type.toUpperCase()} ${symbol} $${option.strike} initiated`);
   };
 
@@ -121,12 +54,6 @@ export default function LiveOptionsChain() {
                 onChange={(e) => setExpiry(e.target.value)}
               />
             </div>
-            <div className="flex items-end">
-              <Button onClick={refreshChain} disabled={isLoading}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-            </div>
           </div>
 
           {/* Stock Price */}
@@ -137,15 +64,20 @@ export default function LiveOptionsChain() {
                 <Badge variant="outline" className="ml-2">Stock</Badge>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold">${stockPrice.toFixed(2)}</div>
-                <div className="text-sm text-green-600 flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  +$2.15 (+1.19%)
+                <div className="text-2xl font-bold">
+                  {loadingMarket || !marketData ? 'Loading...' : `$${marketData.price.toFixed(2)}`}
                 </div>
-                <div className="text-xs text-muted-foreground flex items-center mt-1">
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                  Previous: $180.30
-                </div>
+                {marketData && (
+                  <>
+                    <div className={`text-sm flex items-center ${marketData.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {marketData.change >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                      {marketData.change >= 0 ? '+' : ''}${marketData.change.toFixed(2)} ({marketData.changePercent.toFixed(2)}%)
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center mt-1">
+                      Previous: ${marketData.previousClose.toFixed(2)}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -174,41 +106,45 @@ export default function LiveOptionsChain() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {callOptions.map((option) => (
-                      <TableRow key={option.strike} className={option.strike === 180 ? 'bg-muted/50' : ''}>
-                        <TableCell className="font-medium">
-                          ${option.strike}
-                          {Math.abs(option.strike - stockPrice) < 5 && (
-                            <Badge variant="secondary" className="ml-1 text-xs">ATM</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>${option.bid.toFixed(2)}</TableCell>
-                        <TableCell>${option.ask.toFixed(2)}</TableCell>
-                        <TableCell className="font-medium">${option.last.toFixed(2)}</TableCell>
-                        <TableCell>{option.volume.toLocaleString()}</TableCell>
-                        <TableCell>{option.openInterest.toLocaleString()}</TableCell>
-                        <TableCell>{option.iv.toFixed(1)}%</TableCell>
-                        <TableCell>{option.delta.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-1">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleTrade(option, 'call', 'buy')}
-                            >
-                              Buy
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleTrade(option, 'call', 'sell')}
-                            >
-                              Sell
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {loadingOptions ? (
+                      <TableRow><TableCell colSpan={9}>Loading...</TableCell></TableRow>
+                    ) : (
+                      options.filter(o => o.type === 'call').map((option) => (
+                        <TableRow key={option.strike} className={marketData && Math.abs(option.strike - marketData.price) < 5 ? 'bg-muted/50' : ''}>
+                          <TableCell className="font-medium">
+                            ${option.strike}
+                            {marketData && Math.abs(option.strike - marketData.price) < 5 && (
+                              <Badge variant="secondary" className="ml-1 text-xs">ATM</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>${option.bid.toFixed(2)}</TableCell>
+                          <TableCell>${option.ask.toFixed(2)}</TableCell>
+                          <TableCell className="font-medium">${option.last.toFixed(2)}</TableCell>
+                          <TableCell>{option.volume?.toLocaleString()}</TableCell>
+                          <TableCell>{option.openInterest?.toLocaleString()}</TableCell>
+                          <TableCell>{option.impliedVolatility?.toFixed(1)}%</TableCell>
+                          <TableCell>{option.delta?.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleTrade(option, 'call', 'buy')}
+                              >
+                                Buy
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleTrade(option, 'call', 'sell')}
+                              >
+                                Sell
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -231,41 +167,45 @@ export default function LiveOptionsChain() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {putOptions.map((option) => (
-                      <TableRow key={option.strike} className={option.strike === 180 ? 'bg-muted/50' : ''}>
-                        <TableCell className="font-medium">
-                          ${option.strike}
-                          {Math.abs(option.strike - stockPrice) < 5 && (
-                            <Badge variant="secondary" className="ml-1 text-xs">ATM</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>${option.bid.toFixed(2)}</TableCell>
-                        <TableCell>${option.ask.toFixed(2)}</TableCell>
-                        <TableCell className="font-medium">${option.last.toFixed(2)}</TableCell>
-                        <TableCell>{option.volume.toLocaleString()}</TableCell>
-                        <TableCell>{option.openInterest.toLocaleString()}</TableCell>
-                        <TableCell>{option.iv.toFixed(1)}%</TableCell>
-                        <TableCell>{option.delta.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-1">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleTrade(option, 'put', 'buy')}
-                            >
-                              Buy
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleTrade(option, 'put', 'sell')}
-                            >
-                              Sell
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {loadingOptions ? (
+                      <TableRow><TableCell colSpan={9}>Loading...</TableCell></TableRow>
+                    ) : (
+                      options.filter(o => o.type === 'put').map((option) => (
+                        <TableRow key={option.strike} className={marketData && Math.abs(option.strike - marketData.price) < 5 ? 'bg-muted/50' : ''}>
+                          <TableCell className="font-medium">
+                            ${option.strike}
+                            {marketData && Math.abs(option.strike - marketData.price) < 5 && (
+                              <Badge variant="secondary" className="ml-1 text-xs">ATM</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>${option.bid.toFixed(2)}</TableCell>
+                          <TableCell>${option.ask.toFixed(2)}</TableCell>
+                          <TableCell className="font-medium">${option.last.toFixed(2)}</TableCell>
+                          <TableCell>{option.volume?.toLocaleString()}</TableCell>
+                          <TableCell>{option.openInterest?.toLocaleString()}</TableCell>
+                          <TableCell>{option.impliedVolatility?.toFixed(1)}%</TableCell>
+                          <TableCell>{option.delta?.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleTrade(option, 'put', 'buy')}
+                              >
+                                Buy
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleTrade(option, 'put', 'sell')}
+                              >
+                                Sell
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
