@@ -1,18 +1,4 @@
 services:
-  # Pattern Detection API Service
-  - type: web
-    name: pattern-detection-api
-    env: python
-    region: oregon
-    plan: free
-    buildCommand: pip install -r python/requirements-ml.txt
-    startCommand: uvicorn python.pattern_detection_api:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
-    autoDeploy: true
-
   # ML Stock Screening API Service
   - type: web
     name: ml-stock-screening-api
