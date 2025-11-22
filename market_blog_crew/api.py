@@ -243,10 +243,10 @@ if __name__ == '__main__':
         import subprocess
         subprocess.run([
             'gunicorn',
-            '-w', '4',  # 4 worker processes
+            '-w', '2',  # Reduce worker processes
             '-b', f'0.0.0.0:{port}',
-            '--timeout', '300',  # 5 minute timeout for long-running AI tasks
-            '--log-level', 'warning',  # Reduce Gunicorn logging
+            '--timeout', '600',  # Increase timeout to 10 minutes
+            '--log-level', 'warning',
             '--access-logfile', '-',
             '--error-logfile', '-',
             'api:app'
@@ -254,3 +254,6 @@ if __name__ == '__main__':
     else:
         logger.warning("Using Flask development server (not for production)")
         app.run(host='0.0.0.0', port=port, debug=debug)
+
+    print("Current working directory:", os.getcwd())
+    print("Files in cwd:", os.listdir(os.getcwd()))

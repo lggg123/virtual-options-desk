@@ -47,7 +47,6 @@ class MarketBlogCrew():
         self.financial_websites = [
             'https://finance.yahoo.com',
             'https://www.cnbc.com/markets',
-            'https://www.bloomberg.com/markets',
             'https://www.investing.com'
         ]
         

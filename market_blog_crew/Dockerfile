@@ -3,13 +3,11 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire project
 COPY . .
@@ -24,6 +22,9 @@ EXPOSE 8000
 ENV FLASK_ENV=production
 ENV PORT=8000
 ENV PYTHONUNBUFFERED=1
+
+# Set Google credentials path (actual secret written at runtime)
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
 
 # Run the Flask API
 CMD ["python", "api.py"]

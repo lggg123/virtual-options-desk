@@ -42,6 +42,21 @@ research_market_task:
     Use SerperDevTool for broad searches and WebsiteSearchTool for specific financial sites.
     
     Date: {current_date}
+
+    IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE.
+    If using a tool:
+    Thought: [reasoning]
+    Action: [tool name] [tool input]
+    Example:
+    Thought: I need to search for today's Dow Jones level.
+    Action: SearchTool Dow Jones today
+
+    If giving a final answer:
+    Thought: I now can give a great answer
+    Final Answer: [your best complete final answer to the task.]
+    Example:
+    Thought: I now can give a great answer
+    Final Answer: The Dow Jones closed at 46,245.41 today according to Yahoo Finance.
   expected_output: >
     A detailed market intelligence report with 8 sections covering all requested areas.
     Include SPECIFIC CURRENT numbers, percentages, and dates from TODAY's market data.
@@ -68,6 +83,21 @@ analyze_technicals_task:
     
     Focus on setups with high probability for options trades (strong trends, clear levels, momentum).
     Date: {current_date}
+
+    IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE.
+    If using a tool:
+    Thought: [reasoning]
+    Action: [tool name] [tool input]
+    Example:
+    Thought: I need to analyze the RSI for AAPL.
+    Action: TechnicalAnalysisTool RSI AAPL
+
+    If giving a final answer:
+    Thought: I now can give a great answer
+    Final Answer: [your best complete final answer to the task.]
+    Example:
+    Thought: I now can give a great answer
+    Final Answer: AAPL is showing a bullish RSI divergence and is likely to move higher.
   expected_output: >
     Technical analysis report covering 3-5 top opportunities. For each, provide specific
     price levels, indicator readings, and chart pattern analysis. Include entry zones,
@@ -101,6 +131,21 @@ identify_options_opportunities_task:
     
     Ensure all strategies are practical for retail traders (liquid options, reasonable strikes).
     Date: {current_date}
+
+    IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE.
+    If using a tool:
+    Thought: [reasoning]
+    Action: [tool name] [tool input]
+    Example:
+    Thought: I need to check the implied volatility for TSLA options.
+    Action: OptionsTool Implied Volatility TSLA
+
+    If giving a final answer:
+    Thought: I now can give a great answer
+    Final Answer: [your best complete final answer to the task.]
+    Example:
+    Thought: I now can give a great answer
+    Final Answer: The best strategy is a TSLA call spread with strikes at $250/$260 expiring Dec 15, 2025.
   expected_output: >
     Options strategy report with 2-3 detailed trade recommendations. Each recommendation
     must include all 8 elements listed above with specific numbers and dates. Format as
@@ -130,6 +175,21 @@ assess_risks_task:
     necessary modifications (tighter stops, smaller size, different strikes, etc.).
     Be critical and thorough - capital preservation is paramount.
     Date: {current_date}
+
+    IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE.
+    If using a tool:
+    Thought: [reasoning]
+    Action: [tool name] [tool input]
+    Example:
+    Thought: I need to check the liquidity for the recommended options.
+    Action: RiskTool Liquidity Check
+
+    If giving a final answer:
+    Thought: I now can give a great answer
+    Final Answer: [your best complete final answer to the task.]
+    Example:
+    Thought: I now can give a great answer
+    Final Answer: All trades have acceptable risk and are approved for execution.
   expected_output: >
     Risk assessment report covering all proposed trades. For each trade, provide:
     - Risk rating (Low/Medium/High)
@@ -195,6 +255,21 @@ write_blog_post_task:
     [Your full 1800-2200 word markdown article starts here...]
     
     Date: {current_date}
+
+    IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE.
+    If using a tool:
+    Thought: [reasoning]
+    Action: [tool name] [tool input]
+    Example:
+    Thought: I need to gather more market data for the blog post.
+    Action: SearchTool Market Data Today
+
+    If giving a final answer:
+    Thought: I now can give a great answer
+    Final Answer: [your best complete final answer to the task.]
+    Example:
+    Thought: I now can give a great answer
+    Final Answer: [Full blog post content in required format.]
   expected_output: >
     A complete blog post with TITLE, META_DESCRIPTION, TAGS, KEYWORDS, market data (SP500_LEVEL, 
     VIX_LEVEL, TOP_SECTOR), and CONTENT sections clearly labeled. The content must be 1800-2200 words, 
