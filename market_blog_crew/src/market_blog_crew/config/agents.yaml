@@ -12,7 +12,7 @@ market_researcher:
     Your research forms the foundation for all downstream analysis, so you're meticulous about
     accuracy and context. You can identify emerging trends before they become mainstream and
     recognize when market narratives shift.
-  llm: gemini-2.5-flash
+  llm: gemini/gemini-2.0-flash
 
 technical_analyst:
   role: >
@@ -29,7 +29,7 @@ technical_analyst:
     identifying optimal entry and exit points for options positions based on volatility cycles
     and momentum indicators. You always consider multiple timeframes (daily, weekly, monthly)
     to validate your analysis.
-  llm: gemini-2.5-flash
+  llm: gemini/gemini-2.0-flash
 
 options_strategist:
   role: >
@@ -46,7 +46,7 @@ options_strategist:
     skilled at identifying mispriced options and exploiting volatility skew. You always consider
     liquidity, bid-ask spreads, and realistic slippage when recommending trades. Your strategies
     balance aggressive profit potential with prudent risk management.
-  llm: gemini-2.5-flash
+  llm: gemini/gemini-2.0-flash
 
 risk_manager:
   role: >
@@ -63,7 +63,7 @@ risk_manager:
     and stress testing under various market conditions. You're not afraid to reject trades
     that look attractive on paper but carry hidden risks. You believe preservation of capital
     is paramount and that consistent, risk-adjusted returns beat home runs every time.
-  llm: gemini-2.5-flash
+  llm: gemini/gemini-2.0-flash
 
 content_writer:
   role: >

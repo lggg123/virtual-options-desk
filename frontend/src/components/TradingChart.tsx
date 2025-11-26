@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,15 +43,9 @@ interface TradingSignal {
   type: 'buy' | 'sell' | 'neutral';
   strength: number;
   price: number;
-  // Use real market data from EODHD
-  const { data: marketData, loading: loadingMarket } = useLiveMarketData(symbol);
-  const [currentPrice, setCurrentPrice] = useState(marketData?.price || 182.45);
-  const [priceChange, setPriceChange] = useState(marketData?.change || 0);
-  const [priceChangePercent, setPriceChangePercent] = useState(marketData?.changePercent || 0);
-  const [isLive, setIsLive] = useState(true);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  message: string;
   changePercent: number;
-  timestamp: string;
+  timestamp: number;
 }
 
 interface TooltipContext {
@@ -69,134 +63,78 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
   const [timeframe, setTimeframe] = useState('1M');
   const [priceData, setPriceData] = useState<PriceData[]>([]);
   const [signals, setSignals] = useState<TradingSignal[]>([]);
-  
-    if (marketData) {
+  const [currentPrice, setCurrentPrice] = useState(182.45);
+  const [priceChange, setPriceChange] = useState(0);
+  const [priceChangePercent, setPriceChangePercent] = useState(0);
+  const [isLive, setIsLive] = useState(true);
+
+  // Use real market data from live API
+  const { data: marketData, loading: loadingMarket } = useLiveMarketData(symbol);
+
   useEffect(() => {
     if (propSymbol && propSymbol !== symbol) {
       setSymbol(propSymbol);
       setPriceData([]);
       setSignals([]);
     }
-  }, [propSymbol]);
-  
-  // Use real market data from simulator
-  const { marketData, isConnected, getSymbolData } = useMarketData([symbol]);
-  const currentSymbolData = getSymbolData(symbol);
-  
-  // Get current stock data from simulator
-  const simulator = getMarketSimulator();
-  const stockData = simulator.getStock(symbol);
-  
-  const [currentPrice, setCurrentPrice] = useState(stockData?.price || 182.45);
-  const [priceChange, setPriceChange] = useState(0);
-  const [priceChangePercent, setPriceChangePercent] = useState(0);
-  const [isLive, setIsLive] = useState(true);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  }, [propSymbol, symbol]);
 
-  // Symbol search handler
-  const handleSymbolChange = (newSymbol: string) => {
-    setSymbol(newSymbol);
-    // Clear existing data when symbol changes
-    setPriceData([]);
-    setSignals([]);
-      // Remove simulator-based historical data initialization
-      
+  // Update price data when market data changes
+  useEffect(() => {
+    if (marketData) {
+      setCurrentPrice(marketData.price);
+      setPriceChange(marketData.change);
+      setPriceChangePercent(marketData.changePercent);
+
+      // Add new price data point
+      const newDataPoint: PriceData = {
+        timestamp: Date.now(),
+        price: marketData.price,
+        volume: marketData.volume
+      };
+
       setPriceData(prev => {
         const updated = [...prev.slice(-99), newDataPoint];
         return updated;
       });
-      
-      setCurrentPrice(currentSymbolData.price);
-      setPriceChange(currentSymbolData.change);
-      setPriceChangePercent(currentSymbolData.changePercent);
-      
+
       // Generate trading signal based on real data
-      if (Math.abs(currentSymbolData.changePercent) > 1) {
-        const signal = generateTradingSignal(currentSymbolData);
-        if (signal) {
-          setSignals(prev => [signal, ...prev.slice(0, 4)]);
-        }
+      if (Math.abs(marketData.changePercent) > 1) {
+        const signal: TradingSignal = {
+          id: Math.random().toString(36).substr(2, 9),
+          type: marketData.changePercent > 0 ? 'buy' : 'sell',
+          strength: Math.min(Math.abs(marketData.changePercent) * 50, 100),
+          price: marketData.price,
+          message: marketData.changePercent > 0
+            ? 'Strong upward momentum - Consider call options'
+            : 'Bearish pressure detected - Put options recommended',
+          changePercent: marketData.changePercent,
+          timestamp: Date.now()
+        };
+        setSignals(prev => [signal, ...prev.slice(0, 4)]);
       }
     }
-  }, [currentSymbolData]);
+  }, [marketData]);
 
-  // Initialize with historical data from simulator
+  // Initialize with historical data
   useEffect(() => {
-    const initializeData = async () => {
-      if (stockData) {
-        const simulator = getMarketSimulator();
-        const historicalPrices = await simulator.generateRandomWalk(
-          symbol,
-          stockData.price,
-          stockData.volatility,
-          100
-        );
-        
-        const now = Date.now();
-        const historical: PriceData[] = historicalPrices.map((price, index) => ({
-          timestamp: now - (100 - index) * 60000,
-          price,
-          volume: Math.floor(Math.random() * 1000000) + 500000
-        }));
-        
-        setPriceData(historical);
-        setCurrentPrice(stockData.price);
-      }
-    };
-    
-    initializeData();
-  }, [symbol, stockData]);
+    if (marketData && priceData.length === 0) {
+      // Generate some initial historical data points
+      const now = Date.now();
+      const basePrice = marketData.price;
+      const historical: PriceData[] = Array.from({ length: 50 }, (_, i) => ({
+        timestamp: now - (50 - i) * 60000, // 1 minute intervals
+        price: basePrice + (Math.random() - 0.5) * 5,
+        volume: Math.floor(Math.random() * 1000000) + 500000
+      }));
 
-  // Setup live data update interval
-  useEffect(() => {
-    if (isLive && !intervalRef.current) {
-      intervalRef.current = setInterval(() => {
-        // Force a price update every 30 seconds when live
-        if (stockData) {
-          const simulator = getMarketSimulator();
-          simulator.updatePrices();
-        }
-      }, 30000);
-    } else if (!isLive && intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+      setPriceData(historical);
     }
+  }, [marketData, priceData.length]);
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [isLive, stockData]);
-
-  const generateTradingSignal = (data: MarketDataPoint): TradingSignal | null => {
-    const changePercent = Math.abs(data.changePercent);
-    
-    if (changePercent < 0.5) return null;
-    
-    let signalType: 'buy' | 'sell' | 'neutral';
-    let message: string;
-    
-    if (data.changePercent > 1.5) {
-      signalType = 'buy';
-      message = 'Strong upward momentum - Consider call options';
-    } else if (data.changePercent < -1.5) {
-      signalType = 'sell'; 
-      message = 'Bearish pressure detected - Put options recommended';
-    } else {
-      signalType = 'neutral';
-      message = 'Moderate volatility - Straddle strategy may be optimal';
-    }
-    
-    return {
-      id: Math.random().toString(36).substr(2, 9),
-      type: signalType,
-      strength: Math.min(changePercent * 50, 100),
-      price: data.price,
-      message,
-      timestamp: Date.now()
-    };
+  // Toggle live data
+  const toggleLiveData = () => {
+    setIsLive(!isLive);
   };
 
   // Chart configuration
@@ -319,15 +257,15 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
                 </Button>
                 <div className="flex items-center space-x-2 ml-4">
                   <Signal className="h-3 w-3" />
-                  <span className="text-sm">{isConnected ? 'Live Data' : 'Connecting...'}</span>
-                  {isConnected && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />}
+                  <span className="text-sm">{!loadingMarket ? 'Live Data' : 'Connecting...'}</span>
+                  {!loadingMarket && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <input
                   type="text"
                   value={symbol}
-                  onChange={(e) => handleSymbolChange(e.target.value.toUpperCase())}
+                  onChange={(e) => setSymbol(e.target.value.toUpperCase())}
                   className="px-2 py-1 border rounded text-sm w-20"
                   placeholder="Symbol"
                 />
@@ -341,11 +279,6 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
                   )}
                   {priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)} ({priceChangePercent >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%)
                 </Badge>
-                {marketData && Object.keys(marketData).length > 0 && (
-                  <Badge variant="outline">
-                    {Object.keys(marketData).length} symbols
-                  </Badge>
-                )}
               </div>
             </div>
 
@@ -367,19 +300,19 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
             <div className="grid grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Open</div>
-                <div className="font-medium">${stockData?.open?.toFixed(2) || currentSymbolData?.open?.toFixed(2) || '180.30'}</div>
+                <div className="font-medium">${marketData?.open?.toFixed(2) || '180.30'}</div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">High</div>
-                <div className="font-medium">${stockData?.high?.toFixed(2) || currentSymbolData?.high?.toFixed(2) || Math.max(...priceData.map(d => d.price)).toFixed(2)}</div>
+                <div className="font-medium">${marketData?.high?.toFixed(2) || (priceData.length > 0 ? Math.max(...priceData.map(d => d.price)).toFixed(2) : '185.50')}</div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Low</div>
-                <div className="font-medium">${stockData?.low?.toFixed(2) || currentSymbolData?.low?.toFixed(2) || Math.min(...priceData.map(d => d.price)).toFixed(2)}</div>
+                <div className="font-medium">${marketData?.low?.toFixed(2) || (priceData.length > 0 ? Math.min(...priceData.map(d => d.price)).toFixed(2) : '178.20')}</div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Volume</div>
-                <div className="font-medium">{stockData?.volume ? (stockData.volume / 1000000).toFixed(1) : currentSymbolData?.volume ? (currentSymbolData.volume / 1000000).toFixed(1) : '45.2'}M</div>
+                <div className="font-medium">{marketData?.volume ? (marketData.volume / 1000000).toFixed(1) : '45.2'}M</div>
               </div>
             </div>
           </div>
