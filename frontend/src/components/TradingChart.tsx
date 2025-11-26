@@ -137,13 +137,21 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
     setIsLive(!isLive);
   };
 
+  // Filter out invalid price data and calculate bounds
+  const validPriceData = priceData.filter(d => d.price > 0 && isFinite(d.price));
+  const prices = validPriceData.map(d => d.price);
+  const minPrice = prices.length > 0 ? Math.min(...prices) : currentPrice * 0.99;
+  const maxPrice = prices.length > 0 ? Math.max(...prices) : currentPrice * 1.01;
+  const priceRange = maxPrice - minPrice;
+  const padding = Math.max(priceRange * 0.1, 0.5); // At least $0.50 padding
+
   // Chart configuration
   const chartData = {
-    labels: priceData.map(d => new Date(d.timestamp)),
+    labels: validPriceData.map(d => new Date(d.timestamp)),
     datasets: [
       {
         label: `${symbol} Price`,
-        data: priceData.map(d => d.price),
+        data: validPriceData.map(d => d.price),
         borderColor: priceChange >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)',
         backgroundColor: priceChange >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
         borderWidth: 2,
@@ -183,6 +191,8 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
       },
       y: {
         beginAtZero: false,
+        suggestedMin: minPrice - padding,
+        suggestedMax: maxPrice + padding,
         grid: {
           color: 'rgba(0, 0, 0, 0.1)',
         },
@@ -284,7 +294,7 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
 
             {/* Live Chart */}
             <div className="h-96 bg-white rounded-lg border p-4">
-              {priceData.length > 0 ? (
+              {validPriceData.length > 0 ? (
                 <Line data={chartData} options={chartOptions} />
               ) : (
                 <div className="h-full flex items-center justify-center">

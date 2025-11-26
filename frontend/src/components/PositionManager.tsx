@@ -4,14 +4,26 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TrendingUp, TrendingDown, X } from 'lucide-react';
 
+// Helper to get future Friday dates for sample expiries
+function getFutureFriday(weeksAhead: number): string {
+  const today = new Date();
+  const futureDate = new Date(today);
+  futureDate.setDate(today.getDate() + (weeksAhead * 7));
+  // Adjust to next Friday
+  const dayOfWeek = futureDate.getDay();
+  const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7;
+  futureDate.setDate(futureDate.getDate() + daysUntilFriday);
+  return futureDate.toISOString().split('T')[0];
+}
+
 export default function PositionManager() {
   const positions = [
     {
       id: 1,
       symbol: 'AAPL',
       type: 'Call',
-      strike: 180,
-      expiry: '2024-01-19',
+      strike: 230,
+      expiry: getFutureFriday(2),
       quantity: 5,
       avgPrice: 3.25,
       currentPrice: 3.85,
@@ -26,8 +38,8 @@ export default function PositionManager() {
       id: 2,
       symbol: 'TSLA',
       type: 'Put',
-      strike: 250,
-      expiry: '2024-01-26',
+      strike: 350,
+      expiry: getFutureFriday(3),
       quantity: -3,
       avgPrice: 8.50,
       currentPrice: 7.20,
@@ -42,8 +54,8 @@ export default function PositionManager() {
       id: 3,
       symbol: 'SPY',
       type: 'Call',
-      strike: 450,
-      expiry: '2024-01-12',
+      strike: 600,
+      expiry: getFutureFriday(1),
       quantity: 10,
       avgPrice: 2.15,
       currentPrice: 1.85,

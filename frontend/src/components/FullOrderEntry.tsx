@@ -163,11 +163,21 @@ export default function FullOrderEntry() {
 
   // Quick fill function for testing
   const quickFillAAPL = () => {
+    // Calculate a future expiry date (next Friday, roughly 3 weeks out)
+    const today = new Date();
+    const futureDate = new Date(today);
+    futureDate.setDate(today.getDate() + 21); // 3 weeks from now
+    // Adjust to next Friday
+    const dayOfWeek = futureDate.getDay();
+    const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7;
+    futureDate.setDate(futureDate.getDate() + daysUntilFriday);
+    const expiryDate = futureDate.toISOString().split('T')[0];
+
     setOrderData({
       symbol: 'AAPL',
       optionType: 'call',
-      strike: 180,
-      expiry: '2024-02-16',
+      strike: 230,
+      expiry: expiryDate,
       quantity: 1,
       price: 3.25,
       orderType: 'limit',
