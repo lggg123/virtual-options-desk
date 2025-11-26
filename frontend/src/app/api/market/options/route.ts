@@ -15,7 +15,14 @@ export async function GET(request: NextRequest) {
 
     // Fetch options data from Yahoo Finance
     const baseUrl = `https://query1.finance.yahoo.com/v7/finance/options/${symbol}`;
-    const url = expiration ? `${baseUrl}?date=${expiration}` : baseUrl;
+
+    // Convert expiration date string (YYYY-MM-DD) to Unix timestamp if provided
+    let expirationTimestamp: number | undefined;
+    if (expiration) {
+      expirationTimestamp = Math.floor(new Date(expiration).getTime() / 1000);
+    }
+
+    const url = expirationTimestamp ? `${baseUrl}?date=${expirationTimestamp}` : baseUrl;
 
     const response = await fetch(url, {
       headers: {
@@ -36,6 +43,13 @@ export async function GET(request: NextRequest) {
         expirations: []
       });
     }
+
+    // Filter out expired dates and get future expirations only
+    const now = Math.floor(Date.now() / 1000);
+    const futureExpirations = optionChain.expirationDates.filter((date: number) => date > now);
+
+    // Use the nearest future expiration if no expiration is specified
+    const targetExpiration = expirationTimestamp || futureExpirations[0] || optionChain.expirationDates[0];
 
     const calls = optionChain.options[0].calls || [];
     const puts = optionChain.options[0].puts || [];
@@ -78,7 +92,7 @@ export async function GET(request: NextRequest) {
         gamma: 0,
         theta: 0,
         vega: 0,
-        expiration: new Date(optionChain.expirationDates[0] * 1000).toISOString(),
+        expiration: new Date(targetExpiration * 1000).toISOString(),
         type: 'call'
       })),
       ...puts.map((put: YahooOption) => ({
@@ -93,12 +107,13 @@ export async function GET(request: NextRequest) {
         gamma: 0,
         theta: 0,
         vega: 0,
-        expiration: new Date(optionChain.expirationDates[0] * 1000).toISOString(),
+        expiration: new Date(targetExpiration * 1000).toISOString(),
         type: 'put'
       }))
     ];
 
-    const expirations = optionChain.expirationDates.map((date: number) => 
+    // Return only future expirations in YYYY-MM-DD format
+    const expirations = futureExpirations.map((date: number) =>
       new Date(date * 1000).toISOString().split('T')[0]
     );
 

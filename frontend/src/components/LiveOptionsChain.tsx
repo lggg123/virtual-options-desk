@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLiveMarketData, useOptionsChain } from '@/hooks/useLiveMarketData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { OptionsData } from '@/hooks/useLiveMarketData';
@@ -18,7 +19,14 @@ export default function LiveOptionsChain() {
   const [symbol, setSymbol] = useState('AAPL');
   const [expiry, setExpiry] = useState('');
   const { data: marketData, loading: loadingMarket } = useLiveMarketData(symbol);
-  const { options, loading: loadingOptions } = useOptionsChain(symbol, expiry);
+  const { options, expirations, loading: loadingOptions } = useOptionsChain(symbol, expiry);
+
+  // Auto-select the first (nearest) expiration date when available
+  useEffect(() => {
+    if (expirations.length > 0 && !expiry) {
+      setExpiry(expirations[0]);
+    }
+  }, [expirations, expiry]);
 
   // ...existing code...
 
@@ -47,12 +55,22 @@ export default function LiveOptionsChain() {
             </div>
             <div className="flex-1">
               <Label htmlFor="chain-expiry">Expiry Date</Label>
-              <Input
-                id="chain-expiry"
-                type="date"
-                value={expiry}
-                onChange={(e) => setExpiry(e.target.value)}
-              />
+              <Select value={expiry} onValueChange={setExpiry}>
+                <SelectTrigger id="chain-expiry">
+                  <SelectValue placeholder="Select expiration date" />
+                </SelectTrigger>
+                <SelectContent>
+                  {expirations.map((date) => (
+                    <SelectItem key={date} value={date}>
+                      {new Date(date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

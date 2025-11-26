@@ -73,34 +73,38 @@ export function useLiveMarketData(symbol: string, refreshInterval = 5000) {
   return { data, loading, error, refresh: fetchData };
 }
 
-export function useOptionsChain(symbol: string, expirationDate?: string) {
+export function useOptionsChain(symbol: string, expirationDate?: string, refreshInterval = 10000) {
   const [options, setOptions] = useState<OptionsData[]>([]);
+  const [expirations, setExpirations] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchOptions() {
-      try {
-        const url = expirationDate 
-          ? `/api/market/options?symbol=${symbol}&expiration=${expirationDate}`
-          : `/api/market/options?symbol=${symbol}`;
-        
-        const response = await fetch(url);
-        
-        if (response.ok) {
-          const data = await response.json();
-          setOptions(data.options || []);
-          setError(null);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch options data');
-      } finally {
-        setLoading(false);
-      }
-    }
+  const fetchOptions = useCallback(async () => {
+    try {
+      const url = expirationDate
+        ? `/api/market/options?symbol=${symbol}&expiration=${expirationDate}`
+        : `/api/market/options?symbol=${symbol}`;
 
-    fetchOptions();
+      const response = await fetch(url);
+
+      if (response.ok) {
+        const data = await response.json();
+        setOptions(data.options || []);
+        setExpirations(data.expirations || []);
+        setError(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch options data');
+    } finally {
+      setLoading(false);
+    }
   }, [symbol, expirationDate]);
 
-  return { options, loading, error };
+  useEffect(() => {
+    fetchOptions();
+    const interval = setInterval(fetchOptions, refreshInterval);
+    return () => clearInterval(interval);
+  }, [fetchOptions, refreshInterval]);
+
+  return { options, expirations, loading, error, refresh: fetchOptions };
 }
