@@ -163,13 +163,22 @@ def generate_blog():
         lines = output_text.split('\n')
         current_section = None
         content_lines = []
-        
+        found_first_h1 = False
+
         for line in lines:
             # Strip markdown headers (## or #) from the beginning
             cleaned_line = line.lstrip('#').strip()
 
+            # Check if this is an H1 header (single #) - could be the title
+            is_h1 = line.startswith('# ') and not line.startswith('## ')
+
             if cleaned_line.startswith('TITLE:') or line.startswith('TITLE:'):
                 blog_data['title'] = cleaned_line.replace('TITLE:', '').strip()
+                found_first_h1 = True
+            elif is_h1 and not found_first_h1 and not blog_data['title']:
+                # First H1 header without TITLE: prefix - treat as title
+                blog_data['title'] = cleaned_line
+                found_first_h1 = True
             elif cleaned_line.startswith('META_DESCRIPTION:') or line.startswith('META_DESCRIPTION:'):
                 blog_data['meta_description'] = cleaned_line.replace('META_DESCRIPTION:', '').strip()
             elif cleaned_line.startswith('TAGS:') or line.startswith('TAGS:'):
@@ -193,6 +202,10 @@ def generate_blog():
             elif cleaned_line.startswith('CONTENT:') or line.startswith('CONTENT:'):
                 current_section = 'content'
             elif current_section == 'content':
+                content_lines.append(line)
+            # If we haven't found CONTENT: yet but we're past the metadata, start collecting content
+            elif found_first_h1 and line.startswith('## ') and 'Introduction' in line and current_section is None:
+                current_section = 'content'
                 content_lines.append(line)
         
         blog_data['content'] = '\n'.join(content_lines).strip()
