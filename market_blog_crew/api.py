@@ -165,46 +165,65 @@ def generate_blog():
         content_lines = []
         
         for line in lines:
-            if line.startswith('TITLE:'):
-                blog_data['title'] = line.replace('TITLE:', '').strip()
-            elif line.startswith('META_DESCRIPTION:'):
-                blog_data['meta_description'] = line.replace('META_DESCRIPTION:', '').strip()
-            elif line.startswith('TAGS:'):
-                tags_str = line.replace('TAGS:', '').strip()
+            # Strip markdown headers (## or #) from the beginning
+            cleaned_line = line.lstrip('#').strip()
+
+            if cleaned_line.startswith('TITLE:') or line.startswith('TITLE:'):
+                blog_data['title'] = cleaned_line.replace('TITLE:', '').strip()
+            elif cleaned_line.startswith('META_DESCRIPTION:') or line.startswith('META_DESCRIPTION:'):
+                blog_data['meta_description'] = cleaned_line.replace('META_DESCRIPTION:', '').strip()
+            elif cleaned_line.startswith('TAGS:') or line.startswith('TAGS:'):
+                tags_str = cleaned_line.replace('TAGS:', '').strip()
                 blog_data['tags'] = [t.strip() for t in tags_str.split(',') if t.strip()]
-            elif line.startswith('KEYWORDS:'):
-                keywords_str = line.replace('KEYWORDS:', '').strip()
+            elif cleaned_line.startswith('KEYWORDS:') or line.startswith('KEYWORDS:'):
+                keywords_str = cleaned_line.replace('KEYWORDS:', '').strip()
                 blog_data['target_keywords'] = [k.strip() for k in keywords_str.split(',') if k.strip()]
-            elif line.startswith('SP500_LEVEL:'):
+            elif cleaned_line.startswith('SP500_LEVEL:') or line.startswith('SP500_LEVEL:'):
                 try:
-                    blog_data['market_data']['sp500_level'] = float(line.replace('SP500_LEVEL:', '').strip())
+                    blog_data['market_data']['sp500_level'] = float(cleaned_line.replace('SP500_LEVEL:', '').strip())
                 except:
                     pass
-            elif line.startswith('VIX_LEVEL:'):
+            elif cleaned_line.startswith('VIX_LEVEL:') or line.startswith('VIX_LEVEL:'):
                 try:
-                    blog_data['market_data']['vix_level'] = float(line.replace('VIX_LEVEL:', '').strip())
+                    blog_data['market_data']['vix_level'] = float(cleaned_line.replace('VIX_LEVEL:', '').strip())
                 except:
                     pass
-            elif line.startswith('TOP_SECTOR:'):
-                blog_data['market_data']['top_sector'] = line.replace('TOP_SECTOR:', '').strip()
-            elif line.startswith('CONTENT:'):
+            elif cleaned_line.startswith('TOP_SECTOR:') or line.startswith('TOP_SECTOR:'):
+                blog_data['market_data']['top_sector'] = cleaned_line.replace('TOP_SECTOR:', '').strip()
+            elif cleaned_line.startswith('CONTENT:') or line.startswith('CONTENT:'):
                 current_section = 'content'
             elif current_section == 'content':
                 content_lines.append(line)
         
         blog_data['content'] = '\n'.join(content_lines).strip()
-        
+
+        # Validate that we have actual content
+        if not blog_data['title'] or not blog_data['content']:
+            logger.error(f"Parsing failed - Title: '{blog_data['title'][:50] if blog_data['title'] else 'EMPTY'}', Content length: {len(blog_data['content'])}")
+            logger.error(f"Raw output preview (first 500 chars): {output_text[:500]}")
+            return jsonify({
+                'success': False,
+                'error': 'Blog parsing failed',
+                'message': 'Could not parse blog content from AI output. Title or content is empty.',
+                'debug': {
+                    'title_found': bool(blog_data['title']),
+                    'content_length': len(blog_data['content']),
+                    'raw_output_preview': output_text[:1000]
+                }
+            }), 500
+
         # Also save to output directory
         output_dir = Path(__file__).parent / 'output'
         output_dir.mkdir(exist_ok=True)
-        
+
         # Save as JSON
         json_file = output_dir / f'blog-{current_date}.json'
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(blog_data, f, indent=2, ensure_ascii=False)
-        
-        logger.info(f"Blog generated: {blog_data['title'][:50]}...")
-        
+
+        logger.info(f"Blog generated successfully: {blog_data['title'][:50]}...")
+        logger.info(f"Content length: {len(blog_data['content'])} chars, Tags: {blog_data['tags']}")
+
         return jsonify({
             'success': True,
             'blog': blog_data,
