@@ -85,7 +85,7 @@ Fully Connected (128 → 64 → 1)
 - **Recommended**: Kaggle (for background execution) or Google Colab with T4 GPU
 - **Training Time**: 30-60 minutes (200 stocks), 8-12 hours (5000 stocks)
 
-> **For long training runs (5000+ stocks):** See [KAGGLE_LSTM_TRAINING_GUIDE.md](./KAGGLE_LSTM_TRAINING_GUIDE.md) for instructions on running in the background on Kaggle.
+> **For long training runs (5000+ stocks):** See [KAGGLE_TRAINING_GUIDE.md](./KAGGLE_TRAINING_GUIDE.md) for instructions on running in the background on Kaggle.
 
 ### Output Files
 ```

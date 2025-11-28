@@ -265,48 +265,84 @@ export class RealMarketDataService {
     }));
   }
 
+  // Helper to format symbol for EODHD (US stocks need .US suffix)
+  private formatEODHDSymbol(symbol: string): string {
+    // If symbol already has exchange suffix, use as-is
+    if (symbol.includes('.')) return symbol;
+    // Default to US market for common symbols
+    return `${symbol}.US`;
+  }
+
   // EODHD Implementation
   private async getEODHDPrice(symbol: string) {
-    const url = `https://eodhd.com/api/real-time/${symbol}?api_token=${this.config.apiKey}&fmt=json`;
-    
+    const formattedSymbol = this.formatEODHDSymbol(symbol);
+    const url = `https://eodhd.com/api/real-time/${formattedSymbol}?api_token=${this.config.apiKey}&fmt=json`;
+
     const response = await fetch(url);
     const data = await response.json();
-    
-    if (data.error) {
-      throw new Error(`EODHD error: ${data.error}`);
+
+    if (data.error || typeof data === 'string') {
+      throw new Error(`EODHD error: ${data.error || data}`);
     }
 
     return {
       price: data.close,
       change: data.change,
       changePercent: data.change_p,
-      volume: data.volume || 0
+      volume: data.volume || 0,
+      high: data.high,
+      low: data.low,
+      open: data.open
     };
   }
 
   private async getEODHDHistorical(symbol: string, days: number): Promise<MarketData[]> {
+    const formattedSymbol = this.formatEODHDSymbol(symbol);
+
+    // Try intraday endpoint first (requires paid plan for most data)
     const to = new Date().toISOString().split('T')[0];
     const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    
-    const url = `https://eodhd.com/api/intraday/${symbol}?api_token=${this.config.apiKey}&interval=5m&from=${from}&to=${to}&fmt=json`;
-    
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (!Array.isArray(data)) {
-      throw new Error('EODHD: Invalid response format');
+
+    try {
+      const intradayUrl = `https://eodhd.com/api/intraday/${formattedSymbol}?api_token=${this.config.apiKey}&interval=5m&from=${from}&to=${to}&fmt=json`;
+      const intradayResponse = await fetch(intradayUrl);
+      const intradayData = await intradayResponse.json();
+
+      if (Array.isArray(intradayData) && intradayData.length > 0) {
+        interface EODHDIntradayItem { close: number; volume: number; datetime: string; high: number; low: number; open: number; }
+        return intradayData.map((item: EODHDIntradayItem) => ({
+          price: item.close,
+          volume: item.volume,
+          timestamp: new Date(`${item.datetime}Z`).toISOString(),
+          high: item.high,
+          low: item.low,
+          open: item.open,
+          symbol
+        }));
+      }
+    } catch {
+      // Intraday failed, try EOD (end-of-day) data
     }
 
-    interface TwelveDataItem { close: number; volume: number; datetime: string; high: number; low: number; open: number; }
-    return data.map((item: TwelveDataItem) => ({
-      price: item.close,
-      volume: item.volume,
-      timestamp: new Date(`${item.datetime}Z`).toISOString(),
-      high: item.high,
-      low: item.low,
-      open: item.open,
-      symbol
-    }));
+    // Fallback to EOD (end-of-day) historical data
+    const eodUrl = `https://eodhd.com/api/eod/${formattedSymbol}?api_token=${this.config.apiKey}&from=${from}&to=${to}&fmt=json`;
+    const eodResponse = await fetch(eodUrl);
+    const eodData = await eodResponse.json();
+
+    if (Array.isArray(eodData) && eodData.length > 0) {
+      interface EODHDEodItem { close: number; volume: number; date: string; high: number; low: number; open: number; adjusted_close?: number; }
+      return eodData.map((item: EODHDEodItem) => ({
+        price: item.adjusted_close || item.close,
+        volume: item.volume,
+        timestamp: new Date(item.date).toISOString(),
+        high: item.high,
+        low: item.low,
+        open: item.open,
+        symbol
+      }));
+    }
+
+    throw new Error('EODHD: No historical data available');
   }
 }
 

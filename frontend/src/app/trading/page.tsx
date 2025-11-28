@@ -36,26 +36,10 @@ export default function TradingPage() {
         {/* Top Row - Chart and Order Entry */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Trading Chart</CardTitle>
-                <CardDescription>Visualize price and technicals</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <TradingChart symbol={selectedSymbol} />
-              </CardContent>
-            </Card>
+            <TradingChart symbol={selectedSymbol} />
           </div>
           <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Entry</CardTitle>
-                <CardDescription>Place trades</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FullOrderEntry />
-              </CardContent>
-            </Card>
+            <FullOrderEntry />
           </div>
         </div>
 
