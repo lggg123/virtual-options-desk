@@ -76,8 +76,10 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
   const [priceData, setPriceData] = useState<PriceData[]>([]);
   const [signals, setSignals] = useState<TradingSignal[]>([]);
   const [currentPrice, setCurrentPrice] = useState(0);
-  const [priceChange, setPriceChange] = useState(0);
-  const [priceChangePercent, setPriceChangePercent] = useState(0);
+  const [, setDailyPriceChange] = useState(0);
+  const [, setDailyPriceChangePercent] = useState(0);
+  const [timeframePriceChange, setTimeframePriceChange] = useState(0);
+  const [timeframePriceChangePercent, setTimeframePriceChangePercent] = useState(0);
   const [isLive, setIsLive] = useState(true);
   const [loadingHistorical, setLoadingHistorical] = useState(false);
   const [historicalDataLoaded, setHistoricalDataLoaded] = useState(false);
@@ -194,8 +196,8 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
   useEffect(() => {
     if (marketData) {
       setCurrentPrice(marketData.price);
-      setPriceChange(marketData.change);
-      setPriceChangePercent(marketData.changePercent);
+      setDailyPriceChange(marketData.change);
+      setDailyPriceChangePercent(marketData.changePercent);
 
       // Add new price data point if live mode is on and we have historical data
       if (isLive && historicalDataLoaded) {
@@ -238,6 +240,19 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
       fetchHistoricalData(symbol, timeframe);
     }
   }, [symbol, timeframe, fetchHistoricalData, marketData]);
+
+  // Calculate timeframe-specific price change when price data changes
+  useEffect(() => {
+    if (priceData.length > 0 && currentPrice > 0) {
+      // Get the first (oldest) price in the dataset for this timeframe
+      const startPrice = priceData[0].price;
+      const change = currentPrice - startPrice;
+      const changePercent = (change / startPrice) * 100;
+
+      setTimeframePriceChange(change);
+      setTimeframePriceChangePercent(changePercent);
+    }
+  }, [priceData, currentPrice]);
 
   // Toggle live data
   const toggleLiveData = () => {
@@ -283,8 +298,8 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
           x: d.timestamp,
           y: d.price,
         })),
-        borderColor: priceChange >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)',
-        backgroundColor: priceChange >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+        borderColor: timeframePriceChange >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)',
+        backgroundColor: timeframePriceChange >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
         borderWidth: 2,
         fill: true,
         tension: 0.1,
@@ -411,13 +426,13 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
                 />
                 <Badge variant="outline">{symbol}</Badge>
                 <Badge variant="default">${currentPrice.toFixed(2)}</Badge>
-                <Badge variant="secondary" className={priceChange >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {priceChange >= 0 ? (
+                <Badge variant="secondary" className={timeframePriceChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {timeframePriceChange >= 0 ? (
                     <TrendingUp className="h-3 w-3 mr-1" />
                   ) : (
                     <TrendingDown className="h-3 w-3 mr-1" />
                   )}
-                  {priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)} ({priceChangePercent >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%)
+                  {timeframePriceChange >= 0 ? '+' : ''}${timeframePriceChange.toFixed(2)} ({timeframePriceChangePercent >= 0 ? '+' : ''}{timeframePriceChangePercent.toFixed(2)}%)
                 </Badge>
               </div>
             </div>
