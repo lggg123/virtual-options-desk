@@ -1,113 +1,62 @@
 {
-  "trained_at": "2025-10-09T22:22:04.133527",
-  "config": {
-    "universe": [
-      "AAPL",
-      "MSFT",
-      "GOOGL",
-      "AMZN",
-      "NVDA",
-      "META",
-      "TSLA",
-      "JPM",
-      "V",
-      "JNJ",
-      "WMT",
-      "PG",
-      "MA",
-      "UNH",
-      "DIS",
-      "HD",
-      "BAC",
-      "ADBE",
-      "CRM",
-      "NFLX",
-      "XOM",
-      "CVX",
-      "PFE",
-      "KO",
-      "PEP",
-      "COST",
-      "ABBV",
-      "MRK",
-      "TMO",
-      "AVGO",
-      "LLY",
-      "ABT",
-      "DHR",
-      "NKE",
-      "ACN",
-      "TXN",
-      "NEE",
-      "ORCL",
-      "MCD",
-      "QCOM",
-      "BMY",
-      "LIN",
-      "PM",
-      "UNP",
-      "AMD",
-      "HON",
-      "UPS",
-      "LOW",
-      "RTX",
-      "INTC"
-    ],
-    "period": "3y",
-    "forward_days": 30,
-    "cv_splits": 5,
-    "min_history": 250
-  },
-  "feature_names": [
-    "returns_1d",
-    "returns_5d",
-    "returns_20d",
-    "returns_60d",
-    "sma_5",
-    "sma_10",
+  "training_date": "2025-11-28T08:09:22.778899",
+  "num_stocks": 5196,
+  "training_samples": 1080974,
+  "test_samples": 270244,
+  "feature_count": 18,
+  "features": [
+    "close",
+    "volume",
+    "return_1d",
+    "return_5d",
+    "return_20d",
+    "return_60d",
+    "volatility_20d",
+    "volatility_60d",
     "sma_20",
     "sma_50",
     "sma_200",
+    "sma_20_50_ratio",
+    "sma_50_200_ratio",
     "rsi_14",
-    "rsi_7",
-    "macd",
     "bb_position",
+    "volume_20d_avg",
     "volume_ratio",
-    "volume_trend",
-    "volatility_20d",
-    "volatility_60d",
-    "hl_ratio",
-    "close_position"
+    "momentum_20d"
   ],
-  "feature_count": 19,
-  "training_samples": 20960,
-  "test_samples": 5240,
-  "ensemble_weights": {
+  "model_weights": {
     "xgboost": 0.35,
     "random_forest": 0.25,
     "lightgbm": 0.4
   },
-  "metrics": {
+  "performance": {
     "xgboost": {
-      "mse": 0.013084075061122809,
-      "mae": 0.07856502582361717,
-      "r2": -0.08431319056019637
+      "mse": 3975.817349690052,
+      "mae": 0.41963393343866345,
+      "r2": 0.4324517354150972
     },
     "random_forest": {
-      "mse": 0.013382181343897346,
-      "mae": 0.08031393373267959,
-      "r2": -0.10901807593354262
+      "mse": 3106.14619690907,
+      "mae": 0.5442586539270944,
+      "r2": 0.5565973663905435
     },
     "lightgbm": {
-      "mse": 0.015677544985114315,
-      "mae": 0.08848859964916658,
-      "r2": -0.2992411571736664
+      "mse": 1028.3902107261913,
+      "mae": 0.607612723984988,
+      "r2": 0.853197210012866
     },
     "ensemble": {
-      "mse": 0.013698815648143707,
-      "mae": 0.08130365353680133,
-      "r2": -0.13525842926950982
+      "mse": 829.609137363881,
+      "mae": 0.4563939628124772,
+      "r2": 0.8815732251303358
     }
   },
-  "torch_available": false
+  "config": {
+    "training_universe_size": null,
+    "history_days": 730,
+    "forward_prediction_days": 30,
+    "test_size": 0.2,
+    "random_state": 42,
+    "output_dir": "ml_models"
+  }
 }
