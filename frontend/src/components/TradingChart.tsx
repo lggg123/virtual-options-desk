@@ -274,13 +274,15 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
   // Get timeframe config for display formats
   const tfConfig = TIMEFRAME_CONFIG[timeframe] || TIMEFRAME_CONFIG['1D'];
 
-  // Chart configuration
+  // Chart configuration - use {x, y} format for time series
   const chartData = {
-    labels: validPriceData.map(d => new Date(d.timestamp)),
     datasets: [
       {
         label: `${symbol} Price`,
-        data: validPriceData.map(d => d.price),
+        data: validPriceData.map(d => ({
+          x: d.timestamp,
+          y: d.price,
+        })),
         borderColor: priceChange >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)',
         backgroundColor: priceChange >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
         borderWidth: 2,
@@ -315,19 +317,25 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
           displayFormats: {
             minute: 'HH:mm',
             hour: 'HH:mm',
-            day: tfConfig.displayFormat,
-            week: tfConfig.displayFormat,
-            month: tfConfig.displayFormat,
+            day: 'MMM d',
+            week: 'MMM d',
+            month: 'MMM yyyy',
             year: 'yyyy',
           },
           tooltipFormat: 'MMM d, yyyy HH:mm',
+        },
+        adapters: {
+          date: {
+            locale: undefined,
+          },
         },
         grid: {
           display: false,
         },
         ticks: {
-          maxTicksLimit: 10,
+          maxTicksLimit: 8,
           autoSkip: true,
+          source: 'auto' as const,
         },
       },
       y: {
@@ -417,7 +425,7 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
             {/* Live Chart */}
             <div className="h-96 bg-white rounded-lg border p-4">
               {validPriceData.length > 0 ? (
-                <Line data={chartData} options={chartOptions} />
+                <Line key={`${symbol}-${timeframe}`} data={chartData} options={chartOptions} />
               ) : (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center">
