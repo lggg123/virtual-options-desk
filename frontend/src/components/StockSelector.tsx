@@ -250,10 +250,10 @@ export default function StockSelector({ onSelectStock, currentSymbol = 'AAPL' }:
               ) : liveError ? (
                 <div className="text-xs text-red-500 mt-1">{liveError}</div>
               ) : liveData && (
-                <div className="text-xs text-gray-400 mt-1 flex gap-4">
-                  <span>Price: <span className="text-white font-semibold">${liveData.price?.toFixed(2) ?? '--'}</span></span>
-                  <span>Change: <span className={liveData.change && liveData.change >= 0 ? 'text-green-500' : 'text-red-500'}>{liveData.change !== undefined ? `${liveData.change >= 0 ? '+' : ''}${liveData.change.toFixed(2)}%` : '--'}</span></span>
-                  <span>Vol: <span className="text-white font-semibold">{liveData.volume?.toLocaleString() ?? '--'}</span></span>
+                <div className="text-xs text-muted-foreground mt-1 flex gap-4">
+                  <span>Price: <span className="text-foreground font-semibold">${liveData.price?.toFixed(2) ?? '--'}</span></span>
+                  <span>Change: <span className={liveData.change && liveData.change >= 0 ? 'text-green-600' : 'text-red-600'}>{liveData.change !== undefined ? `${liveData.change >= 0 ? '+' : ''}${liveData.change.toFixed(2)}%` : '--'}</span></span>
+                  <span>Vol: <span className="text-foreground font-semibold">{liveData.volume?.toLocaleString() ?? '--'}</span></span>
                 </div>
               )}
             </div>
