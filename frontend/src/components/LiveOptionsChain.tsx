@@ -43,7 +43,7 @@ export default function LiveOptionsChain() {
       <CardContent>
         <div className="space-y-4">
           {/* Controls */}
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Label htmlFor="chain-symbol">Symbol</Label>
               <Input

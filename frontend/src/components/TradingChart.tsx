@@ -386,7 +386,7 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
         <CardContent>
           <div className="space-y-4">
             {/* Chart Controls */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 {Object.keys(TIMEFRAME_CONFIG).map((tf) => (
                   <Button
@@ -404,19 +404,19 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
                   size="sm"
                   onClick={toggleLiveData}
                 >
-                  {isLive ? 'Pause' : 'Resume'} Live
+                  {isLive ? 'Pause' : 'Resume'}
                 </Button>
-                <div className="flex items-center space-x-2 ml-2">
+                <div className="hidden sm:flex items-center space-x-2 ml-2">
                   <Signal className="h-3 w-3" />
                   <span className="text-sm">
-                    {loadingHistorical ? 'Loading...' : !loadingMarket ? 'Live Data' : 'Connecting...'}
+                    {loadingHistorical ? 'Loading...' : !loadingMarket ? 'Live' : 'Connecting...'}
                   </span>
                   {!loadingMarket && !loadingHistorical && (
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                   )}
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                 <input
                   type="text"
                   value={symbol}
@@ -424,15 +424,14 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
                   className="px-2 py-1 border rounded text-sm w-20"
                   placeholder="Symbol"
                 />
-                <Badge variant="outline">{symbol}</Badge>
-                <Badge variant="default">${currentPrice.toFixed(2)}</Badge>
-                <Badge variant="secondary" className={timeframePriceChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                <Badge variant="default" className="text-xs sm:text-sm">${currentPrice.toFixed(2)}</Badge>
+                <Badge variant="secondary" className={`text-xs sm:text-sm ${timeframePriceChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {timeframePriceChange >= 0 ? (
                     <TrendingUp className="h-3 w-3 mr-1" />
                   ) : (
                     <TrendingDown className="h-3 w-3 mr-1" />
                   )}
-                  {timeframePriceChange >= 0 ? '+' : ''}${timeframePriceChange.toFixed(2)} ({timeframePriceChangePercent >= 0 ? '+' : ''}{timeframePriceChangePercent.toFixed(2)}%)
+                  {timeframePriceChange >= 0 ? '+' : ''}{timeframePriceChangePercent.toFixed(2)}%
                 </Badge>
               </div>
             </div>
@@ -452,22 +451,22 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground">Open</div>
-                <div className="font-medium">${marketData?.open?.toFixed(2) || '180.30'}</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+              <div className="text-center p-2 bg-muted/50 rounded">
+                <div className="text-xs sm:text-sm text-muted-foreground">Open</div>
+                <div className="text-sm sm:text-base font-medium">${marketData?.open?.toFixed(2) || '180.30'}</div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground">High</div>
-                <div className="font-medium">${marketData?.high?.toFixed(2) || (priceData.length > 0 ? Math.max(...priceData.map(d => d.price)).toFixed(2) : '185.50')}</div>
+              <div className="text-center p-2 bg-muted/50 rounded">
+                <div className="text-xs sm:text-sm text-muted-foreground">High</div>
+                <div className="text-sm sm:text-base font-medium">${marketData?.high?.toFixed(2) || (priceData.length > 0 ? Math.max(...priceData.map(d => d.price)).toFixed(2) : '185.50')}</div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground">Low</div>
-                <div className="font-medium">${marketData?.low?.toFixed(2) || (priceData.length > 0 ? Math.min(...priceData.map(d => d.price)).toFixed(2) : '178.20')}</div>
+              <div className="text-center p-2 bg-muted/50 rounded">
+                <div className="text-xs sm:text-sm text-muted-foreground">Low</div>
+                <div className="text-sm sm:text-base font-medium">${marketData?.low?.toFixed(2) || (priceData.length > 0 ? Math.min(...priceData.map(d => d.price)).toFixed(2) : '178.20')}</div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground">Volume</div>
-                <div className="font-medium">{marketData?.volume ? (marketData.volume / 1000000).toFixed(1) : '45.2'}M</div>
+              <div className="text-center p-2 bg-muted/50 rounded">
+                <div className="text-xs sm:text-sm text-muted-foreground">Volume</div>
+                <div className="text-sm sm:text-base font-medium">{marketData?.volume ? (marketData.volume / 1000000).toFixed(1) : '45.2'}M</div>
               </div>
             </div>
           </div>

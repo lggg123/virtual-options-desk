@@ -40,15 +40,15 @@ export default function DashboardMetrics() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 overflow-hidden">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
+          <Card key={i} className="min-w-0">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Loading...</CardTitle>
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">--</div>
+              <div className="text-lg sm:text-2xl font-bold">--</div>
             </CardContent>
           </Card>
         ))}
@@ -82,14 +82,14 @@ export default function DashboardMetrics() {
   const investedAmount = portfolioValue - cashBalance;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 overflow-hidden">
+      <Card className="min-w-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs sm:text-sm font-medium truncate">Portfolio Value</CardTitle>
+          <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-lg sm:text-2xl font-bold truncate">
             ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
@@ -103,13 +103,13 @@ export default function DashboardMetrics() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Cash Available</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs sm:text-sm font-medium truncate">Cash Available</CardTitle>
+          <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-lg sm:text-2xl font-bold truncate">
             ${cashBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
@@ -118,13 +118,13 @@ export default function DashboardMetrics() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs sm:text-sm font-medium truncate">Total P&L</CardTitle>
+          <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         </CardHeader>
         <CardContent>
-          <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <div className={`text-lg sm:text-2xl font-bold truncate ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {totalPnL >= 0 ? '+' : ''}${totalPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
@@ -133,13 +133,13 @@ export default function DashboardMetrics() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Invested</CardTitle>
-          <Activity className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs sm:text-sm font-medium truncate">Invested</CardTitle>
+          <Activity className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-lg sm:text-2xl font-bold truncate">
             ${investedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <p className="text-xs text-muted-foreground mt-1">

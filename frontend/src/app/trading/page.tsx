@@ -51,11 +51,11 @@ export default function TradingPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="chain" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="chain">Options Chain</TabsTrigger>
-                <TabsTrigger value="positions">Positions</TabsTrigger>
-                <TabsTrigger value="scanner">Scanner</TabsTrigger>
-                <TabsTrigger value="risk">Risk</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+                <TabsTrigger value="chain" className="text-xs sm:text-sm py-2">Options Chain</TabsTrigger>
+                <TabsTrigger value="positions" className="text-xs sm:text-sm py-2">Positions</TabsTrigger>
+                <TabsTrigger value="scanner" className="text-xs sm:text-sm py-2">Scanner</TabsTrigger>
+                <TabsTrigger value="risk" className="text-xs sm:text-sm py-2">Risk</TabsTrigger>
               </TabsList>
 
               <TabsContent value="chain" className="space-y-4">

@@ -36,22 +36,22 @@ export default function HomePage() {
       <nav className="fixed top-0 w-full bg-black/20 backdrop-blur-md z-50 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Image src="/logo.svg" alt="AI Stock Desk Logo" width={40} height={40} className="mr-3" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">AI Stock Desk</span>
+            <div className="flex items-center flex-shrink-0">
+              <Image src="/logo.svg" alt="AI Stock Desk Logo" width={40} height={40} className="mr-2 sm:mr-3" />
+              <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent hidden sm:inline">AI Stock Desk</span>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {!loading && (
                 <>
                   {isAuthenticated ? (
                     <>
-                      <Link href="/dashboard" className="hover:text-gray-300 transition">
+                      <Link href="/dashboard" className="text-sm sm:text-base hover:text-gray-300 transition hidden sm:inline">
                         Dashboard
                       </Link>
-                      <Link href="/trading" className="hover:text-gray-300 transition">
+                      <Link href="/trading" className="text-sm sm:text-base hover:text-gray-300 transition hidden sm:inline">
                         Trade
                       </Link>
-                      <Link href="/portfolio" className="hover:text-gray-300 transition">
+                      <Link href="/portfolio" className="text-sm sm:text-base hover:text-gray-300 transition hidden sm:inline">
                         Portfolio
                       </Link>
                       <button
@@ -64,22 +64,22 @@ export default function HomePage() {
                             window.location.href = '/login';
                           }
                         }}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition"
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base bg-red-600 hover:bg-red-700 rounded-md transition"
                       >
                         Sign Out
                       </button>
                     </>
                   ) : (
                     <>
-                      <Link href="/blog" className="hover:text-gray-300 transition">
+                      <Link href="/blog" className="text-sm sm:text-base hover:text-gray-300 transition hidden sm:inline">
                         Blog
                       </Link>
-                      <Link href="/login" className="hover:text-gray-300 transition">
+                      <Link href="/login" className="text-sm sm:text-base hover:text-gray-300 transition">
                         Login
                       </Link>
                       <Link
                         href="/register"
-                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-md transition"
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-md transition"
                       >
                         Sign Up
                       </Link>

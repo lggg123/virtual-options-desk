@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
-import { LogOut, Settings, User, TrendingUp, BarChart3, DollarSign, Sparkles, FileText } from 'lucide-react';
+import { LogOut, Settings, User, TrendingUp, BarChart3, DollarSign, Sparkles, FileText, BookOpen, Menu } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardHeader() {
@@ -50,27 +50,28 @@ export default function DashboardHeader() {
     { href: '/dashboard/ai-picks', label: 'AI Picks', icon: Sparkles },
     { href: '/trading', label: 'Trading', icon: TrendingUp },
     { href: '/portfolio', label: 'Portfolio', icon: DollarSign },
+    { href: '/education', label: 'Learn', icon: BookOpen },
     { href: '/blog', label: 'Blog', icon: FileText },
   ];
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-8">
-          <div>
-            <h1 className="text-2xl font-bold">Virtual Options Desk</h1>
-            <p className="text-muted-foreground">Professional Options Trading Platform</p>
-          </div>
-          
-          {/* Navigation Menu */}
-          <nav className="hidden md:flex items-center space-x-2">
+      <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-4 lg:space-x-8">
+          <Link href="/dashboard" className="flex-shrink-0">
+            <h1 className="text-lg sm:text-2xl font-bold">AI Stock Picks</h1>
+          </Link>
+
+          {/* Navigation Menu - Desktop */}
+          <nav className="hidden lg:flex items-center space-x-1">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
               return (
                 <Link key={item.href} href={item.href}>
-                  <Button 
-                    variant={isActive ? "default" : "ghost"} 
+                  <Button
+                    variant={isActive ? "default" : "ghost"}
+                    size="sm"
                     className="flex items-center gap-2"
                   >
                     <Icon className="h-4 w-4" />
@@ -82,7 +83,30 @@ export default function DashboardHeader() {
           </nav>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          {/* Mobile Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild className="lg:hidden">
+              <Button variant="ghost" size="sm">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <DropdownMenuItem key={item.href} asChild>
+                    <Link href={item.href} className="flex items-center gap-2">
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
