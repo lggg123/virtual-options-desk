@@ -1,8 +1,13 @@
+# Railway configuration for ML API Service
+# Note: Pattern Detection API is deployed from python/ directory with its own railway.toml
+
 [build]
-builder = "dockerfile"
-dockerfilePath = "Dockerfile.pattern"
+builder = "nixpacks"
+nixpacksConfigPath = "python/nixpacks.toml"
 
 [deploy]
-startCommand = "uvicorn python.pattern_detection_api:app --host 0.0.0.0 --port $PORT"
+startCommand = "cd python && bash start_ml_api.sh"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
