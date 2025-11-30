@@ -1,0 +1,3 @@
+# Combined requirements for ML API
+# Include ML dependencies
+-r requirements-ml.txt
