@@ -15,9 +15,9 @@ export async function GET() {
       );
     }
 
-    // Fetch recent trades for the user
+    // Fetch recent trades for the user from the trades table
     const { data: trades, error: tradesError } = await supabase
-      .from('options_trades')
+      .from('trades')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -25,7 +25,7 @@ export async function GET() {
 
     if (tradesError) {
       console.error('Error fetching trades:', tradesError);
-      
+
       // Return empty array if table doesn't exist or no trades
       if (tradesError.code === 'PGRST116' || tradesError.code === '42P01') {
         return NextResponse.json({
@@ -34,16 +34,30 @@ export async function GET() {
           message: 'No trades found'
         });
       }
-      
+
       return NextResponse.json(
         { error: 'Failed to fetch trades' },
         { status: 500 }
       );
     }
 
+    // Transform trades to match frontend interface
+    const transformedTrades = (trades || []).map(trade => ({
+      id: trade.id,
+      symbol: trade.symbol,
+      option_type: trade.option_type,
+      strike_price: trade.strike_price,
+      expiry_date: trade.expiration_date,
+      action: trade.trade_type,
+      quantity: trade.quantity,
+      premium: trade.price,
+      created_at: trade.created_at,
+      updated_at: trade.created_at,
+    }));
+
     return NextResponse.json({
       success: true,
-      data: trades || []
+      data: transformedTrades
     });
   } catch (error) {
     console.error('Unexpected error in trades API:', error);

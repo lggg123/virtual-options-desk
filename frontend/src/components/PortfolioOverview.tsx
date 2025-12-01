@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, TrendingUp } from 'lucide-react';
+import { Loader2, TrendingUp, RotateCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Position {
   id: string;
@@ -18,19 +19,16 @@ interface Position {
 export default function PortfolioOverview() {
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [totalValue, setTotalValue] = useState(0);
 
-  useEffect(() => {
-    fetchPositions();
-  }, []);
-
-  async function fetchPositions() {
+  const fetchPositions = useCallback(async () => {
     try {
       const response = await fetch('/api/positions');
       if (response.ok) {
         const data = await response.json();
         setPositions(data.positions || []);
-        
+
         // Calculate total portfolio value
         const total = (data.positions || []).reduce((sum: number, pos: Position) => {
           return sum + (pos.currentPrice * pos.quantity * 100);
@@ -41,8 +39,26 @@ export default function PortfolioOverview() {
       console.error('Error fetching positions:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }
+  }, []);
+
+  const refreshPositions = useCallback(async () => {
+    setRefreshing(true);
+    await fetchPositions();
+  }, [fetchPositions]);
+
+  useEffect(() => {
+    fetchPositions();
+
+    // Listen for order placement events
+    const handleOrderPlaced = () => {
+      refreshPositions();
+    };
+
+    window.addEventListener('orderPlaced', handleOrderPlaced);
+    return () => window.removeEventListener('orderPlaced', handleOrderPlaced);
+  }, [fetchPositions, refreshPositions]);
 
   if (loading) {
     return (
@@ -113,8 +129,25 @@ export default function PortfolioOverview() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Portfolio Positions</CardTitle>
-        <CardDescription>Current options positions breakdown</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Portfolio Positions</CardTitle>
+            <CardDescription>Current options positions breakdown</CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshPositions}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RotateCcw className="h-4 w-4" />
+            )}
+            Refresh
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">

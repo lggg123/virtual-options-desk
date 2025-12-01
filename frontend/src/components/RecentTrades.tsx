@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RotateCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Trade {
   id: string;
@@ -21,35 +22,50 @@ interface Trade {
 export default function RecentTrades() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchTrades = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/trades');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch trades');
-        }
+  const fetchTrades = useCallback(async () => {
+    try {
+      const response = await fetch('/api/trades');
 
-        const data = await response.json();
-        
-        if (data.success) {
-          setTrades(data.data || []);
-        } else {
-          setError(data.error || 'Failed to load trades');
-        }
-      } catch (err) {
-        console.error('Error fetching trades:', err);
-        setError('Failed to load recent trades');
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error('Failed to fetch trades');
       }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setTrades(data.data || []);
+        setError(null);
+      } else {
+        setError(data.error || 'Failed to load trades');
+      }
+    } catch (err) {
+      console.error('Error fetching trades:', err);
+      setError('Failed to load recent trades');
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  const refreshTrades = useCallback(async () => {
+    setRefreshing(true);
+    await fetchTrades();
+  }, [fetchTrades]);
+
+  useEffect(() => {
+    fetchTrades();
+
+    // Listen for order placement events
+    const handleOrderPlaced = () => {
+      refreshTrades();
     };
 
-    fetchTrades();
-  }, []);
+    window.addEventListener('orderPlaced', handleOrderPlaced);
+    return () => window.removeEventListener('orderPlaced', handleOrderPlaced);
+  }, [fetchTrades, refreshTrades]);
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -71,8 +87,25 @@ export default function RecentTrades() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Trades</CardTitle>
-        <CardDescription>Your latest options transactions</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Recent Trades</CardTitle>
+            <CardDescription>Your latest options transactions</CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshTrades}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RotateCcw className="h-4 w-4" />
+            )}
+            Refresh
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (

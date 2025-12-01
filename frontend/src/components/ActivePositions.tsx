@@ -9,7 +9,7 @@ import { X, RotateCcw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Position {
-  id: number;
+  id: string;
   symbol: string;
   type: string;
   strike: number;
@@ -67,7 +67,7 @@ export default function ActivePositions() {
     return () => window.removeEventListener('orderPlaced', handleOrderPlaced);
   }, [fetchPositions, refreshPositions]);
 
-  const closePosition = async (positionId: number) => {
+  const closePosition = async (positionId: string) => {
     try {
       const response = await fetch(`/api/positions/${positionId}`, {
         method: 'DELETE',
