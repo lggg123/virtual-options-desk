@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
           .from('profiles')
           .insert({
             id: mockUser.id,
-            username: mockUser.email.split('@')[0], // Use email prefix as username
+            email: mockUser.email,
             full_name: mockUser.email.split('@')[0],
             updated_at: new Date().toISOString()
           })
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
         newBalance,
         message: 'Order simulated successfully (demo mode)',
         profile: profile ? {
-          username: profile.username,
+          email: profile.email,
           full_name: profile.full_name
         } : null
       });
@@ -300,7 +300,7 @@ export async function POST(request: NextRequest) {
         newBalance,
         message: 'Order processed successfully',
         profile: profile ? {
-          username: profile.username,
+          email: profile.email,
           full_name: profile.full_name,
           avatar_url: profile.avatar_url
         } : null

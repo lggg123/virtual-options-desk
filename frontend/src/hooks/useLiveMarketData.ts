@@ -73,6 +73,36 @@ export function useLiveMarketData(symbol: string, refreshInterval = 5000) {
   return { data, loading, error, refresh: fetchData };
 }
 
+// Generate fallback expiration dates (next 6 monthly expirations - 3rd Friday of each month)
+function generateFallbackExpirations(): string[] {
+  const expirations: string[] = [];
+  const now = new Date();
+  let currentMonth = now.getMonth();
+  let currentYear = now.getFullYear();
+
+  for (let i = 0; i < 6; i++) {
+    // Find 3rd Friday of the month
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const firstFriday = (5 - firstDay.getDay() + 7) % 7 + 1;
+    const thirdFriday = firstFriday + 14;
+    const expirationDate = new Date(currentYear, currentMonth, thirdFriday);
+
+    // Only add if it's in the future
+    if (expirationDate > now) {
+      expirations.push(expirationDate.toISOString().split('T')[0]);
+    }
+
+    // Move to next month
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+  }
+
+  return expirations;
+}
+
 export function useOptionsChain(symbol: string, expirationDate?: string, refreshInterval = 10000) {
   const [options, setOptions] = useState<OptionsData[]>([]);
   const [expirations, setExpirations] = useState<string[]>([]);
@@ -86,14 +116,26 @@ export function useOptionsChain(symbol: string, expirationDate?: string, refresh
         : `/api/market/options?symbol=${symbol}`;
 
       const response = await fetch(url);
+      const data = await response.json();
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.ok && data.expirations && data.expirations.length > 0) {
         setOptions(data.options || []);
-        setExpirations(data.expirations || []);
+        setExpirations(data.expirations);
+        setError(null);
+      } else {
+        // API failed or returned empty expirations - use fallback dates
+        console.warn('Options API returned no expirations, using fallback dates');
+        const fallbackExpirations = generateFallbackExpirations();
+        setExpirations(fallbackExpirations);
+        setOptions([]);
         setError(null);
       }
     } catch (err) {
+      console.error('Failed to fetch options:', err);
+      // On error, still provide fallback expiration dates so the dropdown isn't empty
+      const fallbackExpirations = generateFallbackExpirations();
+      setExpirations(fallbackExpirations);
+      setOptions([]);
       setError(err instanceof Error ? err.message : 'Failed to fetch options data');
     } finally {
       setLoading(false);

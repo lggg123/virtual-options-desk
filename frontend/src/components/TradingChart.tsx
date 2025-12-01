@@ -88,7 +88,7 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
   const { data: marketData, loading: loadingMarket } = useLiveMarketData(symbol);
 
   // Fetch historical data from EODHD API
-  const fetchHistoricalData = useCallback(async (sym: string, tf: string) => {
+  const fetchHistoricalData = useCallback(async (sym: string, tf: string, currentMarketPrice?: number) => {
     const config = TIMEFRAME_CONFIG[tf];
     if (!config) return;
 
@@ -110,16 +110,16 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
         }));
 
         // Validate historical data - if prices are way off from current price, use fallback
-        if (marketData && marketData.price > 0) {
+        if (currentMarketPrice && currentMarketPrice > 0) {
           const validPrices = historical.filter(d => {
-            const priceDiff = Math.abs(d.price - marketData.price) / marketData.price;
+            const priceDiff = Math.abs(d.price - currentMarketPrice) / currentMarketPrice;
             return priceDiff < 0.5; // Within 50% of current price
           });
 
           if (validPrices.length < historical.length * 0.5) {
             // More than half the data is invalid, use fallback
             console.warn('Historical data prices are invalid, using fallback data');
-            generateFallbackData(marketData.price, tf);
+            generateFallbackData(currentMarketPrice, tf);
             return;
           }
         }
@@ -129,20 +129,20 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
       } else {
         // API didn't return valid data, use fallback
         console.warn('Historical API returned no valid data, using fallback');
-        if (marketData && marketData.price > 0) {
-          generateFallbackData(marketData.price, tf);
+        if (currentMarketPrice && currentMarketPrice > 0) {
+          generateFallbackData(currentMarketPrice, tf);
         }
       }
     } catch (error) {
       console.error('Failed to fetch historical data:', error);
       // Fallback: generate realistic data based on current price
-      if (marketData) {
-        generateFallbackData(marketData.price, tf);
+      if (currentMarketPrice) {
+        generateFallbackData(currentMarketPrice, tf);
       }
     } finally {
       setLoadingHistorical(false);
     }
-  }, [marketData]);
+  }, []);
 
   // Generate fallback data when API fails
   const generateFallbackData = (basePrice: number, tf: string) => {
@@ -234,12 +234,12 @@ export default function TradingChart({ symbol: propSymbol }: TradingChartProps =
     }
   }, [marketData, isLive, historicalDataLoaded]);
 
-  // Fetch historical data when symbol or timeframe changes
+  // Fetch historical data when symbol or timeframe changes (only once per change)
   useEffect(() => {
-    if (marketData && marketData.price > 0) {
-      fetchHistoricalData(symbol, timeframe);
+    if (marketData && marketData.price > 0 && !historicalDataLoaded && !loadingHistorical) {
+      fetchHistoricalData(symbol, timeframe, marketData.price);
     }
-  }, [symbol, timeframe, fetchHistoricalData, marketData]);
+  }, [symbol, timeframe, fetchHistoricalData, marketData, historicalDataLoaded, loadingHistorical]);
 
   // Calculate timeframe-specific price change when price data changes
   useEffect(() => {
