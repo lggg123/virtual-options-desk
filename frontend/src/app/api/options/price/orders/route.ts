@@ -68,11 +68,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create portfolio
-    let { data: portfolio, error: portfolioError } = await supabase
+    const { data: portfolioData, error: portfolioError } = await supabase
       .from('portfolios')
       .select('*')
       .eq('user_id', user.id)
       .single();
+
+    let portfolio = portfolioData;
 
     if (portfolioError && portfolioError.code !== 'PGRST116') {
       console.error('Portfolio error:', portfolioError);
