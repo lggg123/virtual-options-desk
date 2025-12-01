@@ -103,24 +103,42 @@ export interface Database {
         Row: {
           id: string
           user_id: string
+          name: string
+          description: string | null
           cash_balance: number
           total_value: number
+          unrealized_pl: number
+          realized_pl: number
+          is_default: boolean
+          currency: string
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
+          name?: string
+          description?: string | null
           cash_balance?: number
           total_value?: number
+          unrealized_pl?: number
+          realized_pl?: number
+          is_default?: boolean
+          currency?: string
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
+          name?: string
+          description?: string | null
           cash_balance?: number
           total_value?: number
+          unrealized_pl?: number
+          realized_pl?: number
+          is_default?: boolean
+          currency?: string
           created_at?: string
           updated_at?: string
         }

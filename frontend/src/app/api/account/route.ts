@@ -1,33 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
-import { createClient } from '@supabase/supabase-js';
-
-// TypeScript interface for user_accounts table
-interface UserAccount {
-  id: string;
-  user_id: string;
-  cash_balance: number;
-  portfolio_value: number;
-  total_pnl: number;
-  total_pnl_percent: number;
-  created_at: string;
-  updated_at: string;
-}
-
-// Service role client for admin operations (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET() {
   try {
     // Use server-side Supabase client that reads from cookies
     const supabase = await createSupabaseServer();
-    
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       console.error('Auth error:', authError);
       return NextResponse.json(
@@ -36,50 +17,97 @@ export async function GET() {
       );
     }
 
-    // Fetch user account using admin client (bypasses RLS)
-    const { data: account, error: accountError } = await supabaseAdmin
-      .from('user_accounts')
-      .select<'*', UserAccount>('*')
+    // Fetch user's portfolio from portfolios table
+    const { data: portfolio, error: portfolioError } = await supabase
+      .from('portfolios')
+      .select('*')
       .eq('user_id', user.id)
       .single();
 
-    if (accountError) {
-      // If account doesn't exist, create one
-      if (accountError.code === 'PGRST116') {
-        const { data: newAccount, error: createError } = await supabaseAdmin
-          .from('user_accounts')
+    if (portfolioError) {
+      // If portfolio doesn't exist, create one
+      if (portfolioError.code === 'PGRST116') {
+        const { data: newPortfolio, error: createError } = await supabase
+          .from('portfolios')
           .insert({
             user_id: user.id,
+            name: 'Main Portfolio',
             cash_balance: 2000000.00,
-            portfolio_value: 2000000.00,
-            total_pnl: 0.00,
-            total_pnl_percent: 0.00
+            total_value: 2000000.00,
+            unrealized_pl: 0.00,
+            realized_pl: 0.00,
+            is_default: true
           })
-          .select<'*', UserAccount>('*')
+          .select()
           .single();
 
         if (createError) {
-          console.error('Error creating account:', createError);
+          console.error('Error creating portfolio:', createError);
           return NextResponse.json(
-            { error: 'Failed to create account' },
+            { error: 'Failed to create portfolio' },
             { status: 500 }
           );
         }
 
+        // Return in the format DashboardMetrics expects
         return NextResponse.json({
-          account: newAccount,
-          message: 'New account created with $2,000,000 virtual cash'
+          account: {
+            cash_balance: newPortfolio.cash_balance,
+            portfolio_value: newPortfolio.total_value,
+            total_pnl: newPortfolio.unrealized_pl + newPortfolio.realized_pl,
+            total_pnl_percent: 0
+          },
+          message: 'New portfolio created with $2,000,000 virtual cash'
         });
       }
 
-      console.error('Error fetching account:', accountError);
+      console.error('Error fetching portfolio:', portfolioError);
       return NextResponse.json(
-        { error: 'Failed to fetch account' },
+        { error: 'Failed to fetch portfolio' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ account });
+    // Fetch open positions to calculate current portfolio value
+    const { data: positions, error: positionsError } = await supabase
+      .from('positions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', 'open');
+
+    if (positionsError) {
+      console.error('Error fetching positions:', positionsError);
+    }
+
+    // Calculate total positions value
+    const positionsValue = (positions || []).reduce((sum, pos) => {
+      return sum + (pos.market_value || pos.cost_basis || 0);
+    }, 0);
+
+    // Calculate unrealized P&L from positions
+    const unrealizedPL = (positions || []).reduce((sum, pos) => {
+      return sum + (pos.unrealized_pl || 0);
+    }, 0);
+
+    // Total portfolio value = cash + positions value
+    const totalPortfolioValue = portfolio.cash_balance + positionsValue;
+
+    // Total P&L (unrealized from positions + realized from closed trades)
+    const totalPnL = unrealizedPL + (portfolio.realized_pl || 0);
+
+    // Calculate P&L percentage based on initial investment (2M)
+    const initialInvestment = 2000000;
+    const totalPnLPercent = ((totalPortfolioValue - initialInvestment) / initialInvestment) * 100;
+
+    // Return in the format DashboardMetrics expects
+    return NextResponse.json({
+      account: {
+        cash_balance: portfolio.cash_balance,
+        portfolio_value: totalPortfolioValue,
+        total_pnl: totalPnL,
+        total_pnl_percent: totalPnLPercent
+      }
+    });
   } catch (error) {
     console.error('Account API error:', error);
     return NextResponse.json(
