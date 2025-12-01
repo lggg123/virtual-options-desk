@@ -133,54 +133,90 @@ export interface Database {
           }
         ]
       }
-      orders: {
+      trades: {
         Row: {
           id: string
+          portfolio_id: string
           user_id: string
-          option_id: string
-          order_type: 'buy' | 'sell'
+          position_id: string | null
+          symbol: string
+          trade_type: 'buy' | 'sell'
+          position_type: 'stock' | 'call' | 'put' | 'spread'
+          strike_price: number | null
+          expiration_date: string | null
+          option_type: 'call' | 'put' | null
           quantity: number
           price: number
-          status: 'pending' | 'filled' | 'cancelled'
           total_cost: number
+          fees: number
+          realized_pl: number | null
+          realized_pl_percent: number | null
+          strategy: string | null
+          notes: string | null
+          executed_at: string
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
+          portfolio_id: string
           user_id: string
-          option_id: string
-          order_type: 'buy' | 'sell'
+          position_id?: string | null
+          symbol: string
+          trade_type: 'buy' | 'sell'
+          position_type: 'stock' | 'call' | 'put' | 'spread'
+          strike_price?: number | null
+          expiration_date?: string | null
+          option_type?: 'call' | 'put' | null
           quantity: number
           price: number
-          status?: 'pending' | 'filled' | 'cancelled'
           total_cost: number
+          fees?: number
+          realized_pl?: number | null
+          realized_pl_percent?: number | null
+          strategy?: string | null
+          notes?: string | null
+          executed_at?: string
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
+          portfolio_id?: string
           user_id?: string
-          option_id?: string
-          order_type?: 'buy' | 'sell'
+          position_id?: string | null
+          symbol?: string
+          trade_type?: 'buy' | 'sell'
+          position_type?: 'stock' | 'call' | 'put' | 'spread'
+          strike_price?: number | null
+          expiration_date?: string | null
+          option_type?: 'call' | 'put' | null
           quantity?: number
           price?: number
-          status?: 'pending' | 'filled' | 'cancelled'
           total_cost?: number
+          fees?: number
+          realized_pl?: number | null
+          realized_pl_percent?: number | null
+          strategy?: string | null
+          notes?: string | null
+          executed_at?: string
           created_at?: string
-          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "orders_user_id_fkey"
+            foreignKeyName: "trades_user_id_fkey"
             columns: ["user_id"]
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "orders_option_id_fkey"
-            columns: ["option_id"]
-            referencedRelation: "options"
+            foreignKeyName: "trades_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trades_position_id_fkey"
+            columns: ["position_id"]
+            referencedRelation: "positions"
             referencedColumns: ["id"]
           }
         ]
@@ -188,43 +224,88 @@ export interface Database {
       positions: {
         Row: {
           id: string
+          portfolio_id: string
           user_id: string
-          option_id: string
+          symbol: string
+          position_type: 'stock' | 'call' | 'put' | 'spread'
+          strike_price: number | null
+          expiration_date: string | null
+          option_type: 'call' | 'put' | null
           quantity: number
-          average_cost: number
-          current_value: number
-          realized_pnl: number
-          unrealized_pnl: number
+          entry_price: number
+          current_price: number | null
+          cost_basis: number
+          market_value: number | null
+          unrealized_pl: number | null
+          unrealized_pl_percent: number | null
+          delta: number | null
+          gamma: number | null
+          theta: number | null
+          vega: number | null
+          implied_volatility: number | null
           opened_at: string
           closed_at: string | null
+          status: 'open' | 'closed' | 'expired'
+          strategy: string | null
+          notes: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
+          portfolio_id: string
           user_id: string
-          option_id: string
+          symbol: string
+          position_type: 'stock' | 'call' | 'put' | 'spread'
+          strike_price?: number | null
+          expiration_date?: string | null
+          option_type?: 'call' | 'put' | null
           quantity: number
-          average_cost: number
-          current_value: number
-          realized_pnl?: number
-          unrealized_pnl?: number
+          entry_price: number
+          current_price?: number | null
+          cost_basis: number
+          market_value?: number | null
+          unrealized_pl?: number | null
+          unrealized_pl_percent?: number | null
+          delta?: number | null
+          gamma?: number | null
+          theta?: number | null
+          vega?: number | null
+          implied_volatility?: number | null
           opened_at?: string
           closed_at?: string | null
+          status?: 'open' | 'closed' | 'expired'
+          strategy?: string | null
+          notes?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
+          portfolio_id?: string
           user_id?: string
-          option_id?: string
+          symbol?: string
+          position_type?: 'stock' | 'call' | 'put' | 'spread'
+          strike_price?: number | null
+          expiration_date?: string | null
+          option_type?: 'call' | 'put' | null
           quantity?: number
-          average_cost?: number
-          current_value?: number
-          realized_pnl?: number
-          unrealized_pnl?: number
+          entry_price?: number
+          current_price?: number | null
+          cost_basis?: number
+          market_value?: number | null
+          unrealized_pl?: number | null
+          unrealized_pl_percent?: number | null
+          delta?: number | null
+          gamma?: number | null
+          theta?: number | null
+          vega?: number | null
+          implied_volatility?: number | null
           opened_at?: string
           closed_at?: string | null
+          status?: 'open' | 'closed' | 'expired'
+          strategy?: string | null
+          notes?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -236,9 +317,9 @@ export interface Database {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "positions_option_id_fkey"
-            columns: ["option_id"]
-            referencedRelation: "options"
+            foreignKeyName: "positions_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            referencedRelation: "portfolios"
             referencedColumns: ["id"]
           }
         ]
