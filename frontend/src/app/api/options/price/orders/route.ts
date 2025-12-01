@@ -202,31 +202,31 @@ export async function POST(request: NextRequest) {
     
     // Real database operations for authenticated users
     try {
-      // Create order record
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: mockUser.id,
-          option_id: optionId,
-          order_type: orderType,
-          quantity,
-          price,
-          status: 'filled', // In a simulated environment, orders are instantly filled
-          total_cost: totalCost,
-        })
-        .select()
+      // Parse optionId to extract option details (format: SYMBOL_STRIKE_EXPIRY_TYPE)
+      // Example: AAPL_150_2024-01-19_call
+      const optionParts = optionId.split('_');
+      const symbol = optionParts[0] || 'UNKNOWN';
+      const strikePrice = parseFloat(optionParts[1]) || 0;
+      const expirationDate = optionParts[2] || null;
+      const optionType = optionParts[3] as 'call' | 'put' || 'call';
+
+      // Get user's portfolio_id
+      const { data: userPortfolio, error: portfolioLookupError } = await supabase
+        .from('portfolios')
+        .select('id')
+        .eq('user_id', mockUser.id)
         .single();
-      
-      if (orderError) {
-        console.error('Order creation error:', orderError);
-        throw new Error(`Failed to create order: ${orderError.message}`);
+
+      if (portfolioLookupError || !userPortfolio) {
+        console.error('Portfolio lookup error:', portfolioLookupError);
+        throw new Error('Failed to find portfolio');
       }
-      
+
       // Update portfolio balance
-      const newBalance = orderType === 'buy' 
+      const newBalance = orderType === 'buy'
         ? portfolio.cash_balance - totalCost
         : portfolio.cash_balance + totalCost;
-      
+
       const { error: portfolioUpdateError } = await supabase
         .from('portfolios')
         .update({
@@ -235,42 +235,47 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString()
         })
         .eq('user_id', mockUser.id);
-      
+
       if (portfolioUpdateError) {
         console.error('Portfolio update error:', portfolioUpdateError);
         throw new Error(`Failed to update portfolio: ${portfolioUpdateError.message}`);
       }
-      
+
       // Handle positions for buy orders
       if (orderType === 'buy') {
         const { data: existingPosition, error: positionError } = await supabase
           .from('positions')
           .select('*')
           .eq('user_id', mockUser.id)
-          .eq('option_id', optionId)
-          .is('closed_at', null)
+          .eq('symbol', symbol)
+          .eq('strike_price', strikePrice)
+          .eq('option_type', optionType)
+          .eq('status', 'open')
           .single();
-        
+
         if (positionError && positionError.code !== 'PGRST116') {
           console.error('Position lookup error:', positionError);
           throw new Error(`Failed to lookup position: ${positionError.message}`);
         }
-        
+
         if (existingPosition) {
           // Update existing position
           const newQuantity = existingPosition.quantity + quantity;
-          const newAverageCost = ((existingPosition.average_cost * existingPosition.quantity) + (price * quantity)) / newQuantity;
-          
+          const newCostBasis = existingPosition.cost_basis + totalCost;
+          const newEntryPrice = newCostBasis / (newQuantity * 100);
+
           const { error: updatePositionError } = await supabase
             .from('positions')
             .update({
               quantity: newQuantity,
-              average_cost: newAverageCost,
-              current_value: newQuantity * price * 100,
+              cost_basis: newCostBasis,
+              entry_price: newEntryPrice,
+              current_price: price,
+              market_value: newQuantity * price * 100,
               updated_at: new Date().toISOString()
             })
             .eq('id', existingPosition.id);
-          
+
           if (updatePositionError) {
             console.error('Position update error:', updatePositionError);
             throw new Error(`Failed to update position: ${updatePositionError.message}`);
@@ -280,23 +285,56 @@ export async function POST(request: NextRequest) {
           const { error: createPositionError } = await supabase
             .from('positions')
             .insert({
+              portfolio_id: userPortfolio.id,
               user_id: mockUser.id,
-              option_id: optionId,
+              symbol,
+              position_type: optionType,
+              strike_price: strikePrice,
+              expiration_date: expirationDate,
+              option_type: optionType,
               quantity,
-              average_cost: price,
-              current_value: quantity * price * 100
+              entry_price: price,
+              current_price: price,
+              cost_basis: totalCost,
+              market_value: totalCost,
+              status: 'open'
             });
-          
+
           if (createPositionError) {
             console.error('Position creation error:', createPositionError);
             throw new Error(`Failed to create position: ${createPositionError.message}`);
           }
         }
       }
-      
-      return NextResponse.json({ 
+
+      // Create trade record in the trades table
+      const { data: trade, error: tradeError } = await supabase
+        .from('trades')
+        .insert({
+          portfolio_id: userPortfolio.id,
+          user_id: mockUser.id,
+          symbol,
+          trade_type: orderType,
+          position_type: optionType,
+          strike_price: strikePrice,
+          expiration_date: expirationDate,
+          option_type: optionType,
+          quantity,
+          price,
+          total_cost: totalCost,
+          executed_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (tradeError) {
+        console.error('Trade creation error:', tradeError);
+        throw new Error(`Failed to create trade record: ${tradeError.message}`);
+      }
+
+      return NextResponse.json({
         success: true,
-        order, 
+        order: trade,
         newBalance,
         message: 'Order processed successfully',
         profile: profile ? {
