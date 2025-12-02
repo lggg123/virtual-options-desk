@@ -162,163 +162,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.EODHD_API_KEY;
+    // Generate standard expiration dates
+    const expirations = generateStandardExpirations();
 
-    if (!apiKey) {
-      console.warn('EODHD API key not configured, using fallback data');
-      return NextResponse.json({
-        options: [],
-        expirations: generateStandardExpirations(),
-        underlyingPrice: 0,
-        source: 'fallback'
-      });
-    }
+    // Get the selected expiration or default to the first one
+    const selectedExpiration = expiration || expirations[0];
 
-    const formattedSymbol = formatEODHDSymbol(symbol);
+    // Fetch current stock price for realistic options pricing
+    const stockPrice = await fetchCurrentPrice(symbol);
 
-    // Build EODHD options URL
-    let url = `https://eodhd.com/api/options/${formattedSymbol}?api_token=${apiKey}&fmt=json`;
-
-    // Add expiration filter if provided (EODHD uses from/to format)
-    if (expiration) {
-      url += `&from=${expiration}&to=${expiration}`;
-    }
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      console.error(`EODHD API error: ${response.status}`);
-      // Return fallback expirations so dropdown isn't empty
-      return NextResponse.json({
-        options: [],
-        expirations: generateStandardExpirations(),
-        underlyingPrice: 0,
-        source: 'fallback'
-      });
-    }
-
-    const data = await response.json();
-
-    // Handle EODHD error responses
-    if (data.error || typeof data === 'string') {
-      console.error('EODHD error:', data.error || data);
-      return NextResponse.json({
-        options: [],
-        expirations: generateStandardExpirations(),
-        underlyingPrice: 0,
-        source: 'fallback'
-      });
-    }
-
-    // EODHD returns data in a different format
-    // Extract unique expiration dates from options data
-    const expirationSet = new Set<string>();
-    const options: Array<{
-      strike: number;
-      bid: number;
-      ask: number;
-      last: number;
-      volume: number;
-      openInterest: number;
-      impliedVolatility: number;
-      delta: number;
-      gamma: number;
-      theta: number;
-      vega: number;
-      expiration: string;
-      type: 'call' | 'put';
-    }> = [];
-
-    // EODHD options response structure
-    interface EODHDOption {
-      strike: number;
-      bid?: number;
-      ask?: number;
-      lastPrice?: number;
-      volume?: number;
-      openInterest?: number;
-      impliedVolatility?: number;
-      delta?: number;
-      gamma?: number;
-      theta?: number;
-      vega?: number;
-      expirationDate?: string;
-      contractType?: string;
-    }
-
-    if (data.data && Array.isArray(data.data)) {
-      for (const option of data.data as EODHDOption[]) {
-        const expDate = option.expirationDate || '';
-        if (expDate) {
-          expirationSet.add(expDate.split('T')[0]);
-        }
-
-        options.push({
-          strike: option.strike || 0,
-          bid: option.bid || 0,
-          ask: option.ask || 0,
-          last: option.lastPrice || 0,
-          volume: option.volume || 0,
-          openInterest: option.openInterest || 0,
-          impliedVolatility: option.impliedVolatility || 0,
-          delta: option.delta || 0,
-          gamma: option.gamma || 0,
-          theta: option.theta || 0,
-          vega: option.vega || 0,
-          expiration: expDate,
-          type: (option.contractType?.toLowerCase() === 'put' ? 'put' : 'call') as 'call' | 'put'
-        });
-      }
-    } else if (Array.isArray(data)) {
-      // Alternative EODHD response format
-      for (const option of data as EODHDOption[]) {
-        const expDate = option.expirationDate || '';
-        if (expDate) {
-          expirationSet.add(expDate.split('T')[0]);
-        }
-
-        options.push({
-          strike: option.strike || 0,
-          bid: option.bid || 0,
-          ask: option.ask || 0,
-          last: option.lastPrice || 0,
-          volume: option.volume || 0,
-          openInterest: option.openInterest || 0,
-          impliedVolatility: option.impliedVolatility || 0,
-          delta: option.delta || 0,
-          gamma: option.gamma || 0,
-          theta: option.theta || 0,
-          vega: option.vega || 0,
-          expiration: expDate,
-          type: (option.contractType?.toLowerCase() === 'put' ? 'put' : 'call') as 'call' | 'put'
-        });
-      }
-    }
-
-    // Get expirations from API data, or use fallback if none found
-    let expirations = Array.from(expirationSet).sort();
-    if (expirations.length === 0) {
-      expirations = generateStandardExpirations();
-    }
-
-    // Filter to only future expirations
-    const now = new Date().toISOString().split('T')[0];
-    expirations = expirations.filter(exp => exp >= now);
-
-    // If still no future expirations, use generated ones
-    if (expirations.length === 0) {
-      expirations = generateStandardExpirations();
-    }
+    // Generate realistic options chain based on stock price
+    const options = generateOptionsChain(stockPrice, selectedExpiration);
 
     return NextResponse.json({
       options,
       expirations,
-      underlyingPrice: data.lastPrice || data.underlyingPrice || 0,
-      source: 'eodhd'
+      underlyingPrice: stockPrice,
+      source: 'generated'
     });
   } catch (error) {
     console.error('Error fetching options chain:', error);
-    // Return fallback expirations so dropdown isn't empty
     return NextResponse.json({
       options: [],
       expirations: generateStandardExpirations(),
