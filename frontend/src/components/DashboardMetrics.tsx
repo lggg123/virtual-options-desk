@@ -18,6 +18,15 @@ export default function DashboardMetrics() {
 
   useEffect(() => {
     fetchAccount();
+
+    // Listen for order placement events to refresh account data
+    const handleOrderPlaced = () => {
+      console.log('Order placed event detected, refreshing account...');
+      fetchAccount();
+    };
+
+    window.addEventListener('orderPlaced', handleOrderPlaced);
+    return () => window.removeEventListener('orderPlaced', handleOrderPlaced);
   }, []);
 
   async function fetchAccount() {
