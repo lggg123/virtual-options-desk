@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 interface CSVRow {
   symbol: string;
@@ -24,21 +25,9 @@ interface StockPick {
 
 export async function GET() {
   try {
-    // Get the base URL from the request
-    const headersList = await headers();
-    const host = headersList.get('host') || 'localhost:3000';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    const baseUrl = `${protocol}://${host}`;
-
-    // Fetch CSV from public directory via HTTP
-    const csvUrl = `${baseUrl}/data/top25_pro.csv`;
-    const response = await fetch(csvUrl, { cache: 'no-store' });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch CSV: ${response.status}`);
-    }
-
-    const csv = await response.text();
+    // Read CSV directly from the file system
+    const csvPath = path.join(process.cwd(), 'public', 'data', 'top25_pro.csv');
+    const csv = await fs.readFile(csvPath, 'utf-8');
     const [header, ...rows] = csv.trim().split('\n');
     const columns = header.split(',');
 

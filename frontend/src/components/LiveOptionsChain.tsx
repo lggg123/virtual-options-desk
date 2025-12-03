@@ -31,7 +31,20 @@ export default function LiveOptionsChain() {
   // ...existing code...
 
   const handleTrade = (option: OptionsData, type: 'call' | 'put', action: 'buy' | 'sell') => {
-    toast.success(`${action.toUpperCase()} ${type.toUpperCase()} ${symbol} $${option.strike} initiated`);
+    // Dispatch custom event to prefill the order form
+    const orderData = {
+      symbol,
+      optionType: type,
+      strike: option.strike,
+      expiry: expiry,
+      quantity: 1,
+      price: action === 'buy' ? option.ask : option.bid,
+      orderType: 'limit' as const,
+      action: action
+    };
+
+    window.dispatchEvent(new CustomEvent('prefillOrder', { detail: orderData }));
+    toast.success(`Order form prefilled: ${action.toUpperCase()} ${type.toUpperCase()} ${symbol} $${option.strike}`);
   };
 
   return (

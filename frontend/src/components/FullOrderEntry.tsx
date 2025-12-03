@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +48,19 @@ export default function FullOrderEntry() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderPreview, setOrderPreview] = useState<OrderPreview | null>(null);
+
+  // Listen for prefillOrder events from options chain
+  useEffect(() => {
+    const handlePrefillOrder = (event: CustomEvent<OrderData>) => {
+      setOrderData(event.detail);
+      setOrderPreview(null); // Clear any existing preview
+    };
+
+    window.addEventListener('prefillOrder', handlePrefillOrder as EventListener);
+    return () => {
+      window.removeEventListener('prefillOrder', handlePrefillOrder as EventListener);
+    };
+  }, []);
 
   const calculateOrderValue = () => {
     return orderData.quantity * orderData.price * 100;
