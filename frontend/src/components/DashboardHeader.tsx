@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
-import { LogOut, Settings, User, TrendingUp, BarChart3, DollarSign, Sparkles, FileText, BookOpen, Menu } from 'lucide-react';
+import { LogOut, Settings, User, TrendingUp, BarChart3, DollarSign, Sparkles, FileText, BookOpen, Menu, LineChart } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardHeader() {
@@ -48,6 +48,7 @@ export default function DashboardHeader() {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/dashboard/ai-picks', label: 'AI Picks', icon: Sparkles },
+    { href: '/dashboard/options-analysis', label: 'Options', icon: LineChart },
     { href: '/trading', label: 'Trading', icon: TrendingUp },
     { href: '/portfolio', label: 'Portfolio', icon: DollarSign },
     { href: '/education', label: 'Learn', icon: BookOpen },
