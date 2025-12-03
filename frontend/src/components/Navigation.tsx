@@ -95,7 +95,12 @@ export default function Navigation() {
           {/* Navigation Links */}
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
-              const isActive = !item.external && (pathname === item.href || pathname?.startsWith(item.href + '/'));
+              // Use exact match for /dashboard to prevent highlighting when on child routes
+              const isActive = !item.external && (
+                item.href === '/dashboard'
+                  ? pathname === item.href
+                  : (pathname === item.href || pathname?.startsWith(item.href + '/'))
+              );
               
               if (item.external) {
                 return (
@@ -180,7 +185,12 @@ export default function Navigation() {
         <div className="lg:hidden fixed inset-0 z-40 bg-slate-900 pt-16">
           <nav className="px-4 py-6 space-y-1">
             {navigation.map((item) => {
-              const isActive = !item.external && (pathname === item.href || pathname?.startsWith(item.href + '/'));
+              // Use exact match for /dashboard to prevent highlighting when on child routes
+              const isActive = !item.external && (
+                item.href === '/dashboard'
+                  ? pathname === item.href
+                  : (pathname === item.href || pathname?.startsWith(item.href + '/'))
+              );
               
               if (item.external) {
                 return (

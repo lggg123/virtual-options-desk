@@ -147,7 +147,28 @@ def calculate_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
         
         # Momentum
         stock_df['momentum_20d'] = stock_df['close'] / stock_df['close'].shift(20) - 1
-        
+
+        # === Additional indicators for breakout classifier ===
+        # RSI (rename to match breakout model)
+        stock_df['rsi'] = stock_df['rsi_14']
+
+        # MACD
+        ema_12 = stock_df['close'].ewm(span=12, adjust=False).mean()
+        ema_26 = stock_df['close'].ewm(span=26, adjust=False).mean()
+        stock_df['macd'] = ema_12 - ema_26
+        signal_line = stock_df['macd'].ewm(span=9, adjust=False).mean()
+        stock_df['macd_histogram'] = stock_df['macd'] - signal_line
+
+        # ROC (Rate of Change) - 10 day
+        stock_df['roc_10'] = (stock_df['close'] - stock_df['close'].shift(10)) / stock_df['close'].shift(10) * 100
+
+        # ATR (Average True Range)
+        high_low = stock_df['high'] - stock_df['low']
+        high_close = np.abs(stock_df['high'] - stock_df['close'].shift())
+        low_close = np.abs(stock_df['low'] - stock_df['close'].shift())
+        true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+        stock_df['atr'] = true_range.rolling(14).mean()
+
         result_dfs.append(stock_df)
     
     if not result_dfs:
@@ -162,27 +183,35 @@ def calculate_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     """Prepare features matching the trained model"""
-    
+
+    # Main model features (18 features)
     feature_cols = [
         'close', 'volume', 'return_1d', 'return_5d', 'return_20d', 'return_60d',
         'volatility_20d', 'volatility_60d', 'sma_20', 'sma_50', 'sma_200',
         'sma_20_50_ratio', 'sma_50_200_ratio', 'rsi_14', 'bb_position',
         'volume_20d_avg', 'volume_ratio', 'momentum_20d'
     ]
-    
+
+    # Additional columns needed for breakout classifier
+    breakout_cols = ['open', 'high', 'low', 'rsi', 'macd', 'macd_histogram', 'roc_10', 'atr']
+
     # Get latest data point for each stock
     latest = df.sort_values('date').groupby('symbol').last().reset_index()
-    
-    # Keep only feature columns
-    features = latest[['symbol', 'date'] + feature_cols].copy()
-    
+
+    # Determine which columns to keep
+    all_cols = ['symbol', 'date'] + feature_cols + breakout_cols
+    available_cols = [col for col in all_cols if col in latest.columns]
+
+    # Keep only available columns
+    features = latest[available_cols].copy()
+
     # Fill missing values with median
-    for col in feature_cols:
+    for col in feature_cols + breakout_cols:
         if col in features.columns:
-            features[col].fillna(features[col].median(), inplace=True)
-    
+            features[col] = features[col].fillna(features[col].median())
+
     print(f"   Prepared features for {len(features)} stocks")
-    
+
     return features
 
 
@@ -343,19 +372,23 @@ def apply_breakout_detection(predictions_df: pd.DataFrame, models: Dict) -> pd.D
         predictions_df['is_breakout'] = False
         return predictions_df
     
-    # Prepare features for breakout classifier
-    # The breakout classifier uses similar features
-    feature_cols = [
-        'close', 'volume', 'sma_50', 'sma_200', 'rsi_14',
-        'volatility_20d', 'volume_ratio', 'momentum_20d'
+    # Prepare features for breakout classifier (requires 13 specific features)
+    # Features: open, high, low, close, volume, sma_50, sma_200, rsi, macd, macd_histogram, roc_10, atr, volume_ratio
+    breakout_feature_cols = [
+        'open', 'high', 'low', 'close', 'volume', 'sma_50', 'sma_200',
+        'rsi', 'macd', 'macd_histogram', 'roc_10', 'atr', 'volume_ratio'
     ]
-    
-    # Fill any missing features with median
-    for col in feature_cols:
+
+    # Fill any missing features with 0 or median
+    for col in breakout_feature_cols:
         if col not in predictions_df.columns:
+            print(f"   ⚠️  Missing breakout feature: {col}, filling with 0")
             predictions_df[col] = 0.0
-    
-    X_breakout = predictions_df[feature_cols].values
+        else:
+            # Fill NaN values with median
+            predictions_df[col] = predictions_df[col].fillna(predictions_df[col].median())
+
+    X_breakout = predictions_df[breakout_feature_cols].values
     
     try:
         # Get breakout probability

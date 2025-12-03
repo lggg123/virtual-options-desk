@@ -113,9 +113,9 @@ def main():
     tickers = stock_df[ticker_col].dropna().astype(str).str.strip().unique().tolist()
     
     # Limit to reasonable number for API
-    if len(tickers) > 500:
-        print(f"⚠️  {len(tickers)} tickers found - limiting to first 500 for API efficiency")
-        tickers = tickers[:500]
+    if len(tickers) > 1000:
+        print(f"⚠️  {len(tickers)} tickers found - limiting to first 1000 for API efficiency")
+        tickers = tickers[:1000]
     
     print(f"📋 Processing {len(tickers)} tickers")
     
