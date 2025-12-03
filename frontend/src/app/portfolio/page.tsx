@@ -8,72 +8,70 @@ import ActivePositions from '@/components/ActivePositions';
 import RecentTrades from '@/components/RecentTrades';
 import { supabase } from '@/lib/supabase/client';
 
-interface UserProfile {
+interface AccountData {
+  cash_balance: number;
+  portfolio_value: number;
+  total_pnl: number;
+  total_pnl_percent: number;
+}
+
+interface PositionData {
   id: string;
-  email?: string;
-  portfolio_value?: number;
-  open_positions?: number;
-  total_return?: number;
+  symbol: string;
+  type: string;
+  quantity: number;
 }
 
 export default function PortfolioPage() {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [account, setAccount] = useState<AccountData | null>(null);
+  const [positions, setPositions] = useState<PositionData[]>([]);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        // Get current user
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user) {
-          console.error('Error fetching user:', userError);
-          setLoading(false);
-          return;
-        }
+    fetchPortfolioData();
 
-        // Try to fetch user profile from profiles table
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.log('No profile found, using defaults:', profileError);
-          // Use default values if no profile exists
-          setUserProfile({
-            id: user.id,
-            email: user.email,
-            portfolio_value: 2000000, // Default $2M
-            open_positions: 0,
-            total_return: 0
-          });
-        } else {
-          // Use profile data if available, with defaults as fallback
-          console.log('Profile loaded:', profile);
-          setUserProfile({
-            id: user.id,
-            email: user.email,
-            portfolio_value: 2000000, // TODO: Calculate from positions table
-            open_positions: 0, // TODO: Count from positions table
-            total_return: 0 // TODO: Calculate from portfolios table
-          });
-        }
-      } catch (err) {
-        console.error('Exception fetching profile:', err);
-        setLoading(false);
-      } finally {
-        setLoading(false);
-      }
+    // Listen for order placement events to refresh data
+    const handleOrderPlaced = () => {
+      console.log('Order placed event detected, refreshing portfolio...');
+      fetchPortfolioData();
     };
 
-    fetchUserProfile();
+    window.addEventListener('orderPlaced', handleOrderPlaced);
+    return () => window.removeEventListener('orderPlaced', handleOrderPlaced);
   }, []);
 
-  const portfolioValue = userProfile?.portfolio_value ?? 2000000;
-  const openPositions = userProfile?.open_positions ?? 0;
-  const totalReturn = userProfile?.total_return ?? 0;
+  async function fetchPortfolioData() {
+    try {
+      // Get current user for email display
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setUserEmail(user.email);
+      }
+
+      // Fetch account data (includes P&L calculations)
+      const accountResponse = await fetch('/api/account');
+      if (accountResponse.ok) {
+        const accountData = await accountResponse.json();
+        setAccount(accountData.account);
+      }
+
+      // Fetch positions for count
+      const positionsResponse = await fetch('/api/positions');
+      if (positionsResponse.ok) {
+        const positionsData = await positionsResponse.json();
+        setPositions(positionsData.positions || []);
+      }
+    } catch (err) {
+      console.error('Error fetching portfolio data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const portfolioValue = account?.portfolio_value ?? 2000000;
+  const openPositions = positions.length;
+  const totalReturn = account?.total_pnl_percent ?? 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,7 +83,7 @@ export default function PortfolioPage() {
             <CardTitle className="text-3xl font-bold">Portfolio</CardTitle>
             <CardDescription>
               Track your positions and performance across all your options trades
-              {userProfile?.email && ` - ${userProfile.email}`}
+              {userEmail && ` - ${userEmail}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -94,7 +92,7 @@ export default function PortfolioPage() {
                 Loading portfolio data...
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
                     ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -102,14 +100,22 @@ export default function PortfolioPage() {
                   <div className="text-sm text-muted-foreground">Total Value</div>
                 </div>
                 <div className="text-center p-4 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{openPositions}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    ${(account?.cash_balance ?? 2000000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Cash Available</div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">{openPositions}</div>
                   <div className="text-sm text-muted-foreground">Open Positions</div>
                 </div>
                 <div className="text-center p-4 bg-muted rounded-lg">
-                  <div className={`text-2xl font-bold ${totalReturn >= 0 ? 'text-orange-600' : 'text-red-600'}`}>
-                    {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(1)}%
+                  <div className={`text-2xl font-bold ${(account?.total_pnl ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {(account?.total_pnl ?? 0) >= 0 ? '+' : ''}${Math.abs(account?.total_pnl ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
-                  <div className="text-sm text-muted-foreground">Total Return</div>
+                  <div className="text-sm text-muted-foreground">
+                    Total P&L ({totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%)
+                  </div>
                 </div>
               </div>
             )}
