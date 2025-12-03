@@ -30,11 +30,15 @@ export default function BreakoutPicksPage() {
     async function fetchPlan() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const res = await fetch(`/api/subscription/status?user_id=${session.user.id}`);
-        if (res.ok) {
-          const sub = await res.json();
-          setPlan(sub.plan || 'free');
-        } else {
+        try {
+          const res = await fetch('/api/payment/subscription');
+          if (res.ok) {
+            const sub = await res.json();
+            setPlan(sub.plan || 'free');
+          } else {
+            setPlan('free');
+          }
+        } catch {
           setPlan('free');
         }
       } else {

@@ -56,7 +56,7 @@ export default function AIPicksPage() {
       let picksLimit = 10; // Free tier default
       let subStatus = 'inactive';
       try {
-        const subRes = await fetch(`/api/subscription/status?user_id=${session.user.id}`);
+        const subRes = await fetch('/api/payment/subscription');
         if (subRes.ok) {
           const subData = await subRes.json();
           plan = subData.plan || 'free';
@@ -70,13 +70,13 @@ export default function AIPicksPage() {
           setSubscription({ plan, status: subStatus, picks_limit: picksLimit });
           console.log('[AIPicks] Subscription:', { plan, subStatus, picksLimit });
         } else {
-          setSubscription({ plan: 'free', status: 'inactive', picks_limit: 10 });
-          setError('Could not fetch subscription status. Defaulting to Free plan.');
-          console.warn('[AIPicks] Subscription API error:', subRes.status);
+          // Non-200 response - default to free plan without showing error
+          setSubscription({ plan: 'free', status: 'active', picks_limit: 10 });
+          console.warn('[AIPicks] Subscription API returned:', subRes.status);
         }
       } catch (subErr) {
-        setSubscription({ plan: 'free', status: 'inactive', picks_limit: 10 });
-        setError('Error fetching subscription. Defaulting to Free plan.');
+        // Network error - default to free plan without showing error
+        setSubscription({ plan: 'free', status: 'active', picks_limit: 10 });
         console.error('[AIPicks] Subscription fetch error:', subErr);
       }
 
