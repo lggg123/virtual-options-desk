@@ -1,12 +1,10 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  experimental: {
-    turbo: {
-      rules: {
-        '*.py': {
-          loaders: ['raw-loader'],
-        },
+  turbopack: {
+    rules: {
+      '*.py': {
+        loaders: ['raw-loader'],
       },
     },
   },

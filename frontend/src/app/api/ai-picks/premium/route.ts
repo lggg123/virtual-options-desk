@@ -25,10 +25,34 @@ interface StockPick {
   reasoning: string;
 }
 
+// Helper to find CSV file in multiple possible locations
+async function findCSVFile(filename: string): Promise<string> {
+  const possiblePaths = [
+    path.join(process.cwd(), 'public', 'data', filename),
+    path.join(process.cwd(), 'frontend', 'public', 'data', filename),
+    path.join(process.cwd(), '.next', 'standalone', 'public', 'data', filename),
+    path.join(process.cwd(), 'standalone', 'public', 'data', filename),
+    path.resolve(__dirname, '..', '..', '..', '..', '..', 'public', 'data', filename),
+  ];
+
+  for (const p of possiblePaths) {
+    try {
+      await fs.access(p);
+      console.log(`[AI Picks Premium] Found CSV at: ${p}`);
+      return p;
+    } catch {
+      // Path not accessible, try next
+    }
+  }
+
+  console.error(`[AI Picks Premium] Could not find ${filename} in any of:`, possiblePaths);
+  throw new Error(`CSV file not found: ${filename}`);
+}
+
 export async function GET() {
   try {
-    // Read CSV directly from the file system
-    const csvPath = path.join(process.cwd(), 'public', 'data', 'top50_premium.csv');
+    // Read CSV from file system with multiple path fallbacks
+    const csvPath = await findCSVFile('top50_premium.csv');
     const csv = await fs.readFile(csvPath, 'utf-8');
     const [header, ...rows] = csv.trim().split('\n');
     const columns = header.split(',');
