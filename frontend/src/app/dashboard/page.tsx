@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import DashboardHeader from '@/components/DashboardHeader';
 import DashboardMetrics from '@/components/DashboardMetrics';
 import LiveOptionsChain from '@/components/LiveOptionsChain';
 import PortfolioOverview from '@/components/PortfolioOverview';
 import RecentTrades from '@/components/RecentTrades';
 import MarketData from '@/components/MarketData';
+import RiskAnalysis from '@/components/RiskAnalysis';
 
 export default function DashboardPage() {
   return (
@@ -61,17 +61,7 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="analysis" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Risk Analysis</CardTitle>
-                <CardDescription>
-                  Portfolio risk metrics and Greeks analysis
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Risk analysis tools coming soon...</p>
-              </CardContent>
-            </Card>
+            <RiskAnalysis />
           </TabsContent>
         </Tabs>
       </main>
