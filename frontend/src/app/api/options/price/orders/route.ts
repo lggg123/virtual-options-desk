@@ -146,8 +146,14 @@ export async function POST(request: NextRequest) {
       portfolio = {
         id: 'mock-portfolio-id',
         user_id: mockUser.id,
+        name: 'Demo Portfolio',
+        description: null,
         cash_balance: 10000,
         total_value: 10000,
+        unrealized_pl: 0,
+        realized_pl: 0,
+        is_default: true,
+        currency: 'USD',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
