@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { TrendingUp, TrendingDown, Zap, Activity, DollarSign, Lock, Sparkles } from 'lucide-react';
+import { TrendingUp, TrendingDown, Zap, Activity, DollarSign, Lock, Sparkles, BarChart3, X } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import TradingChart from '@/components/TradingChart';
 
 interface StockPick {
   symbol: string;
@@ -29,6 +30,7 @@ export default function AIPicksPage() {
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [liveQuotes, setLiveQuotes] = useState<Record<string, { price?: number; change?: number; volume?: number }> >({});
   const [error, setError] = useState<string | null>(null);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAIPicks();
@@ -140,6 +142,41 @@ export default function AIPicksPage() {
   return (
     <div className="min-h-screen bg-slate-950 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Chart Modal */}
+        {selectedSymbol && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+            <div className="bg-slate-900 rounded-lg border border-slate-700 w-full max-w-5xl max-h-[90vh] overflow-auto">
+              <div className="flex items-center justify-between p-4 border-b border-slate-700">
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="w-6 h-6 text-indigo-400" />
+                  <h2 className="text-xl font-bold text-white">{selectedSymbol} Chart</h2>
+                  {picks.find(p => p.symbol === selectedSymbol) && (
+                    <span className={`
+                      px-3 py-1 rounded-full text-xs font-medium
+                      ${picks.find(p => p.symbol === selectedSymbol)?.prediction === 'bullish' ? 'bg-green-500/20 text-green-400' :
+                        picks.find(p => p.symbol === selectedSymbol)?.prediction === 'bearish' ? 'bg-red-500/20 text-red-400' :
+                        'bg-gray-500/20 text-gray-400'}
+                    `}>
+                      {picks.find(p => p.symbol === selectedSymbol)?.prediction}
+                    </span>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedSymbol(null)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              <div className="p-4">
+                <TradingChart symbol={selectedSymbol} />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Error Banner */}
         {error && (
           <div className="mb-6 p-4 bg-red-900/80 border border-red-700 text-red-200 rounded-lg">
@@ -322,11 +359,22 @@ export default function AIPicksPage() {
                         </div>
                       </div>
 
-                      <div className="ml-6 text-right">
-                        <div className="text-sm text-gray-400 mb-1">Confidence</div>
-                        <div className="text-2xl font-bold text-indigo-400">
-                          {(pick.confidence * 100).toFixed(0)}%
+                      <div className="ml-6 text-right flex flex-col items-end gap-2">
+                        <div>
+                          <div className="text-sm text-gray-400 mb-1">Confidence</div>
+                          <div className="text-2xl font-bold text-indigo-400">
+                            {(pick.confidence * 100).toFixed(0)}%
+                          </div>
                         </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedSymbol(pick.symbol)}
+                          className="border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300"
+                        >
+                          <BarChart3 className="w-4 h-4 mr-1" />
+                          View Chart
+                        </Button>
                       </div>
                     </div>
                   </div>
