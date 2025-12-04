@@ -144,7 +144,12 @@ export default function AIPicksPage() {
       <div className="max-w-7xl mx-auto">
         {/* Chart Modal */}
         {selectedSymbol && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setSelectedSymbol(null);
+            }}
+          >
             <div className="bg-slate-900 rounded-lg border border-slate-700 w-full max-w-5xl max-h-[90vh] overflow-auto">
               <div className="flex items-center justify-between p-4 border-b border-slate-700">
                 <div className="flex items-center gap-3">
@@ -305,12 +310,17 @@ export default function AIPicksPage() {
               {picks.map((pick, index) => {
                 const quote = liveQuotes[pick.symbol];
                 return (
-                  <div key={index} className="p-6 hover:bg-slate-800/50 transition-colors">
+                  <div
+                    key={index}
+                    className="p-6 hover:bg-slate-800/50 transition-colors cursor-pointer"
+                    onClick={() => setSelectedSymbol(pick.symbol)}
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <span className="text-sm font-semibold text-gray-400">#{index + 1}</span>
                           <h3 className="text-lg font-bold text-white">{pick.symbol}</h3>
+                          <BarChart3 className="w-4 h-4 text-indigo-400" />
                           <span className="text-sm text-gray-400">{pick.name}</span>
                           <span className={`
                             px-3 py-1 rounded-full text-xs font-medium
