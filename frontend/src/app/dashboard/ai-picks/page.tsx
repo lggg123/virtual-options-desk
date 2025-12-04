@@ -256,7 +256,7 @@ export default function AIPicksPage() {
                 <p className="text-gray-400 text-sm">Avg Confidence</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {picks.length > 0
-                    ? `${(picks.reduce((sum, p) => sum + p.confidence, 0) / picks.length * 100).toFixed(1)}%`
+                    ? `${(picks.reduce((sum, p) => sum + (p.confidence ?? 0), 0) / picks.length * 100).toFixed(1)}%`
                     : '0%'
                   }
                 </p>
@@ -271,7 +271,7 @@ export default function AIPicksPage() {
                 <p className="text-gray-400 text-sm">Potential Returns</p>
                 <p className="text-2xl font-bold text-green-400 mt-1">
                   {picks.length > 0
-                    ? `+${(picks.reduce((sum, p) => sum + p.potential_return, 0) / picks.length).toFixed(1)}%`
+                    ? `+${(picks.reduce((sum, p) => sum + (p.potential_return ?? 0), 0) / picks.length).toFixed(1)}%`
                     : '0%'
                   }
                 </p>
@@ -339,16 +339,16 @@ export default function AIPicksPage() {
                         <div className="flex items-center gap-6 text-sm flex-wrap">
                           <div>
                             <span className="text-gray-400">Current: </span>
-                            <span className="text-white font-medium">${pick.current_price.toFixed(2)}</span>
+                            <span className="text-white font-medium">${(pick.current_price ?? 0).toFixed(2)}</span>
                           </div>
                           <div>
                             <span className="text-gray-400">Target: </span>
-                            <span className="text-white font-medium">${pick.target_price.toFixed(2)}</span>
+                            <span className="text-white font-medium">${(pick.target_price ?? 0).toFixed(2)}</span>
                           </div>
                           <div>
                             <span className="text-gray-400">Potential: </span>
-                            <span className={`font-medium ${pick.potential_return > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {pick.potential_return > 0 ? '+' : ''}{pick.potential_return.toFixed(1)}%
+                            <span className={`font-medium ${(pick.potential_return ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {(pick.potential_return ?? 0) > 0 ? '+' : ''}{(pick.potential_return ?? 0).toFixed(1)}%
                             </span>
                           </div>
                           {/* Live quote info */}
@@ -373,7 +373,7 @@ export default function AIPicksPage() {
                         <div>
                           <div className="text-sm text-gray-400 mb-1">Confidence</div>
                           <div className="text-2xl font-bold text-indigo-400">
-                            {(pick.confidence * 100).toFixed(0)}%
+                            {((pick.confidence ?? 0) * 100).toFixed(0)}%
                           </div>
                         </div>
                         <Button

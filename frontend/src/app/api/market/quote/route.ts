@@ -28,25 +28,45 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    const result = data.chart.result[0];
-    const meta = result.meta;
-    const quote = result.indicators.quote[0];
+    const result = data.chart?.result?.[0];
 
-    const latestIndex = quote.close.length - 1;
-    const currentPrice = quote.close[latestIndex];
-    const previousClose = meta.previousClose;
+    if (!result) {
+      throw new Error(`No data available for ${symbol}`);
+    }
+
+    const meta = result.meta;
+    const quote = result.indicators?.quote?.[0];
+
+    // Find the latest non-null close price
+    let currentPrice = meta.regularMarketPrice;
+    if (quote?.close) {
+      for (let i = quote.close.length - 1; i >= 0; i--) {
+        if (quote.close[i] !== null && quote.close[i] !== undefined) {
+          currentPrice = quote.close[i];
+          break;
+        }
+      }
+    }
+
+    const previousClose = meta.previousClose || currentPrice;
     const change = currentPrice - previousClose;
-    const changePercent = (change / previousClose) * 100;
+    const changePercent = previousClose ? (change / previousClose) * 100 : 0;
+
+    // Filter out null values for high/low calculations
+    const validHighs = quote?.high?.filter((v: number | null) => v !== null && v !== undefined) || [];
+    const validLows = quote?.low?.filter((v: number | null) => v !== null && v !== undefined) || [];
+    const validVolumes = quote?.volume?.filter((v: number | null) => v !== null && v !== undefined) || [];
+    const validOpens = quote?.open?.filter((v: number | null) => v !== null && v !== undefined) || [];
 
     return NextResponse.json({
       symbol: symbol,
       regularMarketPrice: currentPrice,
       regularMarketChange: change,
       regularMarketChangePercent: changePercent,
-      regularMarketVolume: quote.volume[latestIndex],
-      regularMarketDayHigh: Math.max(...quote.high.filter((v: number) => v !== null)),
-      regularMarketDayLow: Math.min(...quote.low.filter((v: number) => v !== null)),
-      regularMarketOpen: quote.open[0],
+      regularMarketVolume: validVolumes.length > 0 ? validVolumes[validVolumes.length - 1] : 0,
+      regularMarketDayHigh: validHighs.length > 0 ? Math.max(...validHighs) : currentPrice,
+      regularMarketDayLow: validLows.length > 0 ? Math.min(...validLows) : currentPrice,
+      regularMarketOpen: validOpens.length > 0 ? validOpens[0] : currentPrice,
       regularMarketPreviousClose: previousClose,
       timestamp: new Date().toISOString()
     });
