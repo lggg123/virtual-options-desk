@@ -32,7 +32,8 @@ import { toast } from 'sonner';
 interface Position {
   id: string;
   symbol: string;
-  type: string;
+  ticker: string;
+  type: 'call' | 'put';
   strike: number;
   expiry: string;
   quantity: number;
@@ -44,8 +45,20 @@ interface Position {
   theta: number;
   gamma: number;
   vega: number;
+  daysToExpiry: number;
+  strategy?: string;
   impliedVolatility?: number;
   underlyingPrice?: number;
+}
+
+interface StrategyGroup {
+  name: string;
+  positions: Position[];
+  totalPnl: number;
+  totalDelta: number;
+  totalTheta: number;
+  totalGamma: number;
+  totalVega: number;
 }
 
 interface GreeksSummary {
@@ -393,8 +406,11 @@ export default function OptionsAnalysisPage() {
             </CardContent>
           </Card>
         ) : (
-          <Tabs defaultValue="positions" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+          <Tabs defaultValue="strategies" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto">
+              <TabsTrigger value="strategies" className="text-xs sm:text-sm py-2">
+                Strategies
+              </TabsTrigger>
               <TabsTrigger value="positions" className="text-xs sm:text-sm py-2">
                 Positions
               </TabsTrigger>
@@ -408,6 +424,152 @@ export default function OptionsAnalysisPage() {
                 Decisions
               </TabsTrigger>
             </TabsList>
+
+            {/* Strategies Tab */}
+            <TabsContent value="strategies" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Strategy Overview
+                  </CardTitle>
+                  <CardDescription>
+                    Your option positions grouped by detected strategy
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    // Group positions by strategy
+                    const strategyGroups: StrategyGroup[] = [];
+                    const grouped: Record<string, Position[]> = {};
+
+                    positions.forEach(pos => {
+                      const strategyName = pos.strategy || 'Uncategorized';
+                      // Group strangle/straddle legs together
+                      let groupKey = strategyName;
+                      if (strategyName.includes('Strangle') || strategyName.includes('Straddle')) {
+                        groupKey = strategyName.includes('Strangle') ? `${pos.ticker} Strangle` : `${pos.ticker} Straddle`;
+                      } else if (strategyName.includes('Spread')) {
+                        groupKey = `${pos.ticker} ${strategyName.replace(' (Long Leg)', '').replace(' (Short Leg)', '')}`;
+                      } else {
+                        groupKey = `${pos.ticker} ${pos.type.toUpperCase()} $${pos.strike}`;
+                      }
+
+                      if (!grouped[groupKey]) {
+                        grouped[groupKey] = [];
+                      }
+                      grouped[groupKey].push(pos);
+                    });
+
+                    Object.entries(grouped).forEach(([name, groupPositions]) => {
+                      strategyGroups.push({
+                        name,
+                        positions: groupPositions,
+                        totalPnl: groupPositions.reduce((sum, p) => sum + p.pnl, 0),
+                        totalDelta: groupPositions.reduce((sum, p) => sum + (p.delta * p.quantity * 100), 0),
+                        totalTheta: groupPositions.reduce((sum, p) => sum + (p.theta * p.quantity * 100), 0),
+                        totalGamma: groupPositions.reduce((sum, p) => sum + (p.gamma * p.quantity * 100), 0),
+                        totalVega: groupPositions.reduce((sum, p) => sum + (p.vega * p.quantity * 100), 0),
+                      });
+                    });
+
+                    return (
+                      <div className="space-y-6">
+                        {strategyGroups.map((group, idx) => (
+                          <div key={idx} className="border rounded-lg p-4 space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="text-lg font-semibold">{group.name}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {group.positions.length} leg{group.positions.length > 1 ? 's' : ''}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <div className={`text-xl font-bold ${group.totalPnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {formatCurrency(group.totalPnl)}
+                                </div>
+                                <Badge variant={group.positions[0]?.strategy?.includes('Strangle') ? 'default' :
+                                               group.positions[0]?.strategy?.includes('Spread') ? 'secondary' : 'outline'}>
+                                  {group.positions[0]?.strategy?.includes('Strangle') ? 'Volatility Play' :
+                                   group.positions[0]?.strategy?.includes('Spread') ? 'Directional' : 'Single Leg'}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {/* Strategy Legs */}
+                            <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                              {group.positions.map((pos) => (
+                                <div key={pos.id} className="flex items-center justify-between text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant={pos.type === 'call' ? 'default' : 'secondary'} className="text-xs">
+                                      {pos.type.toUpperCase()}
+                                    </Badge>
+                                    <span>${pos.strike}</span>
+                                    <span className="text-muted-foreground">{pos.expiry}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {pos.quantity > 0 ? '+' : ''}{pos.quantity} contracts
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    <span className="text-muted-foreground">@ ${pos.avgPrice.toFixed(2)}</span>
+                                    <span className={pos.pnl >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                      {formatCurrency(pos.pnl)}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Strategy Greeks */}
+                            <div className="grid grid-cols-4 gap-4 text-center">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Net Delta</p>
+                                <p className="font-medium">{group.totalDelta.toFixed(0)}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Net Gamma</p>
+                                <p className="font-medium">{group.totalGamma.toFixed(2)}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Daily Theta</p>
+                                <p className={`font-medium ${group.totalTheta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {formatCurrency(group.totalTheta)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Net Vega</p>
+                                <p className="font-medium">{formatCurrency(group.totalVega)}</p>
+                              </div>
+                            </div>
+
+                            {/* Strategy Analysis */}
+                            <div className="text-sm text-muted-foreground border-t pt-3">
+                              {group.positions.length >= 2 && group.positions.some(p => p.type === 'call') && group.positions.some(p => p.type === 'put') ? (
+                                <p>
+                                  <strong>Strategy Analysis:</strong> This is a {group.totalDelta > 50 ? 'bullish' : group.totalDelta < -50 ? 'bearish' : 'neutral'} volatility position.
+                                  {Math.abs(group.totalDelta) < 50 ? ' Low delta exposure means limited directional risk.' : ''}
+                                  {group.totalVega > 0 ? ' Long vega benefits from IV expansion.' : ' Short vega benefits from IV contraction.'}
+                                </p>
+                              ) : group.positions[0]?.type === 'call' ? (
+                                <p>
+                                  <strong>Strategy Analysis:</strong> Bullish call position with {group.positions[0]?.daysToExpiry || 0} days to expiry.
+                                  {group.totalTheta < -5 ? ' Watch theta decay accelerating.' : ''}
+                                </p>
+                              ) : (
+                                <p>
+                                  <strong>Strategy Analysis:</strong> Bearish put position with {group.positions[0]?.daysToExpiry || 0} days to expiry.
+                                  {group.totalTheta < -5 ? ' Watch theta decay accelerating.' : ''}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             {/* Positions Tab */}
             <TabsContent value="positions" className="space-y-4">
@@ -446,10 +608,15 @@ export default function OptionsAnalysisPage() {
                               <TableCell>
                                 <div className="space-y-1">
                                   <div className="font-medium flex items-center gap-2">
-                                    {position.symbol}
+                                    {position.ticker || position.symbol.split('-')[0]}
                                     <Badge variant={position.type === 'call' ? 'default' : 'secondary'}>
                                       {position.type.toUpperCase()}
                                     </Badge>
+                                    {position.strategy && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {position.strategy}
+                                      </Badge>
+                                    )}
                                   </div>
                                   <div className="text-sm text-muted-foreground">
                                     ${position.strike} • {position.expiry}
