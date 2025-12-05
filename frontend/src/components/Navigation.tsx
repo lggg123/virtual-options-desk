@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  TrendingUp, 
-  CandlestickChart, 
-  LineChart, 
+import {
+  LayoutDashboard,
+  TrendingUp,
+  CandlestickChart,
+  LineChart,
   Wallet,
   Crown,
   LogOut,
@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Newspaper,
+  BookOpen,
   LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -30,6 +31,7 @@ const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'AI Stock Picks', href: '/dashboard/ai-picks', icon: TrendingUp },
   { name: 'Virtual Options', href: '/trading', icon: CandlestickChart },
+  { name: 'Learn Options', href: '/education/fundamentals', icon: BookOpen },
   { name: 'Pattern Detection', href: 'https://svelte-chart-app.vercel.app/', icon: LineChart, external: true },
   { name: 'AI Insights Blog', href: '/blog', icon: Newspaper },
   { name: 'Portfolio', href: '/portfolio', icon: Wallet },

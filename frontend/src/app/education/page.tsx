@@ -19,7 +19,8 @@ import {
   CheckCircle2,
   ArrowRight,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  GraduationCap
 } from 'lucide-react';
 import DashboardHeader from '@/components/DashboardHeader';
 
@@ -371,6 +372,24 @@ export default function EducationPage() {
             Learn about different options strategies, from basic calls and puts to advanced multi-leg spreads.
             Understanding these strategies is essential for successful options trading.
           </p>
+        </div>
+
+        {/* Navigation Tabs for Education Section */}
+        <div className="flex justify-center">
+          <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-1 bg-muted/50">
+            <Link href="/education/fundamentals">
+              <Button variant="ghost" size="sm" className="rounded-md">
+                <GraduationCap className="h-4 w-4 mr-2" />
+                Fundamentals
+              </Button>
+            </Link>
+            <Link href="/education">
+              <Button variant="secondary" size="sm" className="rounded-md">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Strategies
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Quick Stats */}
