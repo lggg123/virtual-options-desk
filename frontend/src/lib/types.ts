@@ -47,6 +47,237 @@ export interface OptionsPricing {
   updated_at: string;
 }
 
+// Asset class type for different trading instruments
+export type AssetClass = 'stock' | 'option' | 'crypto' | 'commodity' | 'futures' | 'cfd';
+
+// Extended position type to include new asset classes
+export type ExtendedPositionType = 'stock' | 'call' | 'put' | 'spread' | 'crypto' | 'commodity' | 'futures' | 'cfd';
+
+// Cryptocurrency types
+export interface CryptoAsset {
+  id: string;
+  symbol: string;
+  name: string;
+  price: number;
+  price_change_24h: number;
+  price_change_percentage_24h: number;
+  market_cap: number;
+  volume_24h: number;
+  high_24h: number;
+  low_24h: number;
+  circulating_supply: number;
+  total_supply: number;
+  image?: string;
+  last_updated: string;
+}
+
+export interface CryptoQuote {
+  symbol: string;
+  name: string;
+  price: number;
+  change_24h: number;
+  change_percentage_24h: number;
+  volume_24h: number;
+  market_cap: number;
+  high_24h: number;
+  low_24h: number;
+}
+
+// Commodity types
+export interface CommodityAsset {
+  symbol: string;
+  name: string;
+  price: number;
+  unit: string;
+  change: number;
+  change_percentage: number;
+  high: number;
+  low: number;
+  open: number;
+  previous_close: number;
+  category: 'energy' | 'metals' | 'agriculture' | 'livestock';
+  exchange: string;
+  last_updated: string;
+}
+
+export interface CommodityQuote {
+  symbol: string;
+  name: string;
+  price: number;
+  unit: string;
+  change: number;
+  change_percentage: number;
+  category: 'energy' | 'metals' | 'agriculture' | 'livestock';
+}
+
+// Futures contract types
+export interface FuturesContract {
+  symbol: string;
+  name: string;
+  underlying: string;
+  price: number;
+  change: number;
+  change_percentage: number;
+  open: number;
+  high: number;
+  low: number;
+  previous_close: number;
+  volume: number;
+  open_interest: number;
+  expiration_date: string;
+  contract_size: number;
+  tick_size: number;
+  tick_value: number;
+  exchange: string;
+  category: 'index' | 'currency' | 'commodity' | 'interest_rate';
+  last_updated: string;
+}
+
+export interface FuturesQuote {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  change_percentage: number;
+  expiration_date: string;
+  volume: number;
+}
+
+// CFD types (Contracts for Difference)
+export interface CFDInstrument {
+  symbol: string;
+  name: string;
+  underlying_asset: string;
+  asset_class: 'forex' | 'index' | 'commodity' | 'crypto' | 'stock';
+  price: number;
+  bid: number;
+  ask: number;
+  spread: number;
+  change: number;
+  change_percentage: number;
+  high: number;
+  low: number;
+  leverage: number;
+  margin_requirement: number;
+  pip_value: number;
+  trading_hours: string;
+  last_updated: string;
+}
+
+export interface CFDQuote {
+  symbol: string;
+  name: string;
+  bid: number;
+  ask: number;
+  spread: number;
+  change: number;
+  change_percentage: number;
+  leverage: number;
+}
+
+// Trade types for new asset classes
+export interface CryptoTrade {
+  id: string;
+  user_id: string;
+  portfolio_id: string;
+  symbol: string;
+  name: string;
+  trade_type: 'buy' | 'sell';
+  quantity: number;
+  price: number;
+  total_value: number;
+  fees: number;
+  executed_at: string;
+}
+
+export interface CommodityTrade {
+  id: string;
+  user_id: string;
+  portfolio_id: string;
+  symbol: string;
+  name: string;
+  trade_type: 'buy' | 'sell';
+  quantity: number;
+  price: number;
+  unit: string;
+  contract_size: number;
+  total_value: number;
+  fees: number;
+  executed_at: string;
+}
+
+export interface FuturesTrade {
+  id: string;
+  user_id: string;
+  portfolio_id: string;
+  symbol: string;
+  contract_month: string;
+  trade_type: 'buy' | 'sell';
+  quantity: number;
+  price: number;
+  contract_size: number;
+  margin_required: number;
+  total_value: number;
+  fees: number;
+  executed_at: string;
+}
+
+export interface CFDTrade {
+  id: string;
+  user_id: string;
+  portfolio_id: string;
+  symbol: string;
+  trade_type: 'buy' | 'sell';
+  position_type: 'long' | 'short';
+  quantity: number;
+  entry_price: number;
+  leverage: number;
+  margin_used: number;
+  stop_loss?: number;
+  take_profit?: number;
+  total_value: number;
+  fees: number;
+  executed_at: string;
+}
+
+// Popular symbols for each asset class
+export const POPULAR_CRYPTO = [
+  { symbol: 'bitcoin', name: 'Bitcoin', ticker: 'BTC' },
+  { symbol: 'ethereum', name: 'Ethereum', ticker: 'ETH' },
+  { symbol: 'binancecoin', name: 'BNB', ticker: 'BNB' },
+  { symbol: 'solana', name: 'Solana', ticker: 'SOL' },
+  { symbol: 'ripple', name: 'XRP', ticker: 'XRP' },
+  { symbol: 'cardano', name: 'Cardano', ticker: 'ADA' },
+  { symbol: 'dogecoin', name: 'Dogecoin', ticker: 'DOGE' },
+  { symbol: 'polkadot', name: 'Polkadot', ticker: 'DOT' },
+];
+
+export const POPULAR_COMMODITIES = [
+  { symbol: 'CL', name: 'Crude Oil WTI', category: 'energy' as const },
+  { symbol: 'BZ', name: 'Brent Crude Oil', category: 'energy' as const },
+  { symbol: 'NG', name: 'Natural Gas', category: 'energy' as const },
+  { symbol: 'GC', name: 'Gold', category: 'metals' as const },
+  { symbol: 'SI', name: 'Silver', category: 'metals' as const },
+  { symbol: 'HG', name: 'Copper', category: 'metals' as const },
+  { symbol: 'PL', name: 'Platinum', category: 'metals' as const },
+  { symbol: 'ZC', name: 'Corn', category: 'agriculture' as const },
+  { symbol: 'ZW', name: 'Wheat', category: 'agriculture' as const },
+  { symbol: 'ZS', name: 'Soybeans', category: 'agriculture' as const },
+];
+
+export const POPULAR_FUTURES = [
+  { symbol: 'ES', name: 'E-mini S&P 500', category: 'index' as const },
+  { symbol: 'NQ', name: 'E-mini NASDAQ 100', category: 'index' as const },
+  { symbol: 'YM', name: 'E-mini Dow', category: 'index' as const },
+  { symbol: 'RTY', name: 'E-mini Russell 2000', category: 'index' as const },
+  { symbol: 'CL', name: 'Crude Oil', category: 'commodity' as const },
+  { symbol: 'GC', name: 'Gold', category: 'commodity' as const },
+  { symbol: '6E', name: 'Euro FX', category: 'currency' as const },
+  { symbol: '6J', name: 'Japanese Yen', category: 'currency' as const },
+  { symbol: 'ZB', name: '30-Year T-Bond', category: 'interest_rate' as const },
+  { symbol: 'ZN', name: '10-Year T-Note', category: 'interest_rate' as const },
+];
+
 export interface Database {
   public: {
     Tables: {

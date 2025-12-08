@@ -6,3 +6,6 @@ gunicorn>=21.0.0
 numpy==1.26.4
 chromadb==0.4.24
 qdrant-client==1.7.3
+
+# Testing
+pytest>=7.4.0
