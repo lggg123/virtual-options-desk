@@ -100,7 +100,7 @@ async def root():
 
 @app.get("/health")
 async def health():
-    """Health check endpoint for Render"""
+    """Health check endpoint for Railway/Render"""
     return {"status": "healthy"}
 
 
@@ -315,4 +315,5 @@ async def startup_event():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    port = int(os.getenv("PORT", 8002))
+    uvicorn.run(app, host="0.0.0.0", port=port)
