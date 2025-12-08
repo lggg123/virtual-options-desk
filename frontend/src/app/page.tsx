@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, TrendingUp, Zap, BarChart3, BookOpen, Users, DollarSign } from 'lucide-react';
+import { ArrowRight, TrendingUp, Zap, BarChart3, BookOpen, Users, DollarSign, Menu, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function HomePage() {
                 <>
                   {isAuthenticated ? (
                     <>
+                      {/* Desktop nav links */}
                       <Link href="/dashboard" className="text-sm sm:text-base hover:text-gray-300 transition hidden sm:inline">
                         Dashboard
                       </Link>
@@ -64,9 +66,16 @@ export default function HomePage() {
                             window.location.href = '/login';
                           }
                         }}
-                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base bg-red-600 hover:bg-red-700 rounded-md transition"
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base bg-red-600 hover:bg-red-700 rounded-md transition hidden sm:inline"
                       >
                         Sign Out
+                      </button>
+                      {/* Mobile hamburger menu button */}
+                      <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="sm:hidden p-2 text-gray-400 hover:text-white"
+                      >
+                        {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                       </button>
                     </>
                   ) : (
@@ -91,6 +100,79 @@ export default function HomePage() {
           </div>
         </div>
       </nav>
+
+      {/* Mobile Menu for Authenticated Users */}
+      {mobileMenuOpen && isAuthenticated && (
+        <div className="sm:hidden fixed inset-0 z-40 bg-gray-900/95 backdrop-blur-md pt-16">
+          <nav className="px-4 py-6 space-y-2">
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center px-4 py-3 text-lg font-medium text-white hover:bg-gray-800 rounded-lg transition"
+            >
+              <TrendingUp className="w-5 h-5 mr-3 text-blue-400" />
+              Dashboard
+            </Link>
+            <Link
+              href="/dashboard/ai-picks"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center px-4 py-3 text-lg font-medium text-white hover:bg-gray-800 rounded-lg transition"
+            >
+              <Zap className="w-5 h-5 mr-3 text-purple-400" />
+              AI Stock Picks
+            </Link>
+            <Link
+              href="/trading"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center px-4 py-3 text-lg font-medium text-white hover:bg-gray-800 rounded-lg transition"
+            >
+              <BarChart3 className="w-5 h-5 mr-3 text-green-400" />
+              Trade Options
+            </Link>
+            <Link
+              href="/portfolio"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center px-4 py-3 text-lg font-medium text-white hover:bg-gray-800 rounded-lg transition"
+            >
+              <DollarSign className="w-5 h-5 mr-3 text-yellow-400" />
+              Portfolio
+            </Link>
+            <Link
+              href="/education/fundamentals"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center px-4 py-3 text-lg font-medium text-white hover:bg-gray-800 rounded-lg transition"
+            >
+              <BookOpen className="w-5 h-5 mr-3 text-orange-400" />
+              Learn Options
+            </Link>
+            <Link
+              href="/blog"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center px-4 py-3 text-lg font-medium text-white hover:bg-gray-800 rounded-lg transition"
+            >
+              <Users className="w-5 h-5 mr-3 text-pink-400" />
+              Blog
+            </Link>
+            <div className="pt-4 border-t border-gray-700 mt-4">
+              <button
+                onClick={async () => {
+                  setMobileMenuOpen(false);
+                  try {
+                    await supabase.auth.signOut();
+                    window.location.href = '/login';
+                  } catch (error) {
+                    console.error('Sign out error:', error);
+                    window.location.href = '/login';
+                  }
+                }}
+                className="flex items-center justify-center w-full px-4 py-3 text-lg font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition"
+              >
+                Sign Out
+              </button>
+            </div>
+          </nav>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">

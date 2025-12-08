@@ -92,7 +92,7 @@ mobile/macos/Flutter/ephemeral
 mobile/windows/flutter/ephemeral
 
 # ==================== ML MODELS ====================
-*.pkl
+# Ignore all model files by default
 *.h5
 *.pt
 *.pth
@@ -102,6 +102,9 @@ ml_models/*.pkl
 ml_models/*.h5
 ml_models/*.pt
 ml_models/trained/
+# Ignore pkl files in root python folder only
+python/*.pkl
+python/**/*.pkl
 
 # ==================== LOGS ====================
 *.log
