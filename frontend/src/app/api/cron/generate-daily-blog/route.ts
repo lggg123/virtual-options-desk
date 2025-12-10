@@ -53,16 +53,21 @@ async function generateDailyBlog() {
   }
 
   const blog = result.blog;
-  
+
+  // Ensure required fields have fallback values
+  const title = blog.title || `Market Analysis - ${new Date().toLocaleDateString()}`;
+  const content = blog.content || '';
+  const summary = blog.meta_description || blog.summary || 'Daily market analysis and trading insights.';
+
   return {
-    title: blog.title,
-    slug: generateSlug(blog.title),
-    summary: blog.meta_description || blog.summary,
-    content: blog.content,
-    tags: blog.tags || [],
-    readingTime: calculateReadingTime(blog.content),
-    metaDescription: blog.meta_description,
-    metaKeywords: blog.target_keywords || blog.tags,
+    title,
+    slug: generateSlug(title),
+    summary,
+    content,
+    tags: blog.tags || ['market-analysis'],
+    readingTime: calculateReadingTime(content),
+    metaDescription: summary,
+    metaKeywords: blog.target_keywords || blog.tags || ['market-analysis', 'trading'],
     marketData: {
       trend: 'neutral',
       sentiment: 'mixed',
@@ -98,7 +103,7 @@ export async function GET(request: NextRequest) {
         author: 'AI Market Analyst',
         reading_time: blogPost.readingTime,
         tags: blogPost.tags,
-        meta_description: (blogPost.metaDescription || blogPost.summary).substring(0, 160),
+        meta_description: (blogPost.metaDescription || blogPost.summary || '').substring(0, 160),
         meta_keywords: blogPost.metaKeywords,
         market_data: blogPost.marketData,
         status: 'published',
