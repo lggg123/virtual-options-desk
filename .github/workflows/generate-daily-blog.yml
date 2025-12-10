@@ -1,0 +1,31 @@
+name: Generate Daily Blog
+
+on:
+  schedule:
+    # Run at 9 PM UTC, Monday through Friday (same as original Vercel cron)
+    - cron: '0 21 * * 1-5'
+  workflow_dispatch: # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  generate-blog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Blog Generation
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://www.marketstockpick.com/api/cron/generate-daily-blog" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response: $body"
+          echo "HTTP Status: $http_code"
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "Blog generation failed with status $http_code"
+            exit 1
+          fi
+
+          echo "Blog generated successfully!"
