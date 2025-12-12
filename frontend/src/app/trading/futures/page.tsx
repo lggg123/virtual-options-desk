@@ -203,11 +203,11 @@ export default function FuturesPage() {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-slate-700">
-                            <th className="text-left py-3 px-2 text-gray-400 font-medium">Contract</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium">Price</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium">Change</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium hidden sm:table-cell">Volume</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium hidden md:table-cell">Margin</th>
+                            <th className="text-left py-3 px-2 text-slate-300 font-medium">Contract</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium">Price</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium">Change</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium hidden sm:table-cell">Volume</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium hidden md:table-cell">Margin</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -221,7 +221,7 @@ export default function FuturesPage() {
                             >
                               <td className="py-3 px-2">
                                 <div className="font-medium text-white">{contract.symbol}</div>
-                                <div className="text-xs text-gray-400">{contract.name}</div>
+                                <div className="text-xs text-slate-400">{contract.name}</div>
                               </td>
                               <td className="text-right py-3 px-2 font-mono text-white">
                                 {formatPrice(contract.price, contract.symbol)}
@@ -234,10 +234,10 @@ export default function FuturesPage() {
                                   <span className="font-mono">{contract.change_percentage.toFixed(2)}%</span>
                                 </div>
                               </td>
-                              <td className="text-right py-3 px-2 text-gray-300 hidden sm:table-cell">
+                              <td className="text-right py-3 px-2 text-slate-300 hidden sm:table-cell">
                                 {contract.volume.toLocaleString()}
                               </td>
-                              <td className="text-right py-3 px-2 text-gray-300 hidden md:table-cell">
+                              <td className="text-right py-3 px-2 text-cyan-400 hidden md:table-cell">
                                 {contract.margin_requirement}%
                               </td>
                             </tr>

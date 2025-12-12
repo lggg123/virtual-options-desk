@@ -221,12 +221,12 @@ export default function CryptoPage() {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-slate-700">
-                            <th className="text-left py-3 px-2 text-gray-400 font-medium">#</th>
-                            <th className="text-left py-3 px-2 text-gray-400 font-medium">Coin</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium">Price</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium">24h %</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium hidden sm:table-cell">Market Cap</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium hidden md:table-cell">Volume</th>
+                            <th className="text-left py-3 px-2 text-slate-300 font-medium">#</th>
+                            <th className="text-left py-3 px-2 text-slate-300 font-medium">Coin</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium">Price</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium">24h %</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium hidden sm:table-cell">Market Cap</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium hidden md:table-cell">Volume</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -238,13 +238,13 @@ export default function CryptoPage() {
                               }`}
                               onClick={() => setSelectedCrypto(crypto)}
                             >
-                              <td className="py-3 px-2 text-gray-400">{crypto.market_cap_rank}</td>
+                              <td className="py-3 px-2 text-orange-400 font-mono">{crypto.market_cap_rank}</td>
                               <td className="py-3 px-2">
                                 <div className="flex items-center gap-2">
                                   <img src={crypto.image} alt={crypto.name} className="w-6 h-6 rounded-full" />
                                   <div>
                                     <div className="font-medium text-white">{crypto.symbol.toUpperCase()}</div>
-                                    <div className="text-xs text-gray-400 hidden sm:block">{crypto.name}</div>
+                                    <div className="text-xs text-slate-400 hidden sm:block">{crypto.name}</div>
                                   </div>
                                 </div>
                               </td>
@@ -259,10 +259,10 @@ export default function CryptoPage() {
                                   <span className="font-mono">{Math.abs(crypto.price_change_percentage_24h).toFixed(2)}%</span>
                                 </div>
                               </td>
-                              <td className="text-right py-3 px-2 text-gray-300 hidden sm:table-cell">
+                              <td className="text-right py-3 px-2 text-slate-300 hidden sm:table-cell">
                                 {formatLargeNumber(crypto.market_cap)}
                               </td>
-                              <td className="text-right py-3 px-2 text-gray-300 hidden md:table-cell">
+                              <td className="text-right py-3 px-2 text-cyan-400 hidden md:table-cell">
                                 {formatLargeNumber(crypto.total_volume)}
                               </td>
                             </tr>

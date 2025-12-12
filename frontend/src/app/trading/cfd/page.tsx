@@ -207,12 +207,12 @@ export default function CFDPage() {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-slate-700">
-                            <th className="text-left py-3 px-2 text-gray-400 font-medium">Instrument</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium">Bid</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium">Ask</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium">Change</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium hidden sm:table-cell">Spread</th>
-                            <th className="text-right py-3 px-2 text-gray-400 font-medium hidden md:table-cell">Leverage</th>
+                            <th className="text-left py-3 px-2 text-slate-300 font-medium">Instrument</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium">Bid</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium">Ask</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium">Change</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium hidden sm:table-cell">Spread</th>
+                            <th className="text-right py-3 px-2 text-slate-300 font-medium hidden md:table-cell">Leverage</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -225,8 +225,8 @@ export default function CFDPage() {
                               onClick={() => setSelectedCFD(cfd)}
                             >
                               <td className="py-3 px-2">
-                                <div className="font-medium text-white">{cfd.symbol}</div>
-                                <div className="text-xs text-gray-400">{cfd.name}</div>
+                                <div className="font-medium text-white">{cfd.symbol.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2')}</div>
+                                <div className="text-xs text-slate-400">{cfd.name}</div>
                               </td>
                               <td className="text-right py-3 px-2 font-mono text-red-400">
                                 {formatPrice(cfd.bid, cfd.pip_size)}
@@ -242,10 +242,10 @@ export default function CFDPage() {
                                   <span className="font-mono">{cfd.change_percentage.toFixed(2)}%</span>
                                 </div>
                               </td>
-                              <td className="text-right py-3 px-2 text-gray-300 hidden sm:table-cell">
+                              <td className="text-right py-3 px-2 text-slate-300 hidden sm:table-cell">
                                 {cfd.spread} pips
                               </td>
-                              <td className="text-right py-3 px-2 text-gray-300 hidden md:table-cell">
+                              <td className="text-right py-3 px-2 text-indigo-400 hidden md:table-cell">
                                 {cfd.leverage}:1
                               </td>
                             </tr>
@@ -286,8 +286,8 @@ export default function CFDPage() {
                         </div>
 
                         {/* Spread indicator */}
-                        <div className="text-center text-sm text-gray-400">
-                          Spread: {selectedCFD.spread} pips ({formatCurrency(selectedCFD.spread_cost)})
+                        <div className="text-center text-sm text-slate-300">
+                          Spread: <span className="text-amber-400">{selectedCFD.spread} pips</span> ({formatCurrency(selectedCFD.spread_cost)})
                         </div>
 
                         {/* Change */}
@@ -505,7 +505,7 @@ export default function CFDPage() {
                                 </>
                               ) : (
                                 <>
-                                  {orderType === 'buy' ? '🚀 Buy' : '📉 Sell'} {parseFloat(orderQuantity) || 0} {selectedCFD.symbol}
+                                  {orderType === 'buy' ? '🚀 Buy' : '📉 Sell'} {parseFloat(orderQuantity) || 0} {selectedCFD.symbol.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2')}
                                 </>
                               )}
                             </Button>
