@@ -306,48 +306,48 @@ export default function CFDPage() {
 
                         {/* Trading Specs */}
                         <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 p-3 rounded-lg">
-                            <div className="text-indigo-300 text-xs font-medium">Leverage</div>
+                          <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/20 border border-indigo-700/40 p-3 rounded-lg">
+                            <div className="text-indigo-400 text-xs font-medium">Leverage</div>
                             <div className="text-white font-semibold flex items-center gap-1 mt-1">
-                              <Scale className="w-3 h-3 text-indigo-400" />
+                              <Scale className="w-3 h-3 text-indigo-500" />
                               {selectedCFD.leverage}:1
                             </div>
                           </div>
-                          <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-500/30 p-3 rounded-lg">
-                            <div className="text-cyan-300 text-xs font-medium">Margin Req.</div>
+                          <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/20 border border-cyan-700/40 p-3 rounded-lg">
+                            <div className="text-cyan-400 text-xs font-medium">Margin Req.</div>
                             <div className="text-white font-semibold mt-1">{selectedCFD.margin_requirement}%</div>
                           </div>
-                          <div className="bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/30 p-3 rounded-lg">
-                            <div className="text-violet-300 text-xs font-medium">Pip Size</div>
+                          <div className="bg-gradient-to-br from-violet-900/40 to-purple-900/20 border border-violet-700/40 p-3 rounded-lg">
+                            <div className="text-violet-400 text-xs font-medium">Pip Size</div>
                             <div className="text-white font-semibold mt-1">{selectedCFD.pip_size}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-3 rounded-lg">
-                            <div className="text-emerald-300 text-xs font-medium">Pip Value</div>
+                          <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/20 border border-emerald-700/40 p-3 rounded-lg">
+                            <div className="text-emerald-400 text-xs font-medium">Pip Value</div>
                             <div className="text-white font-semibold mt-1">{formatCurrency(selectedCFD.pip_value)}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 p-3 rounded-lg">
-                            <div className="text-amber-300 text-xs font-medium">Min Size</div>
+                          <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/20 border border-amber-700/40 p-3 rounded-lg">
+                            <div className="text-amber-400 text-xs font-medium">Min Size</div>
                             <div className="text-white font-semibold mt-1">{selectedCFD.min_trade_size}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-rose-500/20 to-pink-500/10 border border-rose-500/30 p-3 rounded-lg">
-                            <div className="text-rose-300 text-xs font-medium">Max Size</div>
+                          <div className="bg-gradient-to-br from-rose-900/40 to-pink-900/20 border border-rose-700/40 p-3 rounded-lg">
+                            <div className="text-rose-400 text-xs font-medium">Max Size</div>
                             <div className="text-white font-semibold mt-1">{selectedCFD.max_trade_size}</div>
                           </div>
                         </div>
 
                         {/* Swap Rates */}
-                        <div className="border-t border-indigo-500/20 pt-4">
-                          <div className="text-xs text-indigo-300 mb-2 font-medium">Overnight Swap Rates</div>
+                        <div className="border-t border-indigo-700/30 pt-4">
+                          <div className="text-xs text-indigo-400 mb-2 font-medium">Overnight Swap Rates</div>
                           <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div className={`p-3 rounded-lg border ${selectedCFD.swap_long >= 0 ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30' : 'bg-gradient-to-br from-red-500/20 to-rose-500/10 border-red-500/30'}`}>
-                              <div className={`text-xs font-medium ${selectedCFD.swap_long >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>Long</div>
-                              <div className={`font-semibold mt-1 ${selectedCFD.swap_long >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <div className={`p-3 rounded-lg border ${selectedCFD.swap_long >= 0 ? 'bg-gradient-to-br from-emerald-900/40 to-green-900/20 border-emerald-700/40' : 'bg-gradient-to-br from-red-900/40 to-rose-900/20 border-red-700/40'}`}>
+                              <div className={`text-xs font-medium ${selectedCFD.swap_long >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>Long</div>
+                              <div className={`font-semibold mt-1 ${selectedCFD.swap_long >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                                 {selectedCFD.swap_long > 0 ? '+' : ''}{selectedCFD.swap_long}
                               </div>
                             </div>
-                            <div className={`p-3 rounded-lg border ${selectedCFD.swap_short >= 0 ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30' : 'bg-gradient-to-br from-red-500/20 to-rose-500/10 border-red-500/30'}`}>
-                              <div className={`text-xs font-medium ${selectedCFD.swap_short >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>Short</div>
-                              <div className={`font-semibold mt-1 ${selectedCFD.swap_short >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <div className={`p-3 rounded-lg border ${selectedCFD.swap_short >= 0 ? 'bg-gradient-to-br from-emerald-900/40 to-green-900/20 border-emerald-700/40' : 'bg-gradient-to-br from-red-900/40 to-rose-900/20 border-red-700/40'}`}>
+                              <div className={`text-xs font-medium ${selectedCFD.swap_short >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>Short</div>
+                              <div className={`font-semibold mt-1 ${selectedCFD.swap_short >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                                 {selectedCFD.swap_short > 0 ? '+' : ''}{selectedCFD.swap_short}
                               </div>
                             </div>
@@ -355,31 +355,31 @@ export default function CFDPage() {
                         </div>
 
                         {/* OHLC */}
-                        <div className="border-t border-indigo-500/20 pt-4">
-                          <div className="text-xs text-indigo-300 mb-3 font-medium">Today&apos;s Range</div>
+                        <div className="border-t border-indigo-700/30 pt-4">
+                          <div className="text-xs text-indigo-400 mb-3 font-medium">Today&apos;s Range</div>
                           <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div className="bg-gradient-to-br from-slate-500/20 to-slate-600/10 border border-slate-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-slate-800/60 to-slate-900/40 border border-slate-600/40 p-2 rounded-lg">
                               <span className="text-slate-400 text-xs">Open:</span>
                               <div className="text-white font-mono font-semibold">{formatPrice(selectedCFD.open, selectedCFD.pip_size)}</div>
                             </div>
-                            <div className="bg-gradient-to-br from-slate-500/20 to-slate-600/10 border border-slate-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-slate-800/60 to-slate-900/40 border border-slate-600/40 p-2 rounded-lg">
                               <span className="text-slate-400 text-xs">Prev:</span>
                               <div className="text-white font-mono font-semibold">{formatPrice(selectedCFD.previous_close, selectedCFD.pip_size)}</div>
                             </div>
-                            <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/20 border border-emerald-700/40 p-2 rounded-lg">
                               <span className="text-emerald-400 text-xs">High:</span>
-                              <div className="text-emerald-300 font-mono font-semibold">{formatPrice(selectedCFD.high, selectedCFD.pip_size)}</div>
+                              <div className="text-emerald-400 font-mono font-semibold">{formatPrice(selectedCFD.high, selectedCFD.pip_size)}</div>
                             </div>
-                            <div className="bg-gradient-to-br from-red-500/20 to-rose-500/10 border border-red-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-red-900/40 to-rose-900/20 border border-red-700/40 p-2 rounded-lg">
                               <span className="text-red-400 text-xs">Low:</span>
-                              <div className="text-red-300 font-mono font-semibold">{formatPrice(selectedCFD.low, selectedCFD.pip_size)}</div>
+                              <div className="text-red-400 font-mono font-semibold">{formatPrice(selectedCFD.low, selectedCFD.pip_size)}</div>
                             </div>
                           </div>
                         </div>
 
                         {/* Trading Hours */}
-                        <div className="border-t border-indigo-500/20 pt-4">
-                          <div className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-3 py-2">
+                        <div className="border-t border-indigo-700/30 pt-4">
+                          <div className="flex items-center gap-2 text-xs text-indigo-400 bg-indigo-900/30 border border-indigo-700/30 rounded-lg px-3 py-2">
                             <Clock className="w-3 h-3" />
                             {selectedCFD.trading_hours}
                           </div>

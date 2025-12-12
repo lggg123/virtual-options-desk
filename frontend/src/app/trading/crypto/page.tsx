@@ -313,41 +313,41 @@ export default function CryptoPage() {
 
                         {/* Stats Grid */}
                         <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 p-3 rounded-lg">
-                            <div className="text-orange-300 text-xs font-medium">Market Cap</div>
+                          <div className="bg-gradient-to-br from-orange-900/40 to-amber-900/20 border border-orange-700/40 p-3 rounded-lg">
+                            <div className="text-orange-400 text-xs font-medium">Market Cap</div>
                             <div className="text-white font-semibold mt-1">{formatLargeNumber(selectedCrypto.market_cap)}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-500/30 p-3 rounded-lg">
-                            <div className="text-cyan-300 text-xs font-medium">24h Volume</div>
+                          <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/20 border border-cyan-700/40 p-3 rounded-lg">
+                            <div className="text-cyan-400 text-xs font-medium">24h Volume</div>
                             <div className="text-white font-semibold mt-1">{formatLargeNumber(selectedCrypto.total_volume)}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/30 p-3 rounded-lg">
-                            <div className="text-violet-300 text-xs font-medium">Circulating</div>
+                          <div className="bg-gradient-to-br from-violet-900/40 to-purple-900/20 border border-violet-700/40 p-3 rounded-lg">
+                            <div className="text-violet-400 text-xs font-medium">Circulating</div>
                             <div className="text-white font-semibold mt-1">{formatSupply(selectedCrypto.circulating_supply)}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-3 rounded-lg">
-                            <div className="text-emerald-300 text-xs font-medium">Total Supply</div>
+                          <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/20 border border-emerald-700/40 p-3 rounded-lg">
+                            <div className="text-emerald-400 text-xs font-medium">Total Supply</div>
                             <div className="text-white font-semibold mt-1">{formatSupply(selectedCrypto.total_supply)}</div>
                           </div>
                         </div>
 
                         {/* 24h Range */}
-                        <div className="border-t border-orange-500/20 pt-4">
-                          <div className="text-xs text-orange-300 mb-3 font-medium">24h Range</div>
+                        <div className="border-t border-orange-700/30 pt-4">
+                          <div className="text-xs text-orange-400 mb-3 font-medium">24h Range</div>
                           <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-                            <div className="bg-gradient-to-br from-red-500/20 to-rose-500/10 border border-red-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-red-900/40 to-rose-900/20 border border-red-700/40 p-2 rounded-lg">
                               <span className="text-red-400 text-xs">Low:</span>
-                              <div className="text-red-300 font-mono font-semibold">{formatPrice(selectedCrypto.low_24h)}</div>
+                              <div className="text-red-400 font-mono font-semibold">{formatPrice(selectedCrypto.low_24h)}</div>
                             </div>
-                            <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/20 border border-emerald-700/40 p-2 rounded-lg">
                               <span className="text-emerald-400 text-xs">High:</span>
-                              <div className="text-emerald-300 font-mono font-semibold">{formatPrice(selectedCrypto.high_24h)}</div>
+                              <div className="text-emerald-400 font-mono font-semibold">{formatPrice(selectedCrypto.high_24h)}</div>
                             </div>
                           </div>
                           {/* Price bar */}
-                          <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
+                              className="h-full bg-gradient-to-r from-red-600 via-yellow-600 to-green-600"
                               style={{
                                 width: `${Math.min(100, Math.max(0,
                                   ((selectedCrypto.current_price - selectedCrypto.low_24h) /
@@ -359,9 +359,9 @@ export default function CryptoPage() {
                         </div>
 
                         {/* ATH */}
-                        <div className="border-t border-orange-500/20 pt-4">
-                          <div className="text-xs text-orange-300 mb-2 font-medium">All-Time High</div>
-                          <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/10 border border-amber-500/30 p-3 rounded-lg flex justify-between items-center">
+                        <div className="border-t border-orange-700/30 pt-4">
+                          <div className="text-xs text-orange-400 mb-2 font-medium">All-Time High</div>
+                          <div className="bg-gradient-to-br from-amber-900/40 to-yellow-900/20 border border-amber-700/40 p-3 rounded-lg flex justify-between items-center">
                             <span className="text-white font-mono font-semibold">{formatPrice(selectedCrypto.ath)}</span>
                             <span className={`text-sm font-semibold ${selectedCrypto.ath_change_percentage >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                               {selectedCrypto.ath_change_percentage.toFixed(1)}% from ATH
@@ -370,8 +370,8 @@ export default function CryptoPage() {
                         </div>
 
                         {/* Last Updated */}
-                        <div className="border-t border-orange-500/20 pt-4">
-                          <div className="flex items-center gap-2 text-xs text-orange-300 bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2">
+                        <div className="border-t border-orange-700/30 pt-4">
+                          <div className="flex items-center gap-2 text-xs text-orange-400 bg-orange-900/30 border border-orange-700/30 rounded-lg px-3 py-2">
                             <Clock className="w-3 h-3" />
                             Updated: {new Date(selectedCrypto.last_updated).toLocaleTimeString()}
                           </div>

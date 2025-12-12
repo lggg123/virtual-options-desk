@@ -276,70 +276,70 @@ export default function FuturesPage() {
 
                         {/* Contract Info Grid */}
                         <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 p-3 rounded-lg">
-                            <div className="text-indigo-300 text-xs font-medium">Exchange</div>
+                          <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/20 border border-indigo-700/40 p-3 rounded-lg">
+                            <div className="text-indigo-400 text-xs font-medium">Exchange</div>
                             <div className="text-white font-semibold mt-1">{selectedContract.exchange}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-500/30 p-3 rounded-lg">
-                            <div className="text-cyan-300 text-xs font-medium">Contract</div>
+                          <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/20 border border-cyan-700/40 p-3 rounded-lg">
+                            <div className="text-cyan-400 text-xs font-medium">Contract</div>
                             <div className="text-white font-semibold mt-1">{selectedContract.contract}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/30 p-3 rounded-lg">
-                            <div className="text-violet-300 text-xs font-medium">Contract Size</div>
+                          <div className="bg-gradient-to-br from-violet-900/40 to-purple-900/20 border border-violet-700/40 p-3 rounded-lg">
+                            <div className="text-violet-400 text-xs font-medium">Contract Size</div>
                             <div className="text-white font-semibold mt-1">{selectedContract.contract_size}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-3 rounded-lg">
-                            <div className="text-emerald-300 text-xs font-medium">Tick Size</div>
+                          <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/20 border border-emerald-700/40 p-3 rounded-lg">
+                            <div className="text-emerald-400 text-xs font-medium">Tick Size</div>
                             <div className="text-white font-semibold mt-1">{selectedContract.tick_size}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 p-3 rounded-lg">
-                            <div className="text-amber-300 text-xs font-medium">Tick Value</div>
+                          <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/20 border border-amber-700/40 p-3 rounded-lg">
+                            <div className="text-amber-400 text-xs font-medium">Tick Value</div>
                             <div className="text-white font-semibold mt-1">{formatCurrency(selectedContract.tick_value)}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-rose-500/20 to-pink-500/10 border border-rose-500/30 p-3 rounded-lg">
-                            <div className="text-rose-300 text-xs font-medium">Margin Req.</div>
+                          <div className="bg-gradient-to-br from-rose-900/40 to-pink-900/20 border border-rose-700/40 p-3 rounded-lg">
+                            <div className="text-rose-400 text-xs font-medium">Margin Req.</div>
                             <div className="text-white font-semibold mt-1">{selectedContract.margin_requirement}%</div>
                           </div>
-                          <div className="bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border border-teal-500/30 p-3 rounded-lg col-span-2">
-                            <div className="text-teal-300 text-xs font-medium">Notional Value</div>
+                          <div className="bg-gradient-to-br from-teal-900/40 to-cyan-900/20 border border-teal-700/40 p-3 rounded-lg col-span-2">
+                            <div className="text-teal-400 text-xs font-medium">Notional Value</div>
                             <div className="text-white font-semibold mt-1">{formatCurrency(selectedContract.notional_value)}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-500/30 p-3 rounded-lg">
-                            <div className="text-blue-300 text-xs font-medium">Open Interest</div>
+                          <div className="bg-gradient-to-br from-blue-900/40 to-indigo-900/20 border border-blue-700/40 p-3 rounded-lg">
+                            <div className="text-blue-400 text-xs font-medium">Open Interest</div>
                             <div className="text-white font-semibold mt-1">{selectedContract.open_interest.toLocaleString()}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-fuchsia-500/20 to-purple-500/10 border border-fuchsia-500/30 p-3 rounded-lg">
-                            <div className="text-fuchsia-300 text-xs font-medium">Expiration</div>
+                          <div className="bg-gradient-to-br from-fuchsia-900/40 to-purple-900/20 border border-fuchsia-700/40 p-3 rounded-lg">
+                            <div className="text-fuchsia-400 text-xs font-medium">Expiration</div>
                             <div className="text-white font-semibold mt-1">{selectedContract.expiration_date}</div>
                           </div>
                         </div>
 
                         {/* OHLC */}
-                        <div className="border-t border-indigo-500/20 pt-4">
-                          <div className="text-xs text-indigo-300 mb-3 font-medium">Today&apos;s Range</div>
+                        <div className="border-t border-indigo-700/30 pt-4">
+                          <div className="text-xs text-indigo-400 mb-3 font-medium">Today&apos;s Range</div>
                           <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div className="bg-gradient-to-br from-slate-500/20 to-slate-600/10 border border-slate-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-slate-800/60 to-slate-900/40 border border-slate-600/40 p-2 rounded-lg">
                               <span className="text-slate-400 text-xs">Open:</span>
                               <div className="text-white font-mono font-semibold">{formatPrice(selectedContract.open, selectedContract.symbol)}</div>
                             </div>
-                            <div className="bg-gradient-to-br from-slate-500/20 to-slate-600/10 border border-slate-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-slate-800/60 to-slate-900/40 border border-slate-600/40 p-2 rounded-lg">
                               <span className="text-slate-400 text-xs">Prev:</span>
                               <div className="text-white font-mono font-semibold">{formatPrice(selectedContract.previous_close, selectedContract.symbol)}</div>
                             </div>
-                            <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/20 border border-emerald-700/40 p-2 rounded-lg">
                               <span className="text-emerald-400 text-xs">High:</span>
-                              <div className="text-emerald-300 font-mono font-semibold">{formatPrice(selectedContract.high, selectedContract.symbol)}</div>
+                              <div className="text-emerald-400 font-mono font-semibold">{formatPrice(selectedContract.high, selectedContract.symbol)}</div>
                             </div>
-                            <div className="bg-gradient-to-br from-red-500/20 to-rose-500/10 border border-red-500/30 p-2 rounded-lg">
+                            <div className="bg-gradient-to-br from-red-900/40 to-rose-900/20 border border-red-700/40 p-2 rounded-lg">
                               <span className="text-red-400 text-xs">Low:</span>
-                              <div className="text-red-300 font-mono font-semibold">{formatPrice(selectedContract.low, selectedContract.symbol)}</div>
+                              <div className="text-red-400 font-mono font-semibold">{formatPrice(selectedContract.low, selectedContract.symbol)}</div>
                             </div>
                           </div>
                         </div>
 
                         {/* Trading Hours */}
-                        <div className="border-t border-indigo-500/20 pt-4">
-                          <div className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-3 py-2">
+                        <div className="border-t border-indigo-700/30 pt-4">
+                          <div className="flex items-center gap-2 text-xs text-indigo-400 bg-indigo-900/30 border border-indigo-700/30 rounded-lg px-3 py-2">
                             <Clock className="w-3 h-3" />
                             {selectedContract.trading_hours}
                           </div>
