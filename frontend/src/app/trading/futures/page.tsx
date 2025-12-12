@@ -52,7 +52,7 @@ export default function FuturesPage() {
   const [selectedContract, setSelectedContract] = useState<FuturesContract | null>(null);
 
   // Order state
-  const [orderQuantity, setOrderQuantity] = useState<number>(1);
+  const [orderQuantity, setOrderQuantity] = useState<string>('1');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
@@ -97,7 +97,8 @@ export default function FuturesPage() {
   };
 
   const handleSubmitOrder = async () => {
-    if (!selectedContract || orderQuantity <= 0) return;
+    const qty = parseInt(orderQuantity);
+    if (!selectedContract || isNaN(qty) || qty <= 0) return;
 
     setIsSubmitting(true);
     setOrderError(null);
@@ -111,7 +112,7 @@ export default function FuturesPage() {
           symbol: selectedContract.symbol,
           contract: selectedContract.contract,
           orderType,
-          quantity: orderQuantity,
+          quantity: qty,
           price: selectedContract.price,
           contractSize: selectedContract.contract_size,
           marginRequirement: selectedContract.margin_requirement,
@@ -125,8 +126,8 @@ export default function FuturesPage() {
         throw new Error(data.error || 'Failed to place order');
       }
 
-      setOrderSuccess(`${orderType.toUpperCase()} ${orderQuantity} ${selectedContract.symbol} @ ${formatPrice(selectedContract.price, selectedContract.symbol)} - ${data.message}`);
-      setOrderQuantity(1);
+      setOrderSuccess(`${orderType.toUpperCase()} ${qty} ${selectedContract.symbol} @ ${formatPrice(selectedContract.price, selectedContract.symbol)} - ${data.message}`);
+      setOrderQuantity('1');
     } catch (err) {
       setOrderError(err instanceof Error ? err.message : 'Failed to place order');
     } finally {
@@ -275,72 +276,70 @@ export default function FuturesPage() {
 
                         {/* Contract Info Grid */}
                         <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Exchange</div>
-                            <div className="text-white font-medium">{selectedContract.exchange}</div>
+                          <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 p-3 rounded-lg">
+                            <div className="text-indigo-300 text-xs font-medium">Exchange</div>
+                            <div className="text-white font-semibold mt-1">{selectedContract.exchange}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Contract</div>
-                            <div className="text-white font-medium">{selectedContract.contract}</div>
+                          <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-500/30 p-3 rounded-lg">
+                            <div className="text-cyan-300 text-xs font-medium">Contract</div>
+                            <div className="text-white font-semibold mt-1">{selectedContract.contract}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Contract Size</div>
-                            <div className="text-white font-medium">{selectedContract.contract_size}</div>
+                          <div className="bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/30 p-3 rounded-lg">
+                            <div className="text-violet-300 text-xs font-medium">Contract Size</div>
+                            <div className="text-white font-semibold mt-1">{selectedContract.contract_size}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Tick Size</div>
-                            <div className="text-white font-medium">{selectedContract.tick_size}</div>
+                          <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-3 rounded-lg">
+                            <div className="text-emerald-300 text-xs font-medium">Tick Size</div>
+                            <div className="text-white font-semibold mt-1">{selectedContract.tick_size}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Tick Value</div>
-                            <div className="text-white font-medium">{formatCurrency(selectedContract.tick_value)}</div>
+                          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 p-3 rounded-lg">
+                            <div className="text-amber-300 text-xs font-medium">Tick Value</div>
+                            <div className="text-white font-semibold mt-1">{formatCurrency(selectedContract.tick_value)}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Margin Req.</div>
-                            <div className="text-white font-medium">{selectedContract.margin_requirement}%</div>
+                          <div className="bg-gradient-to-br from-rose-500/20 to-pink-500/10 border border-rose-500/30 p-3 rounded-lg">
+                            <div className="text-rose-300 text-xs font-medium">Margin Req.</div>
+                            <div className="text-white font-semibold mt-1">{selectedContract.margin_requirement}%</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded col-span-2">
-                            <div className="text-gray-400 text-xs">Notional Value</div>
-                            <div className="text-white font-medium">{formatCurrency(selectedContract.notional_value)}</div>
+                          <div className="bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border border-teal-500/30 p-3 rounded-lg col-span-2">
+                            <div className="text-teal-300 text-xs font-medium">Notional Value</div>
+                            <div className="text-white font-semibold mt-1">{formatCurrency(selectedContract.notional_value)}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Open Interest</div>
-                            <div className="text-white font-medium">{selectedContract.open_interest.toLocaleString()}</div>
+                          <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-500/30 p-3 rounded-lg">
+                            <div className="text-blue-300 text-xs font-medium">Open Interest</div>
+                            <div className="text-white font-semibold mt-1">{selectedContract.open_interest.toLocaleString()}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Expiration</div>
-                            <div className="text-white font-medium">{selectedContract.expiration_date}</div>
+                          <div className="bg-gradient-to-br from-fuchsia-500/20 to-purple-500/10 border border-fuchsia-500/30 p-3 rounded-lg">
+                            <div className="text-fuchsia-300 text-xs font-medium">Expiration</div>
+                            <div className="text-white font-semibold mt-1">{selectedContract.expiration_date}</div>
                           </div>
                         </div>
 
                         {/* OHLC */}
-                        <div className="border-t border-slate-700 pt-4">
-                          <div className="text-xs text-gray-400 mb-2">Today&apos;s Range</div>
-                          <div className="flex justify-between text-sm">
-                            <div>
-                              <span className="text-gray-400">Open:</span>
-                              <span className="text-white ml-2 font-mono">{formatPrice(selectedContract.open, selectedContract.symbol)}</span>
+                        <div className="border-t border-indigo-500/20 pt-4">
+                          <div className="text-xs text-indigo-300 mb-3 font-medium">Today&apos;s Range</div>
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="bg-gradient-to-br from-slate-500/20 to-slate-600/10 border border-slate-500/30 p-2 rounded-lg">
+                              <span className="text-slate-400 text-xs">Open:</span>
+                              <div className="text-white font-mono font-semibold">{formatPrice(selectedContract.open, selectedContract.symbol)}</div>
                             </div>
-                            <div>
-                              <span className="text-gray-400">Prev:</span>
-                              <span className="text-white ml-2 font-mono">{formatPrice(selectedContract.previous_close, selectedContract.symbol)}</span>
+                            <div className="bg-gradient-to-br from-slate-500/20 to-slate-600/10 border border-slate-500/30 p-2 rounded-lg">
+                              <span className="text-slate-400 text-xs">Prev:</span>
+                              <div className="text-white font-mono font-semibold">{formatPrice(selectedContract.previous_close, selectedContract.symbol)}</div>
                             </div>
-                          </div>
-                          <div className="flex justify-between text-sm mt-2">
-                            <div>
-                              <span className="text-green-400">High:</span>
-                              <span className="text-white ml-2 font-mono">{formatPrice(selectedContract.high, selectedContract.symbol)}</span>
+                            <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-2 rounded-lg">
+                              <span className="text-emerald-400 text-xs">High:</span>
+                              <div className="text-emerald-300 font-mono font-semibold">{formatPrice(selectedContract.high, selectedContract.symbol)}</div>
                             </div>
-                            <div>
-                              <span className="text-red-400">Low:</span>
-                              <span className="text-white ml-2 font-mono">{formatPrice(selectedContract.low, selectedContract.symbol)}</span>
+                            <div className="bg-gradient-to-br from-red-500/20 to-rose-500/10 border border-red-500/30 p-2 rounded-lg">
+                              <span className="text-red-400 text-xs">Low:</span>
+                              <div className="text-red-300 font-mono font-semibold">{formatPrice(selectedContract.low, selectedContract.symbol)}</div>
                             </div>
                           </div>
                         </div>
 
                         {/* Trading Hours */}
-                        <div className="border-t border-slate-700 pt-4">
-                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <div className="border-t border-indigo-500/20 pt-4">
+                          <div className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-3 py-2">
                             <Clock className="w-3 h-3" />
                             {selectedContract.trading_hours}
                           </div>
@@ -398,11 +397,23 @@ export default function FuturesPage() {
                             <div>
                               <Label className="text-xs text-slate-300 font-medium">Number of Contracts</Label>
                               <Input
-                                type="number"
-                                min={1}
+                                type="text"
+                                inputMode="numeric"
                                 value={orderQuantity}
-                                onChange={(e) => setOrderQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="mt-1 bg-slate-900/50 border-slate-600 focus:border-indigo-500 text-white font-mono"
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === '' || /^\d*$/.test(val)) {
+                                    setOrderQuantity(val);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  const num = parseInt(orderQuantity);
+                                  if (isNaN(num) || num < 1) {
+                                    setOrderQuantity('1');
+                                  }
+                                }}
+                                className="mt-1 bg-slate-900/50 border-slate-600 focus:border-indigo-500 text-white font-mono text-lg"
+                                placeholder="1"
                               />
                             </div>
 
@@ -410,11 +421,11 @@ export default function FuturesPage() {
                             <div className="bg-slate-900/60 border border-slate-700/50 p-4 rounded-lg text-sm space-y-2">
                               <div className="flex justify-between items-center">
                                 <span className="text-slate-400">Notional Value</span>
-                                <span className="text-white font-mono">{formatCurrency(selectedContract.notional_value * orderQuantity)}</span>
+                                <span className="text-white font-mono">{formatCurrency(selectedContract.notional_value * (parseInt(orderQuantity) || 0))}</span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-slate-400">Margin Required</span>
-                                <span className="text-cyan-400 font-mono font-semibold">{formatCurrency(selectedContract.notional_value * orderQuantity * (selectedContract.margin_requirement / 100))}</span>
+                                <span className="text-cyan-400 font-mono font-semibold">{formatCurrency(selectedContract.notional_value * (parseInt(orderQuantity) || 0) * (selectedContract.margin_requirement / 100))}</span>
                               </div>
                               <div className="flex justify-between items-center pt-2 border-t border-slate-700">
                                 <span className="text-slate-400">Tick Value</span>
@@ -439,7 +450,7 @@ export default function FuturesPage() {
                                 </>
                               ) : (
                                 <>
-                                  {orderType === 'buy' ? '🚀 Buy' : '📉 Sell'} {orderQuantity} {selectedContract.symbol}
+                                  {orderType === 'buy' ? '🚀 Buy' : '📉 Sell'} {parseInt(orderQuantity) || 0} {selectedContract.symbol}
                                 </>
                               )}
                             </Button>

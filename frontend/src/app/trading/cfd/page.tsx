@@ -55,7 +55,7 @@ export default function CFDPage() {
   const [selectedCFD, setSelectedCFD] = useState<CFDInstrument | null>(null);
 
   // Order state
-  const [orderQuantity, setOrderQuantity] = useState<number>(1);
+  const [orderQuantity, setOrderQuantity] = useState<string>('1');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
   const [positionType, setPositionType] = useState<'long' | 'short'>('long');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,7 +100,8 @@ export default function CFDPage() {
   };
 
   const handleSubmitOrder = async () => {
-    if (!selectedCFD || orderQuantity <= 0) return;
+    const qty = parseFloat(orderQuantity);
+    if (!selectedCFD || isNaN(qty) || qty <= 0) return;
 
     setIsSubmitting(true);
     setOrderError(null);
@@ -115,7 +116,7 @@ export default function CFDPage() {
           name: selectedCFD.name,
           orderType,
           positionType,
-          quantity: orderQuantity,
+          quantity: qty,
           price: orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid,
           leverage: selectedCFD.leverage,
           pipValue: selectedCFD.pip_value,
@@ -129,8 +130,8 @@ export default function CFDPage() {
       }
 
       const price = orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid;
-      setOrderSuccess(`${orderType.toUpperCase()} ${orderQuantity} ${selectedCFD.symbol} @ ${formatPrice(price, selectedCFD.pip_size)} - ${data.message}`);
-      setOrderQuantity(1);
+      setOrderSuccess(`${orderType.toUpperCase()} ${qty} ${selectedCFD.symbol} @ ${formatPrice(price, selectedCFD.pip_size)} - ${data.message}`);
+      setOrderQuantity('1');
     } catch (err) {
       setOrderError(err instanceof Error ? err.message : 'Failed to place order');
     } finally {
@@ -305,48 +306,48 @@ export default function CFDPage() {
 
                         {/* Trading Specs */}
                         <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Leverage</div>
-                            <div className="text-white font-medium flex items-center gap-1">
-                              <Scale className="w-3 h-3" />
+                          <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 p-3 rounded-lg">
+                            <div className="text-indigo-300 text-xs font-medium">Leverage</div>
+                            <div className="text-white font-semibold flex items-center gap-1 mt-1">
+                              <Scale className="w-3 h-3 text-indigo-400" />
                               {selectedCFD.leverage}:1
                             </div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Margin Req.</div>
-                            <div className="text-white font-medium">{selectedCFD.margin_requirement}%</div>
+                          <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-500/30 p-3 rounded-lg">
+                            <div className="text-cyan-300 text-xs font-medium">Margin Req.</div>
+                            <div className="text-white font-semibold mt-1">{selectedCFD.margin_requirement}%</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Pip Size</div>
-                            <div className="text-white font-medium">{selectedCFD.pip_size}</div>
+                          <div className="bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/30 p-3 rounded-lg">
+                            <div className="text-violet-300 text-xs font-medium">Pip Size</div>
+                            <div className="text-white font-semibold mt-1">{selectedCFD.pip_size}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Pip Value</div>
-                            <div className="text-white font-medium">{formatCurrency(selectedCFD.pip_value)}</div>
+                          <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-3 rounded-lg">
+                            <div className="text-emerald-300 text-xs font-medium">Pip Value</div>
+                            <div className="text-white font-semibold mt-1">{formatCurrency(selectedCFD.pip_value)}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Min Size</div>
-                            <div className="text-white font-medium">{selectedCFD.min_trade_size}</div>
+                          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 p-3 rounded-lg">
+                            <div className="text-amber-300 text-xs font-medium">Min Size</div>
+                            <div className="text-white font-semibold mt-1">{selectedCFD.min_trade_size}</div>
                           </div>
-                          <div className="bg-slate-800/30 p-3 rounded">
-                            <div className="text-gray-400 text-xs">Max Size</div>
-                            <div className="text-white font-medium">{selectedCFD.max_trade_size}</div>
+                          <div className="bg-gradient-to-br from-rose-500/20 to-pink-500/10 border border-rose-500/30 p-3 rounded-lg">
+                            <div className="text-rose-300 text-xs font-medium">Max Size</div>
+                            <div className="text-white font-semibold mt-1">{selectedCFD.max_trade_size}</div>
                           </div>
                         </div>
 
                         {/* Swap Rates */}
-                        <div className="border-t border-slate-700 pt-4">
-                          <div className="text-xs text-gray-400 mb-2">Overnight Swap Rates</div>
+                        <div className="border-t border-indigo-500/20 pt-4">
+                          <div className="text-xs text-indigo-300 mb-2 font-medium">Overnight Swap Rates</div>
                           <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div className="bg-slate-800/30 p-3 rounded">
-                              <div className="text-gray-400 text-xs">Long</div>
-                              <div className={selectedCFD.swap_long >= 0 ? 'text-green-400' : 'text-red-400'}>
+                            <div className={`p-3 rounded-lg border ${selectedCFD.swap_long >= 0 ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30' : 'bg-gradient-to-br from-red-500/20 to-rose-500/10 border-red-500/30'}`}>
+                              <div className={`text-xs font-medium ${selectedCFD.swap_long >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>Long</div>
+                              <div className={`font-semibold mt-1 ${selectedCFD.swap_long >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                 {selectedCFD.swap_long > 0 ? '+' : ''}{selectedCFD.swap_long}
                               </div>
                             </div>
-                            <div className="bg-slate-800/30 p-3 rounded">
-                              <div className="text-gray-400 text-xs">Short</div>
-                              <div className={selectedCFD.swap_short >= 0 ? 'text-green-400' : 'text-red-400'}>
+                            <div className={`p-3 rounded-lg border ${selectedCFD.swap_short >= 0 ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30' : 'bg-gradient-to-br from-red-500/20 to-rose-500/10 border-red-500/30'}`}>
+                              <div className={`text-xs font-medium ${selectedCFD.swap_short >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>Short</div>
+                              <div className={`font-semibold mt-1 ${selectedCFD.swap_short >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                 {selectedCFD.swap_short > 0 ? '+' : ''}{selectedCFD.swap_short}
                               </div>
                             </div>
@@ -354,33 +355,31 @@ export default function CFDPage() {
                         </div>
 
                         {/* OHLC */}
-                        <div className="border-t border-slate-700 pt-4">
-                          <div className="text-xs text-gray-400 mb-2">Today&apos;s Range</div>
-                          <div className="flex justify-between text-sm">
-                            <div>
-                              <span className="text-gray-400">Open:</span>
-                              <span className="text-white ml-2 font-mono">{formatPrice(selectedCFD.open, selectedCFD.pip_size)}</span>
+                        <div className="border-t border-indigo-500/20 pt-4">
+                          <div className="text-xs text-indigo-300 mb-3 font-medium">Today&apos;s Range</div>
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="bg-gradient-to-br from-slate-500/20 to-slate-600/10 border border-slate-500/30 p-2 rounded-lg">
+                              <span className="text-slate-400 text-xs">Open:</span>
+                              <div className="text-white font-mono font-semibold">{formatPrice(selectedCFD.open, selectedCFD.pip_size)}</div>
                             </div>
-                            <div>
-                              <span className="text-gray-400">Prev:</span>
-                              <span className="text-white ml-2 font-mono">{formatPrice(selectedCFD.previous_close, selectedCFD.pip_size)}</span>
+                            <div className="bg-gradient-to-br from-slate-500/20 to-slate-600/10 border border-slate-500/30 p-2 rounded-lg">
+                              <span className="text-slate-400 text-xs">Prev:</span>
+                              <div className="text-white font-mono font-semibold">{formatPrice(selectedCFD.previous_close, selectedCFD.pip_size)}</div>
                             </div>
-                          </div>
-                          <div className="flex justify-between text-sm mt-2">
-                            <div>
-                              <span className="text-green-400">High:</span>
-                              <span className="text-white ml-2 font-mono">{formatPrice(selectedCFD.high, selectedCFD.pip_size)}</span>
+                            <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-500/30 p-2 rounded-lg">
+                              <span className="text-emerald-400 text-xs">High:</span>
+                              <div className="text-emerald-300 font-mono font-semibold">{formatPrice(selectedCFD.high, selectedCFD.pip_size)}</div>
                             </div>
-                            <div>
-                              <span className="text-red-400">Low:</span>
-                              <span className="text-white ml-2 font-mono">{formatPrice(selectedCFD.low, selectedCFD.pip_size)}</span>
+                            <div className="bg-gradient-to-br from-red-500/20 to-rose-500/10 border border-red-500/30 p-2 rounded-lg">
+                              <span className="text-red-400 text-xs">Low:</span>
+                              <div className="text-red-300 font-mono font-semibold">{formatPrice(selectedCFD.low, selectedCFD.pip_size)}</div>
                             </div>
                           </div>
                         </div>
 
                         {/* Trading Hours */}
-                        <div className="border-t border-slate-700 pt-4">
-                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <div className="border-t border-indigo-500/20 pt-4">
+                          <div className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-3 py-2">
                             <Clock className="w-3 h-3" />
                             {selectedCFD.trading_hours}
                           </div>
@@ -438,13 +437,25 @@ export default function CFDPage() {
                             <div>
                               <Label className="text-xs text-slate-300 font-medium">Lot Size</Label>
                               <Input
-                                type="number"
-                                min={selectedCFD.min_trade_size}
-                                max={selectedCFD.max_trade_size}
-                                step={0.01}
+                                type="text"
+                                inputMode="decimal"
                                 value={orderQuantity}
-                                onChange={(e) => setOrderQuantity(Math.max(selectedCFD.min_trade_size, parseFloat(e.target.value) || selectedCFD.min_trade_size))}
-                                className="mt-1 bg-slate-900/50 border-slate-600 focus:border-indigo-500 text-white font-mono"
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                                    setOrderQuantity(val);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  const num = parseFloat(orderQuantity);
+                                  if (isNaN(num) || num < selectedCFD.min_trade_size) {
+                                    setOrderQuantity(selectedCFD.min_trade_size.toString());
+                                  } else if (num > selectedCFD.max_trade_size) {
+                                    setOrderQuantity(selectedCFD.max_trade_size.toString());
+                                  }
+                                }}
+                                className="mt-1 bg-slate-900/50 border-slate-600 focus:border-indigo-500 text-white font-mono text-lg"
+                                placeholder={selectedCFD.min_trade_size.toString()}
                               />
                               <div className="text-xs text-slate-400 mt-1">
                                 Min: {selectedCFD.min_trade_size} | Max: {selectedCFD.max_trade_size}
@@ -461,11 +472,11 @@ export default function CFDPage() {
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-slate-400">Position Value</span>
-                                <span className="text-white font-mono">{formatCurrency((orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid) * orderQuantity * 100000)}</span>
+                                <span className="text-white font-mono">{formatCurrency((orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid) * (parseFloat(orderQuantity) || 0) * 100000)}</span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-slate-400">Margin Required</span>
-                                <span className="text-cyan-400 font-mono font-semibold">{formatCurrency((orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid) * orderQuantity * 100000 / selectedCFD.leverage)}</span>
+                                <span className="text-cyan-400 font-mono font-semibold">{formatCurrency((orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid) * (parseFloat(orderQuantity) || 0) * 100000 / selectedCFD.leverage)}</span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-slate-400">Leverage</span>
@@ -473,7 +484,7 @@ export default function CFDPage() {
                               </div>
                               <div className="flex justify-between items-center pt-2 border-t border-slate-700">
                                 <span className="text-slate-400">Spread Cost</span>
-                                <span className="text-amber-400 font-mono">{formatCurrency(selectedCFD.spread_cost * orderQuantity)}</span>
+                                <span className="text-amber-400 font-mono">{formatCurrency(selectedCFD.spread_cost * (parseFloat(orderQuantity) || 0))}</span>
                               </div>
                             </div>
 
@@ -494,7 +505,7 @@ export default function CFDPage() {
                                 </>
                               ) : (
                                 <>
-                                  {orderType === 'buy' ? '🚀 Buy' : '📉 Sell'} {orderQuantity} {selectedCFD.symbol}
+                                  {orderType === 'buy' ? '🚀 Buy' : '📉 Sell'} {parseFloat(orderQuantity) || 0} {selectedCFD.symbol}
                                 </>
                               )}
                             </Button>
