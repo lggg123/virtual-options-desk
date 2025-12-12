@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import type { Database } from '@/lib/types';
+import BlogViewTracker from './BlogViewTracker';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,13 +29,6 @@ async function getBlogPost(slug: string) {
     .single();
 
   if (error || !data) return null;
-
-  // Increment view count
-  try {
-    await supabase.rpc('increment_blog_view_count', { post_slug: slug });
-  } catch (err) {
-    console.error('Error incrementing view count:', err);
-  }
 
   return data;
 }
@@ -83,7 +77,8 @@ export default async function BlogPostPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-background">
       <PublicBlogHeader />
-      
+      <BlogViewTracker slug={slug} />
+
       <article className="container mx-auto px-4 py-12 max-w-4xl">
         {/* Back Button */}
         <Link href="/blog">

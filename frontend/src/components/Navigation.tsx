@@ -15,7 +15,10 @@ import {
   X,
   Newspaper,
   BookOpen,
-  LucideIcon
+  LucideIcon,
+  BarChart3,
+  DollarSign,
+  Bitcoin
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -31,6 +34,9 @@ const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'AI Stock Picks', href: '/dashboard/ai-picks', icon: TrendingUp },
   { name: 'Virtual Options', href: '/trading', icon: CandlestickChart },
+  { name: 'Futures', href: '/trading/futures', icon: BarChart3 },
+  { name: 'CFDs', href: '/trading/cfd', icon: DollarSign },
+  { name: 'Crypto', href: '/trading/crypto', icon: Bitcoin },
   { name: 'Learn Options', href: '/education/fundamentals', icon: BookOpen },
   { name: 'Pattern Detection', href: 'https://svelte-chart-app.vercel.app/', icon: LineChart, external: true },
   { name: 'AI Insights Blog', href: '/blog', icon: Newspaper },
