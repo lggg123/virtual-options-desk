@@ -347,37 +347,47 @@ export default function FuturesPage() {
                         </div>
 
                         {/* Order Entry Form */}
-                        <div className="border-t border-slate-700 pt-4 mt-4">
-                          <div className="flex items-center gap-2 mb-3">
-                            <ShoppingCart className="w-4 h-4 text-indigo-400" />
-                            <span className="text-sm font-medium text-white">Place Order</span>
+                        <div className="border-t border-indigo-500/30 pt-4 mt-4 bg-gradient-to-b from-indigo-500/5 to-transparent -mx-6 px-6 pb-2">
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 bg-indigo-500/20 rounded-lg">
+                              <ShoppingCart className="w-4 h-4 text-indigo-400" />
+                            </div>
+                            <span className="text-sm font-semibold text-white">Place Order</span>
+                            <Badge variant="outline" className="ml-auto text-xs border-indigo-500/50 text-indigo-300">
+                              Virtual Trading
+                            </Badge>
                           </div>
 
                           {orderSuccess && (
-                            <div className="mb-3 p-2 bg-green-500/10 border border-green-500/30 rounded text-green-400 text-xs">
+                            <div className="mb-3 p-3 bg-emerald-500/20 border border-emerald-500/50 rounded-lg text-emerald-300 text-sm flex items-center gap-2">
+                              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                               {orderSuccess}
                             </div>
                           )}
 
                           {orderError && (
-                            <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs">
+                            <div className="mb-3 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
                               {orderError}
                             </div>
                           )}
 
-                          <div className="space-y-3">
+                          <div className="space-y-4">
                             {/* Buy/Sell Toggle */}
                             <div className="grid grid-cols-2 gap-2">
                               <Button
                                 variant={orderType === 'buy' ? 'default' : 'outline'}
-                                className={orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                className={orderType === 'buy'
+                                  ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-semibold shadow-lg shadow-emerald-500/25'
+                                  : 'border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10'}
                                 onClick={() => setOrderType('buy')}
                               >
                                 Buy Long
                               </Button>
                               <Button
                                 variant={orderType === 'sell' ? 'default' : 'outline'}
-                                className={orderType === 'sell' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                className={orderType === 'sell'
+                                  ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold shadow-lg shadow-red-500/25'
+                                  : 'border-red-500/50 text-red-400 hover:bg-red-500/10'}
                                 onClick={() => setOrderType('sell')}
                               >
                                 Sell Short
@@ -386,46 +396,50 @@ export default function FuturesPage() {
 
                             {/* Quantity */}
                             <div>
-                              <Label className="text-xs text-gray-400">Contracts</Label>
+                              <Label className="text-xs text-slate-300 font-medium">Number of Contracts</Label>
                               <Input
                                 type="number"
                                 min={1}
                                 value={orderQuantity}
                                 onChange={(e) => setOrderQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="mt-1"
+                                className="mt-1 bg-slate-900/50 border-slate-600 focus:border-indigo-500 text-white font-mono"
                               />
                             </div>
 
                             {/* Order Summary */}
-                            <div className="bg-slate-800/50 p-3 rounded text-xs space-y-1">
-                              <div className="flex justify-between">
-                                <span className="text-gray-400">Notional Value:</span>
-                                <span className="text-white">{formatCurrency(selectedContract.notional_value * orderQuantity)}</span>
+                            <div className="bg-slate-900/60 border border-slate-700/50 p-4 rounded-lg text-sm space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400">Notional Value</span>
+                                <span className="text-white font-mono">{formatCurrency(selectedContract.notional_value * orderQuantity)}</span>
                               </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-400">Margin Required:</span>
-                                <span className="text-white">{formatCurrency(selectedContract.notional_value * orderQuantity * (selectedContract.margin_requirement / 100))}</span>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400">Margin Required</span>
+                                <span className="text-cyan-400 font-mono font-semibold">{formatCurrency(selectedContract.notional_value * orderQuantity * (selectedContract.margin_requirement / 100))}</span>
                               </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-400">Tick Value:</span>
-                                <span className="text-white">{formatCurrency(selectedContract.tick_value)} per tick</span>
+                              <div className="flex justify-between items-center pt-2 border-t border-slate-700">
+                                <span className="text-slate-400">Tick Value</span>
+                                <span className="text-amber-400 font-mono">{formatCurrency(selectedContract.tick_value)} per tick</span>
                               </div>
                             </div>
 
                             {/* Submit Button */}
                             <Button
-                              className={`w-full ${orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                              className={`w-full h-12 text-base font-semibold transition-all ${
+                                orderType === 'buy'
+                                  ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 shadow-lg shadow-emerald-500/30'
+                                  : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 shadow-lg shadow-red-500/30'
+                              }`}
                               onClick={handleSubmitOrder}
                               disabled={isSubmitting}
                             >
                               {isSubmitting ? (
                                 <>
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                   Processing...
                                 </>
                               ) : (
                                 <>
-                                  {orderType === 'buy' ? 'Buy' : 'Sell'} {orderQuantity} {selectedContract.symbol}
+                                  {orderType === 'buy' ? '🚀 Buy' : '📉 Sell'} {orderQuantity} {selectedContract.symbol}
                                 </>
                               )}
                             </Button>

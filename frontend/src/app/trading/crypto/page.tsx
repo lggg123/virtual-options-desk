@@ -378,37 +378,47 @@ export default function CryptoPage() {
                         </div>
 
                         {/* Order Entry Form */}
-                        <div className="border-t border-slate-700 pt-4 mt-4">
-                          <div className="flex items-center gap-2 mb-3">
-                            <ShoppingCart className="w-4 h-4 text-indigo-400" />
-                            <span className="text-sm font-medium text-white">Place Order</span>
+                        <div className="border-t border-orange-500/30 pt-4 mt-4 bg-gradient-to-b from-orange-500/5 to-transparent -mx-6 px-6 pb-2">
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 bg-orange-500/20 rounded-lg">
+                              <ShoppingCart className="w-4 h-4 text-orange-400" />
+                            </div>
+                            <span className="text-sm font-semibold text-white">Place Order</span>
+                            <Badge variant="outline" className="ml-auto text-xs border-orange-500/50 text-orange-300">
+                              Virtual Trading
+                            </Badge>
                           </div>
 
                           {orderSuccess && (
-                            <div className="mb-3 p-2 bg-green-500/10 border border-green-500/30 rounded text-green-400 text-xs">
+                            <div className="mb-3 p-3 bg-emerald-500/20 border border-emerald-500/50 rounded-lg text-emerald-300 text-sm flex items-center gap-2">
+                              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                               {orderSuccess}
                             </div>
                           )}
 
                           {orderError && (
-                            <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs">
+                            <div className="mb-3 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
                               {orderError}
                             </div>
                           )}
 
-                          <div className="space-y-3">
+                          <div className="space-y-4">
                             {/* Buy/Sell Toggle */}
                             <div className="grid grid-cols-2 gap-2">
                               <Button
                                 variant={orderType === 'buy' ? 'default' : 'outline'}
-                                className={orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                className={orderType === 'buy'
+                                  ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-semibold shadow-lg shadow-emerald-500/25'
+                                  : 'border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10'}
                                 onClick={() => setOrderType('buy')}
                               >
                                 Buy
                               </Button>
                               <Button
                                 variant={orderType === 'sell' ? 'default' : 'outline'}
-                                className={orderType === 'sell' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                className={orderType === 'sell'
+                                  ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold shadow-lg shadow-red-500/25'
+                                  : 'border-red-500/50 text-red-400 hover:bg-red-500/10'}
                                 onClick={() => setOrderType('sell')}
                               >
                                 Sell
@@ -417,14 +427,14 @@ export default function CryptoPage() {
 
                             {/* Quantity */}
                             <div>
-                              <Label className="text-xs text-gray-400">Amount ({selectedCrypto.symbol.toUpperCase()})</Label>
+                              <Label className="text-xs text-slate-300 font-medium">Amount ({selectedCrypto.symbol.toUpperCase()})</Label>
                               <Input
                                 type="number"
                                 min={0.00001}
                                 step={0.001}
                                 value={orderQuantity}
                                 onChange={(e) => setOrderQuantity(e.target.value)}
-                                className="mt-1"
+                                className="mt-1 bg-slate-900/50 border-slate-600 focus:border-orange-500 text-white font-mono"
                               />
                               {/* Quick amount buttons */}
                               <div className="flex gap-1 mt-2">
@@ -432,7 +442,7 @@ export default function CryptoPage() {
                                   <button
                                     key={amt}
                                     onClick={() => setOrderQuantity(amt.toString())}
-                                    className="flex-1 text-xs py-1 px-2 bg-slate-700 hover:bg-slate-600 rounded transition-colors"
+                                    className="flex-1 text-xs py-1.5 px-2 bg-slate-800 hover:bg-orange-500/20 hover:text-orange-300 border border-slate-700 hover:border-orange-500/50 rounded-md transition-all font-mono"
                                   >
                                     {amt}
                                   </button>
@@ -441,22 +451,22 @@ export default function CryptoPage() {
                             </div>
 
                             {/* Order Summary */}
-                            <div className="bg-slate-800/50 p-3 rounded text-xs space-y-1">
-                              <div className="flex justify-between">
-                                <span className="text-gray-400">Price:</span>
-                                <span className="text-white">{formatPrice(selectedCrypto.current_price)}</span>
+                            <div className="bg-slate-900/60 border border-slate-700/50 p-4 rounded-lg text-sm space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400">Price</span>
+                                <span className="text-white font-mono">{formatPrice(selectedCrypto.current_price)}</span>
                               </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-400">Total Value:</span>
-                                <span className="text-white">{formatPrice(parseFloat(orderQuantity || '0') * selectedCrypto.current_price)}</span>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400">Subtotal</span>
+                                <span className="text-white font-mono">{formatPrice(parseFloat(orderQuantity || '0') * selectedCrypto.current_price)}</span>
                               </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-400">Fee (0.1%):</span>
-                                <span className="text-yellow-400">{formatPrice(parseFloat(orderQuantity || '0') * selectedCrypto.current_price * 0.001)}</span>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400">Fee (0.1%)</span>
+                                <span className="text-amber-400 font-mono">{formatPrice(parseFloat(orderQuantity || '0') * selectedCrypto.current_price * 0.001)}</span>
                               </div>
-                              <div className="flex justify-between border-t border-slate-600 pt-1 mt-1">
-                                <span className="text-gray-400 font-medium">Total:</span>
-                                <span className="text-white font-medium">
+                              <div className="flex justify-between items-center pt-2 border-t border-slate-700">
+                                <span className="text-slate-300 font-semibold">Total</span>
+                                <span className="text-cyan-400 font-mono font-semibold">
                                   {formatPrice(parseFloat(orderQuantity || '0') * selectedCrypto.current_price * (orderType === 'buy' ? 1.001 : 0.999))}
                                 </span>
                               </div>
@@ -464,18 +474,22 @@ export default function CryptoPage() {
 
                             {/* Submit Button */}
                             <Button
-                              className={`w-full ${orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                              className={`w-full h-12 text-base font-semibold transition-all ${
+                                orderType === 'buy'
+                                  ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 shadow-lg shadow-emerald-500/30'
+                                  : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 shadow-lg shadow-red-500/30'
+                              }`}
                               onClick={handleSubmitOrder}
                               disabled={isSubmitting || parseFloat(orderQuantity || '0') <= 0}
                             >
                               {isSubmitting ? (
                                 <>
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                   Processing...
                                 </>
                               ) : (
                                 <>
-                                  {orderType === 'buy' ? 'Buy' : 'Sell'} {orderQuantity} {selectedCrypto.symbol.toUpperCase()}
+                                  {orderType === 'buy' ? '🚀 Buy' : '📉 Sell'} {orderQuantity} {selectedCrypto.symbol.toUpperCase()}
                                 </>
                               )}
                             </Button>
