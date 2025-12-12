@@ -206,13 +206,13 @@ export default function CFDPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-slate-700">
-                            <th className="text-left py-3 px-2 text-slate-300 font-medium">Instrument</th>
-                            <th className="text-right py-3 px-2 text-slate-300 font-medium">Bid</th>
-                            <th className="text-right py-3 px-2 text-slate-300 font-medium">Ask</th>
-                            <th className="text-right py-3 px-2 text-slate-300 font-medium">Change</th>
-                            <th className="text-right py-3 px-2 text-slate-300 font-medium hidden sm:table-cell">Spread</th>
-                            <th className="text-right py-3 px-2 text-slate-300 font-medium hidden md:table-cell">Leverage</th>
+                          <tr className="border-b border-indigo-500/30 bg-indigo-950/30">
+                            <th className="text-left py-3 px-2 text-indigo-300 font-medium">Instrument</th>
+                            <th className="text-right py-3 px-2 text-red-300 font-medium">Bid</th>
+                            <th className="text-right py-3 px-2 text-green-300 font-medium">Ask</th>
+                            <th className="text-right py-3 px-2 text-amber-300 font-medium">Change</th>
+                            <th className="text-right py-3 px-2 text-cyan-300 font-medium hidden sm:table-cell">Spread</th>
+                            <th className="text-right py-3 px-2 text-purple-300 font-medium hidden md:table-cell">Leverage</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -226,7 +226,7 @@ export default function CFDPage() {
                             >
                               <td className="py-3 px-2">
                                 <div className="font-medium text-white">{cfd.symbol.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2')}</div>
-                                <div className="text-xs text-slate-400">{cfd.name}</div>
+                                <div className="text-xs text-indigo-400">{cfd.name}</div>
                               </td>
                               <td className="text-right py-3 px-2 font-mono text-red-400">
                                 {formatPrice(cfd.bid, cfd.pip_size)}
@@ -242,7 +242,7 @@ export default function CFDPage() {
                                   <span className="font-mono">{cfd.change_percentage.toFixed(2)}%</span>
                                 </div>
                               </td>
-                              <td className="text-right py-3 px-2 text-slate-300 hidden sm:table-cell">
+                              <td className="text-right py-3 px-2 text-cyan-400 hidden sm:table-cell">
                                 {cfd.spread} pips
                               </td>
                               <td className="text-right py-3 px-2 text-indigo-400 hidden md:table-cell">
