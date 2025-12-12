@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import DashboardHeader from '@/components/DashboardHeader';
-import { ArrowUp, ArrowDown, Clock, TrendingUp, AlertCircle } from 'lucide-react';
+import { ArrowUp, ArrowDown, Clock, TrendingUp, AlertCircle, ShoppingCart, Loader2 } from 'lucide-react';
 
 interface FuturesContract {
   symbol: string;
@@ -48,6 +51,13 @@ export default function FuturesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedContract, setSelectedContract] = useState<FuturesContract | null>(null);
 
+  // Order state
+  const [orderQuantity, setOrderQuantity] = useState<number>(1);
+  const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
   useEffect(() => {
     fetchFutures();
     const interval = setInterval(fetchFutures, 60000); // Refresh every minute
@@ -84,6 +94,44 @@ export default function FuturesPage() {
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!selectedContract || orderQuantity <= 0) return;
+
+    setIsSubmitting(true);
+    setOrderError(null);
+    setOrderSuccess(null);
+
+    try {
+      const response = await fetch('/api/market/futures/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol: selectedContract.symbol,
+          contract: selectedContract.contract,
+          orderType,
+          quantity: orderQuantity,
+          price: selectedContract.price,
+          contractSize: selectedContract.contract_size,
+          marginRequirement: selectedContract.margin_requirement,
+          tickValue: selectedContract.tick_value,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to place order');
+      }
+
+      setOrderSuccess(`${orderType.toUpperCase()} ${orderQuantity} ${selectedContract.symbol} @ ${formatPrice(selectedContract.price, selectedContract.symbol)} - ${data.message}`);
+      setOrderQuantity(1);
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Failed to place order');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -297,11 +345,97 @@ export default function FuturesPage() {
                             {selectedContract.trading_hours}
                           </div>
                         </div>
+
+                        {/* Order Entry Form */}
+                        <div className="border-t border-slate-700 pt-4 mt-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <ShoppingCart className="w-4 h-4 text-indigo-400" />
+                            <span className="text-sm font-medium text-white">Place Order</span>
+                          </div>
+
+                          {orderSuccess && (
+                            <div className="mb-3 p-2 bg-green-500/10 border border-green-500/30 rounded text-green-400 text-xs">
+                              {orderSuccess}
+                            </div>
+                          )}
+
+                          {orderError && (
+                            <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs">
+                              {orderError}
+                            </div>
+                          )}
+
+                          <div className="space-y-3">
+                            {/* Buy/Sell Toggle */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button
+                                variant={orderType === 'buy' ? 'default' : 'outline'}
+                                className={orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                onClick={() => setOrderType('buy')}
+                              >
+                                Buy Long
+                              </Button>
+                              <Button
+                                variant={orderType === 'sell' ? 'default' : 'outline'}
+                                className={orderType === 'sell' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                onClick={() => setOrderType('sell')}
+                              >
+                                Sell Short
+                              </Button>
+                            </div>
+
+                            {/* Quantity */}
+                            <div>
+                              <Label className="text-xs text-gray-400">Contracts</Label>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={orderQuantity}
+                                onChange={(e) => setOrderQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                className="mt-1"
+                              />
+                            </div>
+
+                            {/* Order Summary */}
+                            <div className="bg-slate-800/50 p-3 rounded text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Notional Value:</span>
+                                <span className="text-white">{formatCurrency(selectedContract.notional_value * orderQuantity)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Margin Required:</span>
+                                <span className="text-white">{formatCurrency(selectedContract.notional_value * orderQuantity * (selectedContract.margin_requirement / 100))}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Tick Value:</span>
+                                <span className="text-white">{formatCurrency(selectedContract.tick_value)} per tick</span>
+                              </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <Button
+                              className={`w-full ${orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                              onClick={handleSubmitOrder}
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  {orderType === 'buy' ? 'Buy' : 'Sell'} {orderQuantity} {selectedContract.symbol}
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-8 text-gray-400">
                         <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>Click on a contract to view details</p>
+                        <p>Click on a contract to view details and trade</p>
                       </div>
                     )}
                   </CardContent>

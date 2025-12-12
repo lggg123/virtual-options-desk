@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import DashboardHeader from '@/components/DashboardHeader';
-import { ArrowUp, ArrowDown, Clock, TrendingUp, AlertCircle, Scale } from 'lucide-react';
+import { ArrowUp, ArrowDown, Clock, TrendingUp, AlertCircle, Scale, ShoppingCart, Loader2 } from 'lucide-react';
 
 interface CFDInstrument {
   symbol: string;
@@ -51,6 +54,14 @@ export default function CFDPage() {
   const [selectedAssetClass, setSelectedAssetClass] = useState<string>('all');
   const [selectedCFD, setSelectedCFD] = useState<CFDInstrument | null>(null);
 
+  // Order state
+  const [orderQuantity, setOrderQuantity] = useState<number>(1);
+  const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
+  const [positionType, setPositionType] = useState<'long' | 'short'>('long');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
   useEffect(() => {
     fetchCFDs();
     const interval = setInterval(fetchCFDs, 30000); // Refresh every 30 seconds
@@ -86,6 +97,45 @@ export default function CFDPage() {
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!selectedCFD || orderQuantity <= 0) return;
+
+    setIsSubmitting(true);
+    setOrderError(null);
+    setOrderSuccess(null);
+
+    try {
+      const response = await fetch('/api/market/cfd/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol: selectedCFD.symbol,
+          name: selectedCFD.name,
+          orderType,
+          positionType,
+          quantity: orderQuantity,
+          price: orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid,
+          leverage: selectedCFD.leverage,
+          pipValue: selectedCFD.pip_value,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to place order');
+      }
+
+      const price = orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid;
+      setOrderSuccess(`${orderType.toUpperCase()} ${orderQuantity} ${selectedCFD.symbol} @ ${formatPrice(price, selectedCFD.pip_size)} - ${data.message}`);
+      setOrderQuantity(1);
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Failed to place order');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -335,11 +385,112 @@ export default function CFDPage() {
                             {selectedCFD.trading_hours}
                           </div>
                         </div>
+
+                        {/* Order Entry Form */}
+                        <div className="border-t border-slate-700 pt-4 mt-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <ShoppingCart className="w-4 h-4 text-indigo-400" />
+                            <span className="text-sm font-medium text-white">Place Order</span>
+                          </div>
+
+                          {orderSuccess && (
+                            <div className="mb-3 p-2 bg-green-500/10 border border-green-500/30 rounded text-green-400 text-xs">
+                              {orderSuccess}
+                            </div>
+                          )}
+
+                          {orderError && (
+                            <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs">
+                              {orderError}
+                            </div>
+                          )}
+
+                          <div className="space-y-3">
+                            {/* Buy/Sell Toggle */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button
+                                variant={orderType === 'buy' ? 'default' : 'outline'}
+                                className={orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                onClick={() => { setOrderType('buy'); setPositionType('long'); }}
+                              >
+                                Buy (Long)
+                              </Button>
+                              <Button
+                                variant={orderType === 'sell' ? 'default' : 'outline'}
+                                className={orderType === 'sell' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                onClick={() => { setOrderType('sell'); setPositionType('short'); }}
+                              >
+                                Sell (Short)
+                              </Button>
+                            </div>
+
+                            {/* Quantity (Lots) */}
+                            <div>
+                              <Label className="text-xs text-gray-400">Lots</Label>
+                              <Input
+                                type="number"
+                                min={selectedCFD.min_trade_size}
+                                max={selectedCFD.max_trade_size}
+                                step={0.01}
+                                value={orderQuantity}
+                                onChange={(e) => setOrderQuantity(Math.max(selectedCFD.min_trade_size, parseFloat(e.target.value) || selectedCFD.min_trade_size))}
+                                className="mt-1"
+                              />
+                              <div className="text-xs text-gray-500 mt-1">
+                                Min: {selectedCFD.min_trade_size} | Max: {selectedCFD.max_trade_size}
+                              </div>
+                            </div>
+
+                            {/* Order Summary */}
+                            <div className="bg-slate-800/50 p-3 rounded text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Entry Price:</span>
+                                <span className={orderType === 'buy' ? 'text-green-400' : 'text-red-400'}>
+                                  {formatPrice(orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid, selectedCFD.pip_size)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Position Value:</span>
+                                <span className="text-white">{formatCurrency((orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid) * orderQuantity * 100000)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Margin Required:</span>
+                                <span className="text-white">{formatCurrency((orderType === 'buy' ? selectedCFD.ask : selectedCFD.bid) * orderQuantity * 100000 / selectedCFD.leverage)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Leverage:</span>
+                                <span className="text-indigo-400">{selectedCFD.leverage}:1</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Spread Cost:</span>
+                                <span className="text-yellow-400">{formatCurrency(selectedCFD.spread_cost * orderQuantity)}</span>
+                              </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <Button
+                              className={`w-full ${orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                              onClick={handleSubmitOrder}
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  {orderType === 'buy' ? 'Buy' : 'Sell'} {orderQuantity} {selectedCFD.symbol}
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-8 text-gray-400">
                         <Scale className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>Click on an instrument to view details</p>
+                        <p>Click on an instrument to view details and trade</p>
                       </div>
                     )}
                   </CardContent>

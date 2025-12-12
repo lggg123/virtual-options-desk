@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import DashboardHeader from '@/components/DashboardHeader';
-import { ArrowUp, ArrowDown, Clock, TrendingUp, AlertCircle, Coins, RefreshCw } from 'lucide-react';
+import { ArrowUp, ArrowDown, Clock, TrendingUp, AlertCircle, Coins, RefreshCw, ShoppingCart, Loader2 } from 'lucide-react';
 
 interface CryptoAsset {
   id: string;
@@ -34,6 +37,13 @@ export default function CryptoPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoAsset | null>(null);
   const [view, setView] = useState<'all' | 'top10' | 'gainers' | 'losers'>('all');
+
+  // Order state
+  const [orderQuantity, setOrderQuantity] = useState<string>('0.01');
+  const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCryptos();
@@ -92,6 +102,43 @@ export default function CryptoPage() {
     if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
     return num.toLocaleString();
+  };
+
+  const handleSubmitOrder = async () => {
+    const qty = parseFloat(orderQuantity);
+    if (!selectedCrypto || isNaN(qty) || qty <= 0) return;
+
+    setIsSubmitting(true);
+    setOrderError(null);
+    setOrderSuccess(null);
+
+    try {
+      const response = await fetch('/api/market/crypto/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol: selectedCrypto.symbol,
+          name: selectedCrypto.name,
+          orderType,
+          quantity: qty,
+          price: selectedCrypto.current_price,
+          image: selectedCrypto.image,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to place order');
+      }
+
+      setOrderSuccess(`${orderType.toUpperCase()} ${qty} ${selectedCrypto.symbol.toUpperCase()} @ ${formatPrice(selectedCrypto.current_price)} - ${data.message}`);
+      setOrderQuantity('0.01');
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Failed to place order');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -329,11 +376,116 @@ export default function CryptoPage() {
                             Updated: {new Date(selectedCrypto.last_updated).toLocaleTimeString()}
                           </div>
                         </div>
+
+                        {/* Order Entry Form */}
+                        <div className="border-t border-slate-700 pt-4 mt-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <ShoppingCart className="w-4 h-4 text-indigo-400" />
+                            <span className="text-sm font-medium text-white">Place Order</span>
+                          </div>
+
+                          {orderSuccess && (
+                            <div className="mb-3 p-2 bg-green-500/10 border border-green-500/30 rounded text-green-400 text-xs">
+                              {orderSuccess}
+                            </div>
+                          )}
+
+                          {orderError && (
+                            <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs">
+                              {orderError}
+                            </div>
+                          )}
+
+                          <div className="space-y-3">
+                            {/* Buy/Sell Toggle */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button
+                                variant={orderType === 'buy' ? 'default' : 'outline'}
+                                className={orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                onClick={() => setOrderType('buy')}
+                              >
+                                Buy
+                              </Button>
+                              <Button
+                                variant={orderType === 'sell' ? 'default' : 'outline'}
+                                className={orderType === 'sell' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                onClick={() => setOrderType('sell')}
+                              >
+                                Sell
+                              </Button>
+                            </div>
+
+                            {/* Quantity */}
+                            <div>
+                              <Label className="text-xs text-gray-400">Amount ({selectedCrypto.symbol.toUpperCase()})</Label>
+                              <Input
+                                type="number"
+                                min={0.00001}
+                                step={0.001}
+                                value={orderQuantity}
+                                onChange={(e) => setOrderQuantity(e.target.value)}
+                                className="mt-1"
+                              />
+                              {/* Quick amount buttons */}
+                              <div className="flex gap-1 mt-2">
+                                {[0.001, 0.01, 0.1, 1].map((amt) => (
+                                  <button
+                                    key={amt}
+                                    onClick={() => setOrderQuantity(amt.toString())}
+                                    className="flex-1 text-xs py-1 px-2 bg-slate-700 hover:bg-slate-600 rounded transition-colors"
+                                  >
+                                    {amt}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Order Summary */}
+                            <div className="bg-slate-800/50 p-3 rounded text-xs space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Price:</span>
+                                <span className="text-white">{formatPrice(selectedCrypto.current_price)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Total Value:</span>
+                                <span className="text-white">{formatPrice(parseFloat(orderQuantity || '0') * selectedCrypto.current_price)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Fee (0.1%):</span>
+                                <span className="text-yellow-400">{formatPrice(parseFloat(orderQuantity || '0') * selectedCrypto.current_price * 0.001)}</span>
+                              </div>
+                              <div className="flex justify-between border-t border-slate-600 pt-1 mt-1">
+                                <span className="text-gray-400 font-medium">Total:</span>
+                                <span className="text-white font-medium">
+                                  {formatPrice(parseFloat(orderQuantity || '0') * selectedCrypto.current_price * (orderType === 'buy' ? 1.001 : 0.999))}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <Button
+                              className={`w-full ${orderType === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                              onClick={handleSubmitOrder}
+                              disabled={isSubmitting || parseFloat(orderQuantity || '0') <= 0}
+                            >
+                              {isSubmitting ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  {orderType === 'buy' ? 'Buy' : 'Sell'} {orderQuantity} {selectedCrypto.symbol.toUpperCase()}
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-8 text-gray-400">
                         <Coins className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>Click on a cryptocurrency to view details</p>
+                        <p>Click on a cryptocurrency to view details and trade</p>
                       </div>
                     )}
                   </CardContent>
