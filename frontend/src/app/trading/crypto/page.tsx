@@ -230,11 +230,11 @@ export default function CryptoPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredCryptos.map((crypto) => (
+                          {filteredCryptos.map((crypto, index) => (
                             <tr
                               key={crypto.id}
-                              className={`border-b border-slate-800 hover:bg-slate-800/50 cursor-pointer transition-colors ${
-                                selectedCrypto?.id === crypto.id ? 'bg-slate-800/50' : ''
+                              className={`border-b border-slate-700 hover:bg-slate-700 cursor-pointer transition-colors ${
+                                selectedCrypto?.id === crypto.id ? 'bg-slate-700' : index % 2 === 0 ? 'bg-slate-800' : 'bg-slate-900/80'
                               }`}
                               onClick={() => setSelectedCrypto(crypto)}
                             >
