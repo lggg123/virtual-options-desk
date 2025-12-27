@@ -220,7 +220,7 @@ export default function CryptoPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-orange-500/30 bg-orange-950/30">
+                          <tr className="border-b border-slate-600 bg-slate-800">
                             <th className="text-left py-3 px-2 text-orange-300 font-medium">#</th>
                             <th className="text-left py-3 px-2 text-violet-300 font-medium">Coin</th>
                             <th className="text-right py-3 px-2 text-emerald-300 font-medium">Price</th>
