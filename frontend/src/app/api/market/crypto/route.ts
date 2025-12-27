@@ -47,9 +47,10 @@ export async function GET(request: NextRequest) {
 
     let data;
 
-    if (type === 'list') {
+    if (type === 'list' || type === 'top') {
       // Get list of top cryptocurrencies
-      data = await getTopCryptos();
+      const limit = parseInt(searchParams.get('limit') || '50', 10);
+      data = await getTopCryptos(limit);
     } else if (type === 'price' && symbol) {
       // Get simple price for a symbol
       data = await getCryptoPrice(symbol);
@@ -95,21 +96,22 @@ async function getTopCryptos(limit: number = 50) {
 
   const coins: CoinGeckoMarketData[] = await response.json();
 
+  // Return raw CoinGecko format to match what the frontend expects
   return coins.map(coin => ({
     id: coin.id,
-    symbol: coin.symbol.toUpperCase(),
+    symbol: coin.symbol,
     name: coin.name,
-    price: coin.current_price,
+    current_price: coin.current_price,
     price_change_24h: coin.price_change_24h,
     price_change_percentage_24h: coin.price_change_percentage_24h,
     market_cap: coin.market_cap,
-    volume_24h: coin.total_volume,
+    market_cap_rank: coin.market_cap_rank,
+    total_volume: coin.total_volume,
     high_24h: coin.high_24h,
     low_24h: coin.low_24h,
     circulating_supply: coin.circulating_supply,
     total_supply: coin.total_supply,
     image: coin.image,
-    rank: coin.market_cap_rank,
     ath: coin.ath,
     ath_change_percentage: coin.ath_change_percentage,
     last_updated: coin.last_updated
