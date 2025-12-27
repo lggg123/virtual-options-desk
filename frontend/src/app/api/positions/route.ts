@@ -1,5 +1,25 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
+import { calculateBlackScholes } from '@/lib/calculations/black-scholes';
+
+// Fetch current stock price from Yahoo Finance
+async function fetchCurrentPrice(symbol: string): Promise<number> {
+  try {
+    const response = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, next: { revalidate: 30 } }
+    );
+    if (response.ok) {
+      const data = await response.json();
+      const quote = data.chart.result[0].indicators.quote[0];
+      const latestIndex = quote.close.length - 1;
+      return quote.close[latestIndex] || data.chart.result[0].meta.regularMarketPrice || 100;
+    }
+  } catch (e) {
+    console.error('Failed to fetch price for', symbol, e);
+  }
+  return 0; // Return 0 to indicate fetch failed
+}
 
 // Parse option symbol format: "SPY-2026-01-26-680-call" or "AAPL-2025-12-20-180-put"
 function parseOptionSymbol(symbol: string): {
@@ -71,6 +91,13 @@ export interface TransformedPosition {
   vega: number;
   daysToExpiry: number;
   strategy?: string;
+  // New fields for better trade understanding
+  underlyingPrice: number;
+  intrinsicValue: number;
+  timeValue: number;
+  breakeven: number;
+  priceSource: 'live' | 'estimated' | 'entry';
+  impliedVolatility: number;
 }
 
 export async function GET() {
@@ -99,6 +126,23 @@ export async function GET() {
       throw error;
     }
 
+    // Get unique tickers and fetch current underlying prices
+    const uniqueTickers = [...new Set((positions || []).map(pos => {
+      const parsed = parseOptionSymbol(pos.symbol);
+      return parsed?.ticker || pos.symbol.split('-')[0] || pos.symbol;
+    }))];
+
+    // Fetch all underlying prices in parallel
+    const pricePromises = uniqueTickers.map(async ticker => ({
+      ticker,
+      price: await fetchCurrentPrice(ticker)
+    }));
+    const priceResults = await Promise.all(pricePromises);
+    const underlyingPrices: Record<string, number> = {};
+    for (const { ticker, price } of priceResults) {
+      underlyingPrices[ticker] = price;
+    }
+
     // Transform database positions to match frontend interface
     const transformedPositions: TransformedPosition[] = (positions || []).map(pos => {
       // Try to parse the symbol if strike/expiry are missing
@@ -107,39 +151,104 @@ export async function GET() {
       const ticker = parsed?.ticker || pos.symbol.split('-')[0] || pos.symbol;
       const strike = pos.strike_price || parsed?.strike || 0;
       const expiry = pos.expiration_date || parsed?.expiry || '';
-      const optionType = parsed?.optionType ||
+      const optionType = (parsed?.optionType ||
         (pos.symbol.toLowerCase().includes('put') ? 'put' :
          pos.symbol.toLowerCase().includes('call') ? 'call' :
-         pos.option_type || pos.position_type);
+         pos.option_type || pos.position_type)) as 'call' | 'put';
 
       // Calculate days to expiry
       const expiryDate = expiry ? new Date(expiry) : new Date();
       const daysToExpiry = Math.max(0, Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+      const timeToExpiry = daysToExpiry / 365;
 
-      // Use stored Greeks or estimate them
-      const hasGreeks = pos.delta !== null && pos.delta !== 0;
-      const greeks = hasGreeks
-        ? { delta: pos.delta, gamma: pos.gamma, theta: pos.theta, vega: pos.vega }
-        : estimateGreeks(optionType as 'call' | 'put', strike, daysToExpiry, pos.entry_price);
+      // Get current underlying price
+      const underlyingPrice = underlyingPrices[ticker] || 0;
+
+      // Calculate current option price using Black-Scholes if we have underlying price
+      let currentPrice = pos.entry_price;
+      let priceSource: 'live' | 'estimated' | 'entry' = 'entry';
+      let greeks = { delta: 0, gamma: 0, theta: 0, vega: 0 };
+      const impliedVolatility = pos.implied_volatility || 0.30; // Default 30% IV
+
+      if (underlyingPrice > 0 && strike > 0 && daysToExpiry > 0) {
+        try {
+          const bsResult = calculateBlackScholes({
+            spotPrice: underlyingPrice,
+            strikePrice: strike,
+            timeToExpiry,
+            riskFreeRate: 0.05, // 5% risk-free rate
+            volatility: impliedVolatility,
+            optionType
+          });
+          currentPrice = bsResult.price;
+          greeks = {
+            delta: bsResult.greeks.delta,
+            gamma: bsResult.greeks.gamma,
+            theta: bsResult.greeks.theta,
+            vega: bsResult.greeks.vega
+          };
+          priceSource = 'live';
+        } catch (e) {
+          console.error('Black-Scholes calculation failed:', e);
+          // Fall back to estimated Greeks
+          greeks = estimateGreeks(optionType, strike, daysToExpiry, pos.entry_price);
+          priceSource = 'estimated';
+        }
+      } else if (daysToExpiry === 0) {
+        // Expired option - intrinsic value only
+        currentPrice = optionType === 'call'
+          ? Math.max(0, underlyingPrice - strike)
+          : Math.max(0, strike - underlyingPrice);
+        priceSource = underlyingPrice > 0 ? 'live' : 'entry';
+      } else {
+        // Fallback to stored or estimated Greeks
+        const hasGreeks = pos.delta !== null && pos.delta !== 0;
+        greeks = hasGreeks
+          ? { delta: pos.delta || 0, gamma: pos.gamma || 0, theta: pos.theta || 0, vega: pos.vega || 0 }
+          : estimateGreeks(optionType, strike, daysToExpiry, pos.entry_price);
+      }
+
+      // Calculate intrinsic and time value
+      const intrinsicValue = optionType === 'call'
+        ? Math.max(0, underlyingPrice - strike)
+        : Math.max(0, strike - underlyingPrice);
+      const timeValue = Math.max(0, currentPrice - intrinsicValue);
+
+      // Calculate breakeven (for long positions)
+      const breakeven = optionType === 'call'
+        ? strike + pos.entry_price
+        : strike - pos.entry_price;
+
+      // Calculate P&L
+      const pnl = (currentPrice - pos.entry_price) * pos.quantity * 100;
+      const pnlPercent = pos.entry_price > 0
+        ? ((currentPrice - pos.entry_price) / pos.entry_price) * 100
+        : 0;
 
       return {
         id: pos.id,
         symbol: pos.symbol,
         ticker,
-        type: optionType as 'call' | 'put',
+        type: optionType,
         strike,
         expiry,
         quantity: pos.quantity,
         avgPrice: pos.entry_price,
-        currentPrice: pos.current_price || pos.entry_price,
-        pnl: pos.unrealized_pl || ((pos.current_price || pos.entry_price) - pos.entry_price) * pos.quantity * 100,
-        pnlPercent: pos.unrealized_pl_percent || (pos.entry_price > 0 ? (((pos.current_price || pos.entry_price) - pos.entry_price) / pos.entry_price) * 100 : 0),
+        currentPrice,
+        pnl,
+        pnlPercent,
         delta: greeks.delta || 0,
         theta: greeks.theta || 0,
         gamma: greeks.gamma || 0,
         vega: greeks.vega || 0,
         daysToExpiry,
         strategy: pos.strategy || undefined,
+        underlyingPrice,
+        intrinsicValue,
+        timeValue,
+        breakeven,
+        priceSource,
+        impliedVolatility: impliedVolatility * 100, // Convert to percentage
       };
     });
 
