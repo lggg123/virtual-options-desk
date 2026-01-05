@@ -248,7 +248,7 @@ export default function OrderEntry() {
               type="number"
               min="1"
               value={orderData.quantity}
-              onChange={(e) => setOrderData({...orderData, quantity: parseInt(e.target.value) || 1})}
+              onChange={(e) => setOrderData({...orderData, quantity: parseFloat(e.target.value) || 1})}
             />
           </div>
           <div>
