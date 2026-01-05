@@ -81,8 +81,12 @@ export default function ActivePositions() {
         method: 'DELETE',
       });
 
+      const body = await response.json().catch(() => null);
+
       if (!response.ok) {
-        throw new Error('Failed to close position');
+        console.error('Failed to close position response:', body || response.statusText);
+        toast.error(body?.error || 'Failed to close position');
+        return;
       }
 
       await refreshPositions();
