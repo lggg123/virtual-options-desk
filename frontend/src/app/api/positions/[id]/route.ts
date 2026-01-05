@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
+import type { Database } from '@/lib/types';
 
 export async function DELETE(request: Request) {
   const supabase = await createSupabaseServer();
@@ -34,8 +35,8 @@ export async function DELETE(request: Request) {
     }
 
     // If no rows updated, return not found
-    const updated = data as unknown;
-    if (!updated || (Array.isArray(updated) && (updated as any[]).length === 0)) {
+    const updated = data as Database['public']['Tables']['positions']['Row'][] | null;
+    if (!updated || updated.length === 0) {
       return NextResponse.json({ error: 'Position not found' }, { status: 404 });
     }
 
