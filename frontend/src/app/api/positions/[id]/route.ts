@@ -34,7 +34,8 @@ export async function DELETE(request: Request) {
     }
 
     // If no rows updated, return not found
-    if (!data || (Array.isArray(data) && data.length === 0)) {
+    const updated = data as unknown;
+    if (!updated || (Array.isArray(updated) && (updated as any[]).length === 0)) {
       return NextResponse.json({ error: 'Position not found' }, { status: 404 });
     }
 

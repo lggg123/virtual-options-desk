@@ -11,9 +11,11 @@ async function fetchCurrentPrice(symbol: string): Promise<number> {
     );
     if (response.ok) {
       const data = await response.json();
-      const quote = data.chart.result[0].indicators.quote[0];
-      const latestIndex = quote.close.length - 1;
-      return quote.close[latestIndex] || data.chart.result[0].meta.regularMarketPrice || 100;
+      const quote = data?.chart?.result?.[0]?.indicators?.quote?.[0];
+      const closeArray: number[] = Array.isArray(quote?.close) ? quote.close : [];
+      const latestIndex = closeArray.length > 0 ? closeArray.length - 1 : -1;
+      if (latestIndex >= 0) return closeArray[latestIndex] || data?.chart?.result?.[0]?.meta?.regularMarketPrice || 100;
+      return data?.chart?.result?.[0]?.meta?.regularMarketPrice || 100;
     }
   } catch (e) {
     console.error('Failed to fetch price for', symbol, e);
