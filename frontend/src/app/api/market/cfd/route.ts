@@ -1,3 +1,5 @@
+import { NextRequest, NextResponse } from 'next/server';
+
 // Helper to fetch with timeout using AbortController
 async function fetchWithTimeout(url: string, timeoutMs = 5000): Promise<Response> {
   const controller = new AbortController();
@@ -8,7 +10,6 @@ async function fetchWithTimeout(url: string, timeoutMs = 5000): Promise<Response
     clearTimeout(timeout);
   }
 }
-import { NextRequest, NextResponse } from 'next/server';
 
 // Cache for rate limiting
 const cache = new Map<string, { data: unknown; timestamp: number }>();
@@ -509,7 +510,7 @@ async function getCFDQuote(symbol: string) {
     try {
       const eodhdSymbol = symbol;
       const url = `https://eodhd.com/api/real-time/${eodhdSymbol}.FOREX?api_token=${eodhdKey}&fmt=json`;
-      const resp = await fetch(url);
+      const resp = await fetchWithTimeout(url, 5000);
       const raw = await resp.text();
       let json = {};
       try {
@@ -520,14 +521,14 @@ async function getCFDQuote(symbol: string) {
       r = json || {};
       if (typeof (r as any).close === 'number') {
         basePrice = (r as any).close;
-            const resp = await fetchWithTimeout(url, 5000);
+        useLivePrice = true;
       } else {
         console.warn('EODHD did not return valid price for', symbol, JSON.stringify(json));
         // Fallback to Alpha Vantage if EODHD fails
         if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
           try {
             const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
-            const resp = await fetch(url);
+            const resp = await fetchWithTimeout(url, 5000);
             const json = await resp.json();
             const rate = json['Realtime Currency Exchange Rate'] || {};
             if (typeof rate['5. Exchange Rate'] === 'string') {
@@ -563,7 +564,20 @@ async function getCFDQuote(symbol: string) {
         }
       }
     }
-  // (Removed duplicate/stray else if and following duplicate code)
+  } else if (symbol.endsWith('.US')) {
+    // Alpha Vantage for US stocks
+    try {
+      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol.replace('.US','')}&apikey=${alphaKey}`;
+      const resp = await fetchWithTimeout(url, 5000);
+      const json = await resp.json();
+      const quote = json['Global Quote'] || {};
+      if (typeof quote['05. price'] === 'string') {
+        basePrice = parseFloat(quote['05. price']);
+        useLivePrice = true;
+      }
+    } catch (err) {
+      console.warn('Alpha Vantage US stock fetch failed for', symbol, err);
+    }
   } else {
     // Alpha Vantage for forex
     try {
@@ -594,12 +608,18 @@ async function getCFDQuote(symbol: string) {
   // removed stray/duplicate fetchWithTimeout
 
   if (useLivePrice) {
-    midPrice = typeof r.regularMarketPrice === 'number' ? r.regularMarketPrice : basePrice;
-    bid = typeof r.bid === 'number' ? r.bid : (midPrice - spreadInPrice / 2);
-    ask = typeof r.ask === 'number' ? r.ask : (midPrice + spreadInPrice / 2);
-    previous_close = typeof r.regularMarketPreviousClose === 'number' ? r.regularMarketPreviousClose : basePrice;
-    change = typeof r.regularMarketChange === 'number' ? r.regularMarketChange : (midPrice - previous_close);
-    changePercent = typeof r.regularMarketChangePercent === 'number' ? r.regularMarketChangePercent : ((change / previous_close) * 100);
+    // Alpha Vantage format detection
+    const avMid = typeof r["5. Exchange Rate"] === 'string' ? parseFloat(r["5. Exchange Rate"] as string) : NaN;
+    const avBid = typeof r["8. Bid Price"] === 'string' ? parseFloat(r["8. Bid Price"] as string) : NaN;
+    const avAsk = typeof r["9. Ask Price"] === 'string' ? parseFloat(r["9. Ask Price"] as string) : NaN;
+    const avPrev = typeof r["7. Last Refreshed"] === 'string' ? basePrice : NaN; // Alpha Vantage does not provide previous close, fallback to basePrice
+    // Use AV values if present and valid, else fallback to Yahoo/EODHD fields
+    midPrice = !isNaN(avMid) ? avMid : (typeof r.regularMarketPrice === 'number' ? r.regularMarketPrice : basePrice);
+    bid = !isNaN(avBid) ? avBid : (typeof r.bid === 'number' ? r.bid : (midPrice - spreadInPrice / 2));
+    ask = !isNaN(avAsk) ? avAsk : (typeof r.ask === 'number' ? r.ask : (midPrice + spreadInPrice / 2));
+    previous_close = !isNaN(avPrev) ? avPrev : (typeof r.regularMarketPreviousClose === 'number' ? r.regularMarketPreviousClose : basePrice);
+    change = !isNaN(avMid) && !isNaN(avPrev) ? (avMid - avPrev) : (typeof r.regularMarketChange === 'number' ? r.regularMarketChange : (midPrice - previous_close));
+    changePercent = !isNaN(avMid) && !isNaN(avPrev) && avPrev !== 0 ? ((avMid - avPrev) / avPrev * 100) : (typeof r.regularMarketChangePercent === 'number' ? r.regularMarketChangePercent : ((change / previous_close) * 100));
     high = typeof r.regularMarketDayHigh === 'number' ? r.regularMarketDayHigh : midPrice * (1 + volatility * Math.random() * 0.5);
     low = typeof r.regularMarketDayLow === 'number' ? r.regularMarketDayLow : midPrice * (1 - volatility * Math.random() * 0.5);
     open = typeof r.regularMarketOpen === 'number' ? r.regularMarketOpen : previous_close * (1 + (Math.random() - 0.5) * volatility * 0.5);

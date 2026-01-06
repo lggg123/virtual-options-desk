@@ -31,6 +31,11 @@ export default function LiveOptionsChain() {
   // ...existing code...
 
   const handleTrade = (option: OptionsData, type: 'call' | 'put', action: 'buy' | 'sell') => {
+    const price = action === 'buy' ? option.ask : option.bid;
+    if (typeof price !== 'number' || isNaN(price)) {
+      toast.error(`Cannot ${action} - ${action === 'buy' ? 'ask' : 'bid'} price not available`);
+      return;
+    }
     // Dispatch custom event to prefill the order form
     const orderData = {
       symbol,
@@ -38,7 +43,7 @@ export default function LiveOptionsChain() {
       strike: option.strike,
       expiry: expiry,
       quantity: 1,
-      price: action === 'buy' ? option.ask : option.bid,
+      price: price,
       orderType: 'limit' as const,
       action: action
     };
