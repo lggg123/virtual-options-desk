@@ -15,6 +15,13 @@ import { toast } from 'sonner';
 
 import type { OptionsData } from '@/hooks/useLiveMarketData';
 
+/**
+ * Render a live options chain UI with symbol and expiry controls, real-time market price, segmented calls/puts tables, and trade prefill actions.
+ *
+ * Displays market data and an options table (calls and puts) for the selected symbol and expiration, handles loading and error states, and highlights ATM strikes. Initiating a trade validates the bid/ask, dispatches a `prefillOrder` custom event with the composed order payload, and shows success or error toasts.
+ *
+ * @returns A React element containing the live options chain interface.
+ */
 export default function LiveOptionsChain() {
   const [symbol, setSymbol] = useState('AAPL');
   const [expiry, setExpiry] = useState('');

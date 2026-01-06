@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Helper to fetch with timeout using AbortController
+/**
+ * Fetches a URL and aborts the request if it does not complete within the specified timeout.
+ *
+ * @param url - The resource URL to fetch
+ * @param timeoutMs - Maximum time to wait in milliseconds (default: 5000)
+ * @returns The `Response` from the fetch request
+ */
 async function fetchWithTimeout(url: string, timeoutMs = 5000): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -431,7 +437,23 @@ const BASE_PRICES: Record<string, number> = {
   'AMZN.US': 215.00,
 };
 
-// GET /api/market/cfd?symbol=EURUSD or ?asset_class=forex or ?type=list
+/**
+ * Handle GET requests for CFD market data (single quote, asset-class set, or instruments list).
+ *
+ * Accepts query parameters:
+ * - `symbol` — instrument symbol (e.g., `EURUSD`, `AAPL.US`) to return a single quote.
+ * - `asset_class` — one of `forex`, `index`, `commodity`, `crypto`, `stock` to return all quotes in that class.
+ * - `type` — if set to `list` returns the available instruments and their specifications; otherwise returns quotes (`quote`).
+ *
+ * Responses are cached for 30 seconds and keyed by request type and symbol/asset_class.
+ *
+ * @param request - The incoming NextRequest containing query parameters described above.
+ * @returns A JSON response containing:
+ * - a single CFD quote object when `symbol` is provided,
+ * - an array of CFD quote objects when `asset_class` is provided or no symbol/type is specified,
+ * - an array of instrument definitions when `type=list` is used,
+ * - or `{ error: string }` with HTTP 500 on failure.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -695,6 +717,13 @@ function getVolatilityForAssetClass(assetClass: string): number {
   }
 }
 
+/**
+ * Rounds a price to the nearest increment defined by `precision`.
+ *
+ * @param price - The price value to round
+ * @param precision - The rounding increment (e.g., `0.0001` for 4-decimal precision or `1`/`10` for integer multiples)
+ * @returns The `price` rounded to the nearest `precision`
+ */
 function roundPrice(price: number, precision: number): number {
   if (precision >= 1) {
     return Math.round(price / precision) * precision;
