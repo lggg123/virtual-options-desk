@@ -500,7 +500,7 @@ async function getCFDQuote(symbol: string) {
         useLivePrice = true;
       } else {
         console.warn('EODHD did not return valid price for', symbol, JSON.stringify(json));
-        eodhdFailed = true;
+      }
       }
     } catch (err) {
       console.warn('EODHD fetch failed for', symbol, err);
