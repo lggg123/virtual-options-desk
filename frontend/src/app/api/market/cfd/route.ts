@@ -536,51 +536,7 @@ async function getCFDQuote(symbol: string) {
         }
       }
     }
-  } else if (symbol.endsWith('.US')) {
-    // Alpha Vantage for US stocks
-    try {
-      const avSymbol = symbol.replace('.US', '');
-      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${avSymbol}&apikey=${alphaKey}`;
-      const resp = await fetch(url);
-      const json = await resp.json();
-      const quote = json['Global Quote'] || {};
-      if (typeof quote['05. price'] === 'string') {
-        basePrice = parseFloat(quote['05. price']);
-        useLivePrice = true;
-      }
-    } catch (err) {
-      console.warn('Alpha Vantage fetch failed for', symbol, err);
-    }
-  } else {
-    // Alpha Vantage for forex
-    try {
-      const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
-      const resp = await fetch(url);
-      const json = await resp.json();
-      const rate = json['Realtime Currency Exchange Rate'] || {};
-      if (typeof rate['5. Exchange Rate'] === 'string') {
-        basePrice = parseFloat(rate['5. Exchange Rate']);
-        useLivePrice = true;
-      }
-    } catch (err) {
-      console.warn('Alpha Vantage forex fetch failed for', symbol, err);
-    }
-  }
-  } else if (symbol.endsWith('.US')) {
-    // Alpha Vantage for US stocks
-    try {
-      const avSymbol = symbol.replace('.US', '');
-      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${avSymbol}&apikey=${alphaKey}`;
-      const resp = await fetch(url);
-      const json = await resp.json();
-      const quote = json['Global Quote'] || {};
-      if (typeof quote['05. price'] === 'string') {
-        basePrice = parseFloat(quote['05. price']);
-        useLivePrice = true;
-      }
-    } catch (err) {
-      console.warn('Alpha Vantage fetch failed for', symbol, err);
-    }
+  // (Removed duplicate/stray else if and following duplicate code)
   } else {
     // Alpha Vantage for forex
     try {
