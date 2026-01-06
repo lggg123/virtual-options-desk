@@ -485,7 +485,6 @@ async function getCFDQuote(symbol: string) {
   let basePrice = BASE_PRICES[symbol] || 100;
   let useLivePrice = false;
   let r: Record<string, unknown> = {};
-      const resp = await fetchWithTimeout(url, 5000);
   const alphaKey = process.env.ALPHA_VANTAGE_API_KEY || '';
 
   if (symbol === 'XAUUSD' || symbol === 'XAGUSD' || symbol === 'USOIL' || symbol === 'UKOIL' || symbol === 'NATGAS') {
@@ -551,12 +550,11 @@ async function getCFDQuote(symbol: string) {
     // Alpha Vantage for forex
     try {
       const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
-      const resp = await fetch(url);
+      const resp = await fetchWithTimeout(url, 5000);
       const json = await resp.json();
       const rate = json['Realtime Currency Exchange Rate'] || {};
       if (typeof rate['5. Exchange Rate'] === 'string') {
         basePrice = parseFloat(rate['5. Exchange Rate']);
-      const resp = await fetchWithTimeout(url, 5000);
       }
     } catch (err) {
       console.warn('Alpha Vantage forex fetch failed for', symbol, err);
@@ -574,7 +572,7 @@ async function getCFDQuote(symbol: string) {
   let high: number;
   let low: number;
   let open: number;
-      const resp = await fetchWithTimeout(url, 5000);
+  // removed stray/duplicate fetchWithTimeout
 
   if (useLivePrice) {
     midPrice = typeof r.regularMarketPrice === 'number' ? r.regularMarketPrice : basePrice;
