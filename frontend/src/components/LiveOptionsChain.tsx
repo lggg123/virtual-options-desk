@@ -19,11 +19,11 @@ export default function LiveOptionsChain() {
   const [symbol, setSymbol] = useState('AAPL');
   const [expiry, setExpiry] = useState('');
   const { data: marketData, loading: loadingMarket } = useLiveMarketData(symbol);
-  const { options, expirations, loading: loadingOptions } = useOptionsChain(symbol, expiry);
+  const { options, expirations, loading: loadingOptions, error: optionsError } = useOptionsChain(symbol, expiry);
 
   // Auto-select the first (nearest) expiration date when available
   useEffect(() => {
-    if (expirations.length > 0 && !expiry) {
+    if (Array.isArray(expirations) && expirations.length > 0 && !expiry) {
       setExpiry(expirations[0]);
     }
   }, [expirations, expiry]);
@@ -73,15 +73,21 @@ export default function LiveOptionsChain() {
                   <SelectValue placeholder="Select expiration date" />
                 </SelectTrigger>
                 <SelectContent>
-                  {expirations.map((date) => (
-                    <SelectItem key={date} value={date}>
-                      {new Date(date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
+                  {Array.isArray(expirations) && expirations.length > 0 ? (
+                    expirations.map((date) => (
+                      <SelectItem key={date} value={date}>
+                        {new Date(date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      No expirations available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -96,9 +102,9 @@ export default function LiveOptionsChain() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold">
-                  {loadingMarket || !marketData ? 'Loading...' : `$${marketData.price.toFixed(2)}`}
+                  {loadingMarket || !marketData || typeof marketData.price !== 'number' ? 'Loading...' : `$${marketData.price.toFixed(2)}`}
                 </div>
-                {marketData && (
+                {marketData && typeof marketData.change === 'number' && typeof marketData.changePercent === 'number' && typeof marketData.previousClose === 'number' ? (
                   <>
                     <div className={`text-sm flex items-center ${marketData.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {marketData.change >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
@@ -108,140 +114,147 @@ export default function LiveOptionsChain() {
                       Previous: ${marketData.previousClose.toFixed(2)}
                     </div>
                   </>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
 
           {/* Options Chain */}
-          <Tabs defaultValue="calls" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="calls">Calls</TabsTrigger>
-              <TabsTrigger value="puts">Puts</TabsTrigger>
-            </TabsList>
+          {optionsError && (
+            <div className="text-red-600 text-sm">{optionsError}</div>
+          )}
+          {!Array.isArray(options) || options.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">No options data available for this symbol/expiry.</div>
+          ) : (
+            <Tabs defaultValue="calls" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="calls">Calls</TabsTrigger>
+                <TabsTrigger value="puts">Puts</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="calls">
-              <div className="border rounded-lg overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Strike</TableHead>
-                      <TableHead>Bid</TableHead>
-                      <TableHead>Ask</TableHead>
-                      <TableHead>Last</TableHead>
-                      <TableHead>Volume</TableHead>
-                      <TableHead>OI</TableHead>
-                      <TableHead>IV</TableHead>
-                      <TableHead>Delta</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loadingOptions ? (
-                      <TableRow><TableCell colSpan={9}>Loading...</TableCell></TableRow>
-                    ) : (
-                      options.filter(o => o.type === 'call').map((option) => (
-                        <TableRow key={option.strike} className={marketData && Math.abs(option.strike - marketData.price) < 5 ? 'bg-muted/50' : ''}>
-                          <TableCell className="font-medium">
-                            ${option.strike}
-                            {marketData && Math.abs(option.strike - marketData.price) < 5 && (
-                              <Badge variant="secondary" className="ml-1 text-xs">ATM</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>${option.bid.toFixed(2)}</TableCell>
-                          <TableCell>${option.ask.toFixed(2)}</TableCell>
-                          <TableCell className="font-medium">${option.last.toFixed(2)}</TableCell>
-                          <TableCell>{option.volume?.toLocaleString()}</TableCell>
-                          <TableCell>{option.openInterest?.toLocaleString()}</TableCell>
-                          <TableCell>{option.impliedVolatility?.toFixed(1)}%</TableCell>
-                          <TableCell>{option.delta?.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <div className="flex space-x-1">
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleTrade(option, 'call', 'buy')}
-                              >
-                                Buy
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleTrade(option, 'call', 'sell')}
-                              >
-                                Sell
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
+              <TabsContent value="calls">
+                <div className="border rounded-lg overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Strike</TableHead>
+                        <TableHead>Bid</TableHead>
+                        <TableHead>Ask</TableHead>
+                        <TableHead>Last</TableHead>
+                        <TableHead>Volume</TableHead>
+                        <TableHead>OI</TableHead>
+                        <TableHead>IV</TableHead>
+                        <TableHead>Delta</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {loadingOptions ? (
+                        <TableRow><TableCell colSpan={9}>Loading...</TableCell></TableRow>
+                      ) : (
+                        options.filter(o => o.type === 'call').map((option) => (
+                          <TableRow key={option.strike} className={marketData && typeof marketData.price === 'number' && Math.abs(option.strike - marketData.price) < 5 ? 'bg-muted/50' : ''}>
+                            <TableCell className="font-medium">
+                              ${option.strike}
+                              {marketData && typeof marketData.price === 'number' && Math.abs(option.strike - marketData.price) < 5 && (
+                                <Badge variant="secondary" className="ml-1 text-xs">ATM</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>{typeof option.bid === 'number' ? `$${option.bid.toFixed(2)}` : '-'}</TableCell>
+                            <TableCell>{typeof option.ask === 'number' ? `$${option.ask.toFixed(2)}` : '-'}</TableCell>
+                            <TableCell className="font-medium">{typeof option.last === 'number' ? `$${option.last.toFixed(2)}` : '-'}</TableCell>
+                            <TableCell>{typeof option.volume === 'number' ? option.volume.toLocaleString() : '-'}</TableCell>
+                            <TableCell>{typeof option.openInterest === 'number' ? option.openInterest.toLocaleString() : '-'}</TableCell>
+                            <TableCell>{typeof option.impliedVolatility === 'number' ? `${option.impliedVolatility.toFixed(1)}%` : '-'}</TableCell>
+                            <TableCell>{typeof option.delta === 'number' ? option.delta.toFixed(2) : '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex space-x-1">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleTrade(option, 'call', 'buy')}
+                                >
+                                  Buy
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleTrade(option, 'call', 'sell')}
+                                >
+                                  Sell
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
 
-            <TabsContent value="puts">
-              <div className="border rounded-lg overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Strike</TableHead>
-                      <TableHead>Bid</TableHead>
-                      <TableHead>Ask</TableHead>
-                      <TableHead>Last</TableHead>
-                      <TableHead>Volume</TableHead>
-                      <TableHead>OI</TableHead>
-                      <TableHead>IV</TableHead>
-                      <TableHead>Delta</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loadingOptions ? (
-                      <TableRow><TableCell colSpan={9}>Loading...</TableCell></TableRow>
-                    ) : (
-                      options.filter(o => o.type === 'put').map((option) => (
-                        <TableRow key={option.strike} className={marketData && Math.abs(option.strike - marketData.price) < 5 ? 'bg-muted/50' : ''}>
-                          <TableCell className="font-medium">
-                            ${option.strike}
-                            {marketData && Math.abs(option.strike - marketData.price) < 5 && (
-                              <Badge variant="secondary" className="ml-1 text-xs">ATM</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>${option.bid.toFixed(2)}</TableCell>
-                          <TableCell>${option.ask.toFixed(2)}</TableCell>
-                          <TableCell className="font-medium">${option.last.toFixed(2)}</TableCell>
-                          <TableCell>{option.volume?.toLocaleString()}</TableCell>
-                          <TableCell>{option.openInterest?.toLocaleString()}</TableCell>
-                          <TableCell>{option.impliedVolatility?.toFixed(1)}%</TableCell>
-                          <TableCell>{option.delta?.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <div className="flex space-x-1">
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleTrade(option, 'put', 'buy')}
-                              >
-                                Buy
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleTrade(option, 'put', 'sell')}
-                              >
-                                Sell
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="puts">
+                <div className="border rounded-lg overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Strike</TableHead>
+                        <TableHead>Bid</TableHead>
+                        <TableHead>Ask</TableHead>
+                        <TableHead>Last</TableHead>
+                        <TableHead>Volume</TableHead>
+                        <TableHead>OI</TableHead>
+                        <TableHead>IV</TableHead>
+                        <TableHead>Delta</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {loadingOptions ? (
+                        <TableRow><TableCell colSpan={9}>Loading...</TableCell></TableRow>
+                      ) : (
+                        options.filter(o => o.type === 'put').map((option) => (
+                          <TableRow key={option.strike} className={marketData && typeof marketData.price === 'number' && Math.abs(option.strike - marketData.price) < 5 ? 'bg-muted/50' : ''}>
+                            <TableCell className="font-medium">
+                              ${option.strike}
+                              {marketData && typeof marketData.price === 'number' && Math.abs(option.strike - marketData.price) < 5 && (
+                                <Badge variant="secondary" className="ml-1 text-xs">ATM</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>{typeof option.bid === 'number' ? `$${option.bid.toFixed(2)}` : '-'}</TableCell>
+                            <TableCell>{typeof option.ask === 'number' ? `$${option.ask.toFixed(2)}` : '-'}</TableCell>
+                            <TableCell className="font-medium">{typeof option.last === 'number' ? `$${option.last.toFixed(2)}` : '-'}</TableCell>
+                            <TableCell>{typeof option.volume === 'number' ? option.volume.toLocaleString() : '-'}</TableCell>
+                            <TableCell>{typeof option.openInterest === 'number' ? option.openInterest.toLocaleString() : '-'}</TableCell>
+                            <TableCell>{typeof option.impliedVolatility === 'number' ? `${option.impliedVolatility.toFixed(1)}%` : '-'}</TableCell>
+                            <TableCell>{typeof option.delta === 'number' ? option.delta.toFixed(2) : '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex space-x-1">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleTrade(option, 'put', 'buy')}
+                                >
+                                  Buy
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleTrade(option, 'put', 'sell')}
+                                >
+                                  Sell
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </CardContent>
     </Card>
