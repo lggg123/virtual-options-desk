@@ -485,6 +485,7 @@ async function getCFDQuote(symbol: string) {
   let basePrice = BASE_PRICES[symbol] || 100;
   let useLivePrice = false;
   let r: Record<string, unknown> = {};
+  const eodhdKey = process.env.EODHD_API_KEY || '';
   const alphaKey = process.env.ALPHA_VANTAGE_API_KEY || '';
 
   if (symbol === 'XAUUSD' || symbol === 'XAGUSD' || symbol === 'USOIL' || symbol === 'UKOIL' || symbol === 'NATGAS') {
@@ -572,6 +573,7 @@ async function getCFDQuote(symbol: string) {
   let high: number;
   let low: number;
   let open: number;
+  let previous_close: number;
   // removed stray/duplicate fetchWithTimeout
 
   if (useLivePrice) {
