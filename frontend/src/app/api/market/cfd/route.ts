@@ -531,8 +531,8 @@ async function getCFDQuote(symbol: string) {
       if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
         try {
           const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
-          const resp = await fetch(url);
           const resp = await fetchWithTimeout(url, 5000);
+          const json = await resp.json();
           const rate = json['Realtime Currency Exchange Rate'] || {};
           if (typeof rate['5. Exchange Rate'] === 'string') {
             basePrice = parseFloat(rate['5. Exchange Rate']);
