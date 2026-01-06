@@ -556,6 +556,7 @@ async function getCFDQuote(symbol: string) {
             if (typeof rate['5. Exchange Rate'] === 'string') {
               basePrice = parseFloat(rate['5. Exchange Rate']);
               useLivePrice = true;
+              r = rate;
               console.warn('Alpha Vantage fallback used for', symbol, basePrice);
             } else {
               console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
@@ -577,6 +578,7 @@ async function getCFDQuote(symbol: string) {
           if (typeof rate['5. Exchange Rate'] === 'string') {
             basePrice = parseFloat(rate['5. Exchange Rate']);
             useLivePrice = true;
+            r = rate;
             console.warn('Alpha Vantage fallback used for', symbol, basePrice);
           } else {
             console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
@@ -609,6 +611,8 @@ async function getCFDQuote(symbol: string) {
       const rate = json['Realtime Currency Exchange Rate'] || {};
       if (typeof rate['5. Exchange Rate'] === 'string') {
         basePrice = parseFloat(rate['5. Exchange Rate']);
+        useLivePrice = true;
+        r = rate;
       }
     } catch (err) {
       console.warn('Alpha Vantage forex fetch failed for', symbol, err);
