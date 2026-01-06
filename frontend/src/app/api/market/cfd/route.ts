@@ -403,8 +403,8 @@ const BASE_PRICES: Record<string, number> = {
   'GER40': 19850,
   'UK100': 8250,
   // Commodity - Updated Jan 2026
-  'XAUUSD': 2670.00, // Gold - Updated Jan 2026
-  'XAGUSD': 30.50, // Silver - Updated Jan 2026
+  'XAUUSD': 4498.60, // Gold - Updated Jan 2026 (live market)
+  'XAGUSD': 80.96, // Silver - Updated Jan 2026 (live market)
   'USOIL': 58.00, // WTI Crude - Updated Jan 2026
   'UKOIL': 62.50, // Brent Crude - Updated Jan 2026
   'NATGAS': 2.85,
@@ -473,25 +473,123 @@ async function getCFDQuote(symbol: string) {
     throw new Error(`Unknown CFD symbol: ${symbol}`);
   }
 
-  const basePrice = BASE_PRICES[symbol] || 100;
+  // Try to fetch live price from EODHD (commodities) or Alpha Vantage (forex/stocks)
+  let basePrice = BASE_PRICES[symbol] || 100;
+  let useLivePrice = false;
+  let r: any = {};
+  const eodhdKey = process.env.EODHD_API_KEY || '';
+  const alphaKey = process.env.ALPHA_VANTAGE_API_KEY || '';
 
-  // Simulate price movement based on asset class volatility
+  if (symbol === 'XAUUSD' || symbol === 'XAGUSD' || symbol === 'USOIL' || symbol === 'UKOIL' || symbol === 'NATGAS') {
+    // EODHD for commodities
+    let eodhdFailed = false;
+    try {
+      const eodhdSymbol = symbol;
+      const url = `https://eodhd.com/api/real-time/${eodhdSymbol}.FOREX?api_token=${eodhdKey}&fmt=json`;
+      const resp = await fetch(url);
+      const raw = await resp.text();
+      let json = {};
+      try {
+        json = JSON.parse(raw);
+      } catch (jsonErr) {
+        console.warn('EODHD non-JSON response for', symbol, raw);
+      }
+      r = json || {};
+      if (typeof r.close === 'number') {
+        basePrice = r.close;
+        useLivePrice = true;
+      } else {
+        console.warn('EODHD did not return valid price for', symbol, JSON.stringify(json));
+        eodhdFailed = true;
+      }
+    } catch (err) {
+      console.warn('EODHD fetch failed for', symbol, err);
+      eodhdFailed = true;
+    }
+    // Fallback to Alpha Vantage if EODHD fails
+    if (!useLivePrice && (symbol === 'XAUUSD' || symbol === 'XAGUSD')) {
+      try {
+        const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+        const resp = await fetch(url);
+        const json = await resp.json();
+        const rate = json['Realtime Currency Exchange Rate'] || {};
+        if (typeof rate['5. Exchange Rate'] === 'string') {
+          basePrice = parseFloat(rate['5. Exchange Rate']);
+          useLivePrice = true;
+          console.warn('Alpha Vantage fallback used for', symbol, basePrice);
+        } else {
+          console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
+        }
+      } catch (err) {
+        console.warn('Alpha Vantage fallback fetch failed for', symbol, err);
+      }
+    }
+  } else if (symbol.endsWith('.US')) {
+    // Alpha Vantage for US stocks
+    try {
+      const avSymbol = symbol.replace('.US', '');
+      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${avSymbol}&apikey=${alphaKey}`;
+      const resp = await fetch(url);
+      const json = await resp.json();
+      const quote = json['Global Quote'] || {};
+      if (typeof quote['05. price'] === 'string') {
+        basePrice = parseFloat(quote['05. price']);
+        useLivePrice = true;
+      }
+    } catch (err) {
+      console.warn('Alpha Vantage fetch failed for', symbol, err);
+    }
+  } else {
+    // Alpha Vantage for forex
+    try {
+      const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+      const resp = await fetch(url);
+      const json = await resp.json();
+      const rate = json['Realtime Currency Exchange Rate'] || {};
+      if (typeof rate['5. Exchange Rate'] === 'string') {
+        basePrice = parseFloat(rate['5. Exchange Rate']);
+        useLivePrice = true;
+      }
+    } catch (err) {
+      console.warn('Alpha Vantage forex fetch failed for', symbol, err);
+    }
+  }
+
   const volatility = getVolatilityForAssetClass(spec.asset_class);
-  const randomChange = (Math.random() - 0.5) * 2 * volatility;
-  const midPrice = basePrice * (1 + randomChange);
-
-  // Calculate bid/ask spread
   const spreadInPrice = spec.spread_typical * spec.pip_size;
-  const bid = midPrice - spreadInPrice / 2;
-  const ask = midPrice + spreadInPrice / 2;
 
-  const change = midPrice - basePrice;
-  const changePercent = (change / basePrice) * 100;
+  let midPrice: number;
+  let bid: number;
+  let ask: number;
+  let change: number;
+  let changePercent: number;
+  let high: number;
+  let low: number;
+  let open: number;
+  let previous_close: number;
 
-  // Simulate intraday data
-  const high = midPrice * (1 + volatility * Math.random() * 0.5);
-  const low = midPrice * (1 - volatility * Math.random() * 0.5);
-  const open = basePrice * (1 + (Math.random() - 0.5) * volatility * 0.5);
+  if (useLivePrice) {
+    midPrice = typeof r.regularMarketPrice === 'number' ? r.regularMarketPrice : basePrice;
+    bid = typeof r.bid === 'number' ? r.bid : (midPrice - spreadInPrice / 2);
+    ask = typeof r.ask === 'number' ? r.ask : (midPrice + spreadInPrice / 2);
+    previous_close = typeof r.regularMarketPreviousClose === 'number' ? r.regularMarketPreviousClose : basePrice;
+    change = typeof r.regularMarketChange === 'number' ? r.regularMarketChange : (midPrice - previous_close);
+    changePercent = typeof r.regularMarketChangePercent === 'number' ? r.regularMarketChangePercent : ((change / previous_close) * 100);
+    high = typeof r.regularMarketDayHigh === 'number' ? r.regularMarketDayHigh : midPrice * (1 + volatility * Math.random() * 0.5);
+    low = typeof r.regularMarketDayLow === 'number' ? r.regularMarketDayLow : midPrice * (1 - volatility * Math.random() * 0.5);
+    open = typeof r.regularMarketOpen === 'number' ? r.regularMarketOpen : previous_close * (1 + (Math.random() - 0.5) * volatility * 0.5);
+  } else {
+    const randomChange = (Math.random() - 0.5) * 2 * volatility;
+    midPrice = basePrice * (1 + randomChange);
+    bid = midPrice - spreadInPrice / 2;
+    ask = midPrice + spreadInPrice / 2;
+    change = midPrice - basePrice;
+    changePercent = (change / basePrice) * 100;
+    high = midPrice * (1 + volatility * Math.random() * 0.5);
+    low = midPrice * (1 - volatility * Math.random() * 0.5);
+    open = basePrice * (1 + (Math.random() - 0.5) * volatility * 0.5);
+    previous_close = basePrice;
+  }
 
   // Calculate margin required for 1 lot
   const marginRequired = (midPrice * spec.min_trade_size) / spec.leverage;
