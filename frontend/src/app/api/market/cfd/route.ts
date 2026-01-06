@@ -467,6 +467,23 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * Build a detailed CFD quote object for the given instrument symbol.
+ *
+ * Produces a quote containing pricing (price, bid, ask, high, low, open, previous close, change, change percentage),
+ * instrument metadata (name, underlying asset, asset class, leverage, pip details, trade sizes, swap rates, trading hours),
+ * and margin information; price fields are populated from live market sources when available or synthesized from configured base prices and volatility otherwise.
+ *
+ * @param symbol - The CFD instrument symbol (e.g., "XAUUSD", "EURUSD").
+ * @returns An object with the instrument quote and metadata:
+ *  - symbol, name, underlying_asset, asset_class
+ *  - price, bid, ask, spread, spread_cost
+ *  - change, change_percentage, open, high, low, previous_close
+ *  - leverage, margin_requirement, margin_required_1_lot
+ *  - pip_size, pip_value, min_trade_size, max_trade_size
+ *  - swap_long, swap_short, trading_hours, last_updated
+ * @throws Error if the provided `symbol` is not defined in the CFD_INSTRUMENTS mapping.
+ */
 async function getCFDQuote(symbol: string) {
   const spec = CFD_INSTRUMENTS[symbol];
   if (!spec) {

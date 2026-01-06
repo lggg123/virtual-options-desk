@@ -31,6 +31,13 @@ interface CryptoAsset {
   last_updated: string;
 }
 
+/**
+ * Page component that displays real-time cryptocurrency market data and a simulated trading interface.
+ *
+ * Renders a dashboard with tabs for filtered views (all, top 10, gainers, losers), a refreshable crypto list, a details panel for the selected asset, formatted market statistics, and a virtual buy/sell order form with validation and feedback.
+ *
+ * @returns The rendered Crypto markets page as a JSX element.
+ */
 export default function CryptoPage() {
   const [cryptos, setCryptos] = useState<CryptoAsset[]>([]);
   const [loading, setLoading] = useState(true);
