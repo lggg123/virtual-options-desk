@@ -476,13 +476,13 @@ async function getCFDQuote(symbol: string) {
   // Try to fetch live price from EODHD (commodities) or Alpha Vantage (forex/stocks)
   let basePrice = BASE_PRICES[symbol] || 100;
   let useLivePrice = false;
-  let r: any = {};
+  let r: Record<string, unknown> = {};
   const eodhdKey = process.env.EODHD_API_KEY || '';
   const alphaKey = process.env.ALPHA_VANTAGE_API_KEY || '';
 
   if (symbol === 'XAUUSD' || symbol === 'XAGUSD' || symbol === 'USOIL' || symbol === 'UKOIL' || symbol === 'NATGAS') {
     // EODHD for commodities
-    let eodhdFailed = false;
+    // let eodhdFailed = false; // removed unused assignment
     try {
       const eodhdSymbol = symbol;
       const url = `https://eodhd.com/api/real-time/${eodhdSymbol}.FOREX?api_token=${eodhdKey}&fmt=json`;
@@ -491,7 +491,7 @@ async function getCFDQuote(symbol: string) {
       let json = {};
       try {
         json = JSON.parse(raw);
-      } catch (jsonErr) {
+      } catch {
         console.warn('EODHD non-JSON response for', symbol, raw);
       }
       r = json || {};
