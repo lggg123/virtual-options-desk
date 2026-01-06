@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,13 @@ interface CryptoAsset {
   last_updated: string;
 }
 
+/**
+ * Page component that displays real-time cryptocurrency market data and a simulated trading interface.
+ *
+ * Renders a dashboard with tabs for filtered views (all, top 10, gainers, losers), a refreshable crypto list, a details panel for the selected asset, formatted market statistics, and a virtual buy/sell order form with validation and feedback.
+ *
+ * @returns The rendered Crypto markets page as a JSX element.
+ */
 export default function CryptoPage() {
   const [cryptos, setCryptos] = useState<CryptoAsset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -241,7 +249,7 @@ export default function CryptoPage() {
                               <td className="py-3 px-2 text-orange-400 font-mono">{crypto.market_cap_rank}</td>
                               <td className="py-3 px-2">
                                 <div className="flex items-center gap-2">
-                                  <img src={crypto.image} alt={crypto.name} className="w-6 h-6 rounded-full" />
+                                  <Image src={crypto.image} alt={crypto.name} width={24} height={24} className="w-6 h-6 rounded-full" />
                                   <div>
                                     <div className="font-medium text-white">{crypto.symbol.toUpperCase()}</div>
                                     <div className="text-xs text-violet-400 hidden sm:block">{crypto.name}</div>
@@ -288,7 +296,7 @@ export default function CryptoPage() {
                       <div className="space-y-4">
                         {/* Coin Header */}
                         <div className="flex items-center gap-3 pb-4 border-b border-slate-700">
-                          <img src={selectedCrypto.image} alt={selectedCrypto.name} className="w-12 h-12 rounded-full" />
+                          <Image src={selectedCrypto.image} alt={selectedCrypto.name} width={48} height={48} className="w-12 h-12 rounded-full" />
                           <div>
                             <div className="font-bold text-white text-lg">{selectedCrypto.name}</div>
                             <div className="text-gray-400">{selectedCrypto.symbol.toUpperCase()}</div>

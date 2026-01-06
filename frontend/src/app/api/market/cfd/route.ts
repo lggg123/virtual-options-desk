@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * Fetches a URL and aborts the request if it does not complete within the specified timeout.
+ *
+ * @param url - The resource URL to fetch
+ * @param timeoutMs - Maximum time to wait in milliseconds (default: 5000)
+ * @returns The `Response` from the fetch request
+ */
+async function fetchWithTimeout(url: string, timeoutMs = 5000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 // Cache for rate limiting
 const cache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION = 30000; // 30 second cache for CFDs (faster updates)
@@ -403,8 +420,8 @@ const BASE_PRICES: Record<string, number> = {
   'GER40': 19850,
   'UK100': 8250,
   // Commodity - Updated Jan 2026
-  'XAUUSD': 2670.00, // Gold - Updated Jan 2026
-  'XAGUSD': 30.50, // Silver - Updated Jan 2026
+  'XAUUSD': 4498.60, // Gold - Updated Jan 2026 (live market)
+  'XAGUSD': 80.96, // Silver - Updated Jan 2026 (live market)
   'USOIL': 58.00, // WTI Crude - Updated Jan 2026
   'UKOIL': 62.50, // Brent Crude - Updated Jan 2026
   'NATGAS': 2.85,
@@ -420,7 +437,23 @@ const BASE_PRICES: Record<string, number> = {
   'AMZN.US': 215.00,
 };
 
-// GET /api/market/cfd?symbol=EURUSD or ?asset_class=forex or ?type=list
+/**
+ * Handle GET requests for CFD market data (single quote, asset-class set, or instruments list).
+ *
+ * Accepts query parameters:
+ * - `symbol` — instrument symbol (e.g., `EURUSD`, `AAPL.US`) to return a single quote.
+ * - `asset_class` — one of `forex`, `index`, `commodity`, `crypto`, `stock` to return all quotes in that class.
+ * - `type` — if set to `list` returns the available instruments and their specifications; otherwise returns quotes (`quote`).
+ *
+ * Responses are cached for 30 seconds and keyed by request type and symbol/asset_class.
+ *
+ * @param request - The incoming NextRequest containing query parameters described above.
+ * @returns A JSON response containing:
+ * - a single CFD quote object when `symbol` is provided,
+ * - an array of CFD quote objects when `asset_class` is provided or no symbol/type is specified,
+ * - an array of instrument definitions when `type=list` is used,
+ * - or `{ error: string }` with HTTP 500 on failure.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -467,31 +500,179 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * Build a detailed CFD quote object for the given instrument symbol.
+ *
+ * Produces a quote containing pricing (price, bid, ask, high, low, open, previous close, change, change percentage),
+ * instrument metadata (name, underlying asset, asset class, leverage, pip details, trade sizes, swap rates, trading hours),
+ * and margin information; price fields are populated from live market sources when available or synthesized from configured base prices and volatility otherwise.
+ *
+ * @param symbol - The CFD instrument symbol (e.g., "XAUUSD", "EURUSD").
+ * @returns An object with the instrument quote and metadata:
+ *  - symbol, name, underlying_asset, asset_class
+ *  - price, bid, ask, spread, spread_cost
+ *  - change, change_percentage, open, high, low, previous_close
+ *  - leverage, margin_requirement, margin_required_1_lot
+ *  - pip_size, pip_value, min_trade_size, max_trade_size
+ *  - swap_long, swap_short, trading_hours, last_updated
+ * @throws Error if the provided `symbol` is not defined in the CFD_INSTRUMENTS mapping.
+ */
 async function getCFDQuote(symbol: string) {
   const spec = CFD_INSTRUMENTS[symbol];
   if (!spec) {
     throw new Error(`Unknown CFD symbol: ${symbol}`);
   }
+  let basePrice = BASE_PRICES[symbol] || 100;
+  let useLivePrice = false;
+  let r: Record<string, unknown> = {};
+  const eodhdKey = process.env.EODHD_API_KEY || '';
+  const alphaKey = process.env.ALPHA_VANTAGE_API_KEY || '';
 
-  const basePrice = BASE_PRICES[symbol] || 100;
+  if (symbol === 'XAUUSD' || symbol === 'XAGUSD' || symbol === 'USOIL' || symbol === 'UKOIL' || symbol === 'NATGAS') {
+    try {
+      const eodhdSymbol = symbol;
+      const url = `https://eodhd.com/api/real-time/${eodhdSymbol}.FOREX?api_token=${eodhdKey}&fmt=json`;
+      const resp = await fetchWithTimeout(url, 5000);
+      const raw = await resp.text();
+      let json = {};
+      try {
+        json = JSON.parse(raw);
+      } catch {
+        console.warn('EODHD non-JSON response for', symbol, raw);
+      }
+      r = json || {};
+      if (typeof (r as any).close === 'number') {
+        basePrice = (r as any).close;
+        useLivePrice = true;
+      } else {
+        console.warn('EODHD did not return valid price for', symbol, JSON.stringify(json));
+        // Fallback to Alpha Vantage if EODHD fails
+        if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
+          try {
+            const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+            const resp = await fetchWithTimeout(url, 5000);
+            const json = await resp.json();
+            const rate = json['Realtime Currency Exchange Rate'] || {};
+            if (typeof rate['5. Exchange Rate'] === 'string') {
+              basePrice = parseFloat(rate['5. Exchange Rate']);
+              useLivePrice = true;
+              r = rate;
+              console.warn('Alpha Vantage fallback used for', symbol, basePrice);
+            } else {
+              console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
+            }
+          } catch (err) {
+            console.warn('Alpha Vantage fallback fetch failed for', symbol, err);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('EODHD fetch failed for', symbol, err);
+      // Fallback to Alpha Vantage if EODHD fails
+      if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
+        try {
+          const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+          const resp = await fetchWithTimeout(url, 5000);
+          const json = await resp.json();
+          const rate = json['Realtime Currency Exchange Rate'] || {};
+          if (typeof rate['5. Exchange Rate'] === 'string') {
+            basePrice = parseFloat(rate['5. Exchange Rate']);
+            useLivePrice = true;
+            r = rate;
+            console.warn('Alpha Vantage fallback used for', symbol, basePrice);
+          } else {
+            console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
+          }
+        } catch (err) {
+          console.warn('Alpha Vantage fallback fetch failed for', symbol, err);
+        }
+      }
+    }
+  } else if (symbol.endsWith('.US')) {
+    // Alpha Vantage for US stocks
+    try {
+      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol.replace('.US','')}&apikey=${alphaKey}`;
+      const resp = await fetchWithTimeout(url, 5000);
+      const json = await resp.json();
+      const quote = json['Global Quote'] || {};
+      if (typeof quote['05. price'] === 'string') {
+        basePrice = parseFloat(quote['05. price']);
+        useLivePrice = true;
+      }
+    } catch (err) {
+      console.warn('Alpha Vantage US stock fetch failed for', symbol, err);
+    }
+  } else {
+    // Alpha Vantage for forex
+    try {
+      const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+      const resp = await fetchWithTimeout(url, 5000);
+      const json = await resp.json();
+      const rate = json['Realtime Currency Exchange Rate'] || {};
+      if (typeof rate['5. Exchange Rate'] === 'string') {
+        basePrice = parseFloat(rate['5. Exchange Rate']);
+        useLivePrice = true;
+        r = rate;
+      }
+    } catch (err) {
+      console.warn('Alpha Vantage forex fetch failed for', symbol, err);
+    }
+  }
 
-  // Simulate price movement based on asset class volatility
   const volatility = getVolatilityForAssetClass(spec.asset_class);
-  const randomChange = (Math.random() - 0.5) * 2 * volatility;
-  const midPrice = basePrice * (1 + randomChange);
-
-  // Calculate bid/ask spread
   const spreadInPrice = spec.spread_typical * spec.pip_size;
-  const bid = midPrice - spreadInPrice / 2;
-  const ask = midPrice + spreadInPrice / 2;
 
-  const change = midPrice - basePrice;
-  const changePercent = (change / basePrice) * 100;
+  let midPrice: number;
+  let bid: number;
+  let ask: number;
+  let change: number;
+  let changePercent: number;
+  let high: number;
+  let low: number;
+  let open: number;
+  let previous_close: number;
+  // removed stray/duplicate fetchWithTimeout
 
-  // Simulate intraday data
-  const high = midPrice * (1 + volatility * Math.random() * 0.5);
-  const low = midPrice * (1 - volatility * Math.random() * 0.5);
-  const open = basePrice * (1 + (Math.random() - 0.5) * volatility * 0.5);
+  if (useLivePrice) {
+    // Alpha Vantage FX and GLOBAL_QUOTE format detection
+    const avMid = typeof r["5. Exchange Rate"] === 'string' ? parseFloat(r["5. Exchange Rate"] as string) : NaN;
+    const avBid = typeof r["8. Bid Price"] === 'string' ? parseFloat(r["8. Bid Price"] as string) : NaN;
+    const avAsk = typeof r["9. Ask Price"] === 'string' ? parseFloat(r["9. Ask Price"] as string) : NaN;
+    const avPrev = typeof r["7. Last Refreshed"] === 'string' ? basePrice : NaN; // Alpha Vantage FX does not provide previous close
+
+    // Alpha Vantage GLOBAL_QUOTE fields
+    const gqOpen = typeof r["02. open"] === 'string' ? parseFloat(r["02. open"] as string) : NaN;
+    const gqHigh = typeof r["03. high"] === 'string' ? parseFloat(r["03. high"] as string) : NaN;
+    const gqLow = typeof r["04. low"] === 'string' ? parseFloat(r["04. low"] as string) : NaN;
+    const gqPrevClose = typeof r["08. previous close"] === 'string' ? parseFloat(r["08. previous close"] as string) : NaN;
+    const gqChange = typeof r["09. change"] === 'string' ? parseFloat(r["09. change"] as string) : NaN;
+    const gqChangePct = typeof r["10. change percent"] === 'string' ? parseFloat((r["10. change percent"] as string).replace('%','')) : NaN;
+    const gqPrice = typeof r["05. price"] === 'string' ? parseFloat(r["05. price"] as string) : NaN;
+
+    // Use AV/GLOBAL_QUOTE values if present and valid, else fallback to Yahoo/EODHD fields
+    midPrice = !isNaN(avMid) ? avMid : (!isNaN(gqPrice) ? gqPrice : (typeof r.regularMarketPrice === 'number' ? r.regularMarketPrice : basePrice));
+    bid = !isNaN(avBid) ? avBid : (typeof r.bid === 'number' ? r.bid : (midPrice - spreadInPrice / 2));
+    ask = !isNaN(avAsk) ? avAsk : (typeof r.ask === 'number' ? r.ask : (midPrice + spreadInPrice / 2));
+    previous_close = !isNaN(avPrev) ? avPrev : (!isNaN(gqPrevClose) ? gqPrevClose : (typeof r.regularMarketPreviousClose === 'number' ? r.regularMarketPreviousClose : basePrice));
+    change = !isNaN(avMid) && !isNaN(avPrev) ? (avMid - avPrev)
+      : (!isNaN(gqChange) ? gqChange : (typeof r.regularMarketChange === 'number' ? r.regularMarketChange : (midPrice - previous_close)));
+    changePercent = !isNaN(avMid) && !isNaN(avPrev) && avPrev !== 0 ? ((avMid - avPrev) / avPrev * 100)
+      : (!isNaN(gqChangePct) ? gqChangePct : (typeof r.regularMarketChangePercent === 'number' ? r.regularMarketChangePercent : ((change / previous_close) * 100)));
+    high = !isNaN(gqHigh) ? gqHigh : (typeof r.regularMarketDayHigh === 'number' ? r.regularMarketDayHigh : midPrice * (1 + volatility * Math.random() * 0.5));
+    low = !isNaN(gqLow) ? gqLow : (typeof r.regularMarketDayLow === 'number' ? r.regularMarketDayLow : midPrice * (1 - volatility * Math.random() * 0.5));
+    open = !isNaN(gqOpen) ? gqOpen : (typeof r.regularMarketOpen === 'number' ? r.regularMarketOpen : previous_close * (1 + (Math.random() - 0.5) * volatility * 0.5));
+  } else {
+    const randomChange = (Math.random() - 0.5) * 2 * volatility;
+    midPrice = basePrice * (1 + randomChange);
+    bid = midPrice - spreadInPrice / 2;
+    ask = midPrice + spreadInPrice / 2;
+    change = midPrice - basePrice;
+    changePercent = (change / basePrice) * 100;
+    high = midPrice * (1 + volatility * Math.random() * 0.5);
+    low = midPrice * (1 - volatility * Math.random() * 0.5);
+    open = basePrice * (1 + (Math.random() - 0.5) * volatility * 0.5);
+    previous_close = basePrice;
+  }
 
   // Calculate margin required for 1 lot
   const marginRequired = (midPrice * spec.min_trade_size) / spec.leverage;
@@ -552,6 +733,13 @@ function getVolatilityForAssetClass(assetClass: string): number {
   }
 }
 
+/**
+ * Rounds a price to the nearest increment defined by `precision`.
+ *
+ * @param price - The price value to round
+ * @param precision - The rounding increment (e.g., `0.0001` for 4-decimal precision or `1`/`10` for integer multiples)
+ * @returns The `price` rounded to the nearest `precision`
+ */
 function roundPrice(price: number, precision: number): number {
   if (precision >= 1) {
     return Math.round(price / precision) * precision;
