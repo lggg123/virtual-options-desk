@@ -634,21 +634,33 @@ async function getCFDQuote(symbol: string) {
   // removed stray/duplicate fetchWithTimeout
 
   if (useLivePrice) {
-    // Alpha Vantage format detection
+    // Alpha Vantage FX and GLOBAL_QUOTE format detection
     const avMid = typeof r["5. Exchange Rate"] === 'string' ? parseFloat(r["5. Exchange Rate"] as string) : NaN;
     const avBid = typeof r["8. Bid Price"] === 'string' ? parseFloat(r["8. Bid Price"] as string) : NaN;
     const avAsk = typeof r["9. Ask Price"] === 'string' ? parseFloat(r["9. Ask Price"] as string) : NaN;
-    const avPrev = typeof r["7. Last Refreshed"] === 'string' ? basePrice : NaN; // Alpha Vantage does not provide previous close, fallback to basePrice
-    // Use AV values if present and valid, else fallback to Yahoo/EODHD fields
-    midPrice = !isNaN(avMid) ? avMid : (typeof r.regularMarketPrice === 'number' ? r.regularMarketPrice : basePrice);
+    const avPrev = typeof r["7. Last Refreshed"] === 'string' ? basePrice : NaN; // Alpha Vantage FX does not provide previous close
+
+    // Alpha Vantage GLOBAL_QUOTE fields
+    const gqOpen = typeof r["02. open"] === 'string' ? parseFloat(r["02. open"] as string) : NaN;
+    const gqHigh = typeof r["03. high"] === 'string' ? parseFloat(r["03. high"] as string) : NaN;
+    const gqLow = typeof r["04. low"] === 'string' ? parseFloat(r["04. low"] as string) : NaN;
+    const gqPrevClose = typeof r["08. previous close"] === 'string' ? parseFloat(r["08. previous close"] as string) : NaN;
+    const gqChange = typeof r["09. change"] === 'string' ? parseFloat(r["09. change"] as string) : NaN;
+    const gqChangePct = typeof r["10. change percent"] === 'string' ? parseFloat((r["10. change percent"] as string).replace('%','')) : NaN;
+    const gqPrice = typeof r["05. price"] === 'string' ? parseFloat(r["05. price"] as string) : NaN;
+
+    // Use AV/GLOBAL_QUOTE values if present and valid, else fallback to Yahoo/EODHD fields
+    midPrice = !isNaN(avMid) ? avMid : (!isNaN(gqPrice) ? gqPrice : (typeof r.regularMarketPrice === 'number' ? r.regularMarketPrice : basePrice));
     bid = !isNaN(avBid) ? avBid : (typeof r.bid === 'number' ? r.bid : (midPrice - spreadInPrice / 2));
     ask = !isNaN(avAsk) ? avAsk : (typeof r.ask === 'number' ? r.ask : (midPrice + spreadInPrice / 2));
-    previous_close = !isNaN(avPrev) ? avPrev : (typeof r.regularMarketPreviousClose === 'number' ? r.regularMarketPreviousClose : basePrice);
-    change = !isNaN(avMid) && !isNaN(avPrev) ? (avMid - avPrev) : (typeof r.regularMarketChange === 'number' ? r.regularMarketChange : (midPrice - previous_close));
-    changePercent = !isNaN(avMid) && !isNaN(avPrev) && avPrev !== 0 ? ((avMid - avPrev) / avPrev * 100) : (typeof r.regularMarketChangePercent === 'number' ? r.regularMarketChangePercent : ((change / previous_close) * 100));
-    high = typeof r.regularMarketDayHigh === 'number' ? r.regularMarketDayHigh : midPrice * (1 + volatility * Math.random() * 0.5);
-    low = typeof r.regularMarketDayLow === 'number' ? r.regularMarketDayLow : midPrice * (1 - volatility * Math.random() * 0.5);
-    open = typeof r.regularMarketOpen === 'number' ? r.regularMarketOpen : previous_close * (1 + (Math.random() - 0.5) * volatility * 0.5);
+    previous_close = !isNaN(avPrev) ? avPrev : (!isNaN(gqPrevClose) ? gqPrevClose : (typeof r.regularMarketPreviousClose === 'number' ? r.regularMarketPreviousClose : basePrice));
+    change = !isNaN(avMid) && !isNaN(avPrev) ? (avMid - avPrev)
+      : (!isNaN(gqChange) ? gqChange : (typeof r.regularMarketChange === 'number' ? r.regularMarketChange : (midPrice - previous_close)));
+    changePercent = !isNaN(avMid) && !isNaN(avPrev) && avPrev !== 0 ? ((avMid - avPrev) / avPrev * 100)
+      : (!isNaN(gqChangePct) ? gqChangePct : (typeof r.regularMarketChangePercent === 'number' ? r.regularMarketChangePercent : ((change / previous_close) * 100)));
+    high = !isNaN(gqHigh) ? gqHigh : (typeof r.regularMarketDayHigh === 'number' ? r.regularMarketDayHigh : midPrice * (1 + volatility * Math.random() * 0.5));
+    low = !isNaN(gqLow) ? gqLow : (typeof r.regularMarketDayLow === 'number' ? r.regularMarketDayLow : midPrice * (1 - volatility * Math.random() * 0.5));
+    open = !isNaN(gqOpen) ? gqOpen : (typeof r.regularMarketOpen === 'number' ? r.regularMarketOpen : previous_close * (1 + (Math.random() - 0.5) * volatility * 0.5));
   } else {
     const randomChange = (Math.random() - 0.5) * 2 * volatility;
     midPrice = basePrice * (1 + randomChange);
