@@ -35,14 +35,15 @@ const COMMODITY_INFO: Record<string, { name: string; unit: string; category: 'en
 };
 
 // Simulated base prices (used when API not available)
+// Updated: January 2026
 const BASE_PRICES: Record<string, number> = {
-  'CL': 72.50, // WTI Crude
-  'BZ': 76.80, // Brent
+  'CL': 58.00, // WTI Crude - Updated Jan 2026
+  'BZ': 62.50, // Brent - Updated Jan 2026
   'NG': 2.85,  // Natural Gas
   'HO': 2.35,  // Heating Oil
   'RB': 2.15,  // Gasoline
-  'GC': 2045.00, // Gold
-  'SI': 23.50, // Silver
+  'GC': 2670.00, // Gold - Updated Jan 2026
+  'SI': 30.50, // Silver - Updated Jan 2026
   'HG': 3.85,  // Copper
   'PL': 925.00, // Platinum
   'PA': 1050.00, // Palladium

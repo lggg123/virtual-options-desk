@@ -402,11 +402,11 @@ const BASE_PRICES: Record<string, number> = {
   'US30': 44500,
   'GER40': 19850,
   'UK100': 8250,
-  // Commodity
-  'XAUUSD': 2045.00,
-  'XAGUSD': 23.50,
-  'USOIL': 72.50,
-  'UKOIL': 76.80,
+  // Commodity - Updated Jan 2026
+  'XAUUSD': 2670.00, // Gold - Updated Jan 2026
+  'XAGUSD': 30.50, // Silver - Updated Jan 2026
+  'USOIL': 58.00, // WTI Crude - Updated Jan 2026
+  'UKOIL': 62.50, // Brent Crude - Updated Jan 2026
   'NATGAS': 2.85,
   // Crypto
   'BTCUSD': 98500,
