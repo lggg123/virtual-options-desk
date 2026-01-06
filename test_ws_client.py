@@ -1,1 +1,0 @@
-https://svelte-chart-app.vercel.app/

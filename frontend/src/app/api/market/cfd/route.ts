@@ -472,30 +472,30 @@ async function getCFDQuote(symbol: string) {
   if (!spec) {
     throw new Error(`Unknown CFD symbol: ${symbol}`);
   }
-
-  // Try to fetch live price from EODHD (commodities) or Alpha Vantage (forex/stocks)
-  let basePrice = BASE_PRICES[symbol] || 100;
-  let useLivePrice = false;
-  let r: Record<string, unknown> = {};
-  const eodhdKey = process.env.EODHD_API_KEY || '';
-  const alphaKey = process.env.ALPHA_VANTAGE_API_KEY || '';
-
-  if (symbol === 'XAUUSD' || symbol === 'XAGUSD' || symbol === 'USOIL' || symbol === 'UKOIL' || symbol === 'NATGAS') {
-    // EODHD for commodities
-    // let eodhdFailed = false; // removed unused assignment
+    } else {
+      console.warn('EODHD did not return valid price for', symbol, JSON.stringify(json));
+    }
+  } catch (err) {
+    console.warn('EODHD fetch failed for', symbol, err);
+  }
+  // Fallback to Alpha Vantage if EODHD fails
+  if (!useLivePrice && (symbol === 'XAUUSD' || symbol === 'XAGUSD')) {
     try {
-      const eodhdSymbol = symbol;
-      const url = `https://eodhd.com/api/real-time/${eodhdSymbol}.FOREX?api_token=${eodhdKey}&fmt=json`;
+      const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
       const resp = await fetch(url);
-      const raw = await resp.text();
-      let json = {};
-      try {
-        json = JSON.parse(raw);
-      } catch {
-        console.warn('EODHD non-JSON response for', symbol, raw);
+      const json = await resp.json();
+      const rate = json['Realtime Currency Exchange Rate'] || {};
+      if (typeof rate['5. Exchange Rate'] === 'string') {
+        basePrice = parseFloat(rate['5. Exchange Rate']);
+        useLivePrice = true;
+        console.warn('Alpha Vantage fallback used for', symbol, basePrice);
+      } else {
+        console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
       }
-      r = json || {};
-      if (typeof r.close === 'number') {
+    } catch (err) {
+      console.warn('Alpha Vantage fallback fetch failed for', symbol, err);
+    }
+  }
         basePrice = r.close;
         useLivePrice = true;
       } else {
