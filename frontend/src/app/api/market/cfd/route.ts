@@ -504,7 +504,7 @@ async function getCFDQuote(symbol: string) {
       }
     } catch (err) {
       console.warn('EODHD fetch failed for', symbol, err);
-      eodhdFailed = true;
+    }
     }
     // Fallback to Alpha Vantage if EODHD fails
     if (!useLivePrice && (symbol === 'XAUUSD' || symbol === 'XAGUSD')) {
