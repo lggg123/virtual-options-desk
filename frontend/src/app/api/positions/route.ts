@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { calculateBlackScholes } from '@/lib/calculations/black-scholes';
 
+// In-memory cache for external API calls to prevent rate limiting
+const priceCache = new Map<string, { data: number | { bid: number; ask: number; mid: number }; timestamp: number }>();
+const PRICE_CACHE_DURATION = 30000; // 30 seconds
+
 // Fetch current stock price from Yahoo Finance
 async function fetchCurrentPrice(symbol: string): Promise<number> {
   try {
@@ -19,6 +23,68 @@ async function fetchCurrentPrice(symbol: string): Promise<number> {
     console.error('Failed to fetch price for', symbol, e);
   }
   return 0; // Return 0 to indicate fetch failed
+}
+
+// Fetch current crypto price from CoinGecko (with caching to prevent rate limiting)
+async function fetchCryptoPrice(symbol: string): Promise<number> {
+  // Check cache first
+  const cacheKey = `crypto-${symbol}`;
+  const cached = priceCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < PRICE_CACHE_DURATION) {
+    return cached.data as number;
+  }
+
+  try {
+    const coinIdMap: Record<string, string> = {
+      'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'USDT': 'tether',
+      'BNB': 'binancecoin', 'XRP': 'ripple', 'USDC': 'usd-coin', 'ADA': 'cardano',
+      'DOGE': 'dogecoin', 'AVAX': 'avalanche-2', 'TRX': 'tron', 'TON': 'the-open-network',
+      'LINK': 'chainlink', 'MATIC': 'matic-network', 'DOT': 'polkadot', 'SHIB': 'shiba-inu'
+    };
+
+    const coinId = coinIdMap[symbol] || symbol.toLowerCase();
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`,
+      { next: { revalidate: 60 } } // Cache for 60 seconds
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      const price = data[coinId]?.usd || 0;
+
+      // Update cache
+      priceCache.set(cacheKey, { data: price, timestamp: Date.now() });
+
+      return price;
+    }
+  } catch (e) {
+    console.error('Failed to fetch crypto price for', symbol, e);
+  }
+  return 0;
+}
+
+// Fetch current CFD price from internal API
+async function fetchCFDPrice(symbol: string): Promise<{ bid: number; ask: number; mid: number }> {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/market/cfd?symbol=${symbol}`,
+      { next: { revalidate: 30 } }
+    );
+
+    if (response.ok) {
+      const quote = await response.json();
+      if (quote && quote.bid && quote.ask) {
+        return {
+          bid: quote.bid,
+          ask: quote.ask,
+          mid: quote.price || (quote.bid + quote.ask) / 2
+        };
+      }
+    }
+  } catch (e) {
+    console.error('Failed to fetch CFD price for', symbol, e);
+  }
+  return { bid: 0, ask: 0, mid: 0 };
 }
 
 // Parse option symbol format: "SPY-2026-01-26-680-call" or "AAPL-2025-12-20-180-put"
@@ -77,27 +143,35 @@ export interface TransformedPosition {
   id: string;
   symbol: string;
   ticker: string;
-  type: 'call' | 'put';
-  strike: number;
-  expiry: string;
+  assetClass: 'option' | 'crypto' | 'cfd' | 'stock';
+  type?: 'call' | 'put' | 'long' | 'short';
+  strike?: number;
+  expiry?: string;
   quantity: number;
   avgPrice: number;
   currentPrice: number;
   pnl: number;
   pnlPercent: number;
-  delta: number;
-  theta: number;
-  gamma: number;
-  vega: number;
-  daysToExpiry: number;
+  delta?: number;
+  theta?: number;
+  gamma?: number;
+  vega?: number;
+  daysToExpiry?: number;
   strategy?: string;
-  // New fields for better trade understanding
-  underlyingPrice: number;
-  intrinsicValue: number;
-  timeValue: number;
-  breakeven: number;
+  // Option-specific fields
+  underlyingPrice?: number;
+  intrinsicValue?: number;
+  timeValue?: number;
+  breakeven?: number;
   priceSource: 'live' | 'estimated' | 'entry';
-  impliedVolatility: number;
+  impliedVolatility?: number;
+  // CFD-specific fields
+  leverage?: number;
+  marginUsed?: number;
+  positionValue?: number;
+  // Crypto/general fields
+  name?: string;
+  image?: string;
 }
 
 export async function GET() {
@@ -126,25 +200,192 @@ export async function GET() {
       throw error;
     }
 
-    // Get unique tickers and fetch current underlying prices
-    const uniqueTickers = [...new Set((positions || []).map(pos => {
+    // Parse notes to determine asset class for each position
+    const positionsWithAssetClass = (positions || []).map(pos => {
+      let assetClass: 'option' | 'crypto' | 'cfd' | 'stock' = 'option';
+      let notes: Record<string, unknown> = {};
+
+      try {
+        if (pos.notes) {
+          notes = typeof pos.notes === 'string' ? JSON.parse(pos.notes) : pos.notes;
+          assetClass = (notes.asset_class as 'option' | 'crypto' | 'cfd' | 'stock' | undefined) || 'option';
+        }
+      } catch (e) {
+        console.error('Failed to parse notes for position', pos.id, e);
+      }
+
+      return { ...pos, assetClass, parsedNotes: notes };
+    });
+
+    // Group positions by asset class to fetch prices efficiently
+    const optionPositions = positionsWithAssetClass.filter(p => p.assetClass === 'option');
+    const cryptoPositions = positionsWithAssetClass.filter(p => p.assetClass === 'crypto');
+    const cfdPositions = positionsWithAssetClass.filter(p => p.assetClass === 'cfd');
+
+    // Fetch underlying prices for options
+    const uniqueOptionTickers = [...new Set(optionPositions.map(pos => {
       const parsed = parseOptionSymbol(pos.symbol);
       return parsed?.ticker || pos.symbol.split('-')[0] || pos.symbol;
     }))];
 
-    // Fetch all underlying prices in parallel
-    const pricePromises = uniqueTickers.map(async ticker => ({
+    const optionPricePromises = uniqueOptionTickers.map(async ticker => ({
       ticker,
       price: await fetchCurrentPrice(ticker)
     }));
-    const priceResults = await Promise.all(pricePromises);
+
+    // Fetch crypto prices
+    const uniqueCryptoSymbols = [...new Set(cryptoPositions.map(pos => pos.symbol))];
+    const cryptoPricePromises = uniqueCryptoSymbols.map(async symbol => ({
+      symbol,
+      price: await fetchCryptoPrice(symbol)
+    }));
+
+    // Fetch CFD prices
+    const uniqueCFDSymbols = [...new Set(cfdPositions.map(pos => pos.symbol))];
+    const cfdPricePromises = uniqueCFDSymbols.map(async symbol => ({
+      symbol,
+      prices: await fetchCFDPrice(symbol)
+    }));
+
+    // Wait for all prices
+    const [optionPriceResults, cryptoPriceResults, cfdPriceResults] = await Promise.all([
+      Promise.all(optionPricePromises),
+      Promise.all(cryptoPricePromises),
+      Promise.all(cfdPricePromises)
+    ]);
+
+    // Create price lookup maps
     const underlyingPrices: Record<string, number> = {};
-    for (const { ticker, price } of priceResults) {
+    for (const { ticker, price } of optionPriceResults) {
       underlyingPrices[ticker] = price;
     }
 
+    const cryptoPrices: Record<string, number> = {};
+    for (const { symbol, price } of cryptoPriceResults) {
+      cryptoPrices[symbol] = price;
+    }
+
+    const cfdPrices: Record<string, { bid: number; ask: number; mid: number }> = {};
+    for (const { symbol, prices } of cfdPriceResults) {
+      cfdPrices[symbol] = prices;
+    }
+
     // Transform database positions to match frontend interface
-    const transformedPositions: TransformedPosition[] = (positions || []).map(pos => {
+    const transformedPositions: TransformedPosition[] = positionsWithAssetClass.map(pos => {
+      const assetClass = pos.assetClass;
+      const notes = pos.parsedNotes;
+
+      // Handle different asset classes
+      if (assetClass === 'crypto') {
+        return transformCryptoPosition(pos, notes, cryptoPrices);
+      } else if (assetClass === 'cfd') {
+        return transformCFDPosition(pos, notes, cfdPrices);
+      } else {
+        return transformOptionPosition(pos, notes, underlyingPrices);
+      }
+    });
+
+    // Detect strategies from position combinations (options only)
+    const positionsWithStrategies = detectStrategies(transformedPositions);
+
+    return NextResponse.json({ positions: positionsWithStrategies });
+  } catch (error) {
+    console.error('Error fetching positions:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch positions' },
+      { status: 500 }
+    );
+  }
+}
+
+// Transform crypto position
+function transformCryptoPosition(
+  pos: { id: string; symbol: string; quantity: number; entry_price: number; current_price?: number | null },
+  notes: Record<string, unknown>,
+  cryptoPrices: Record<string, number>
+): TransformedPosition {
+  const symbol = pos.symbol;
+  const currentPrice = cryptoPrices[symbol] || pos.current_price || pos.entry_price;
+  const priceSource = cryptoPrices[symbol] > 0 ? 'live' : 'entry';
+
+  // P&L calculation for spot crypto (no multiplier)
+  const pnl = (currentPrice - pos.entry_price) * pos.quantity;
+  const pnlPercent = pos.entry_price > 0
+    ? ((currentPrice - pos.entry_price) / pos.entry_price) * 100
+    : 0;
+
+  return {
+    id: pos.id,
+    symbol,
+    ticker: symbol,
+    assetClass: 'crypto',
+    type: pos.quantity > 0 ? 'long' : 'short',
+    quantity: pos.quantity,
+    avgPrice: pos.entry_price,
+    currentPrice,
+    pnl,
+    pnlPercent,
+    priceSource,
+    name: notes.name as string | undefined,
+    image: notes.image as string | undefined,
+  };
+}
+
+// Transform CFD position
+function transformCFDPosition(
+  pos: { id: string; symbol: string; quantity: number; entry_price: number; current_price?: number | null; cost_basis?: number | null },
+  notes: Record<string, unknown>,
+  cfdPrices: Record<string, { bid: number; ask: number; mid: number }>
+): TransformedPosition {
+  const symbol = pos.symbol;
+  const cfdQuote = cfdPrices[symbol];
+  const positionType = (notes.position_type as string | undefined) || 'long';
+
+  // Use bid for long positions (selling price), ask for short positions (buying price to close)
+  const currentPrice = cfdQuote
+    ? (positionType === 'long' ? cfdQuote.bid : cfdQuote.ask)
+    : pos.current_price || pos.entry_price;
+
+  const priceSource = cfdQuote ? 'live' : 'entry';
+  const leverage = (notes.leverage as number | undefined) || 1;
+
+  // P&L calculation for CFDs (no multiplier, but account for position direction)
+  const priceDiff = positionType === 'long'
+    ? (currentPrice - pos.entry_price)
+    : (pos.entry_price - currentPrice);
+
+  const pnl = priceDiff * pos.quantity * leverage;
+  const pnlPercent = pos.entry_price > 0
+    ? (priceDiff / pos.entry_price) * 100 * leverage
+    : 0;
+
+  const positionValue = pos.quantity * currentPrice * leverage;
+  const marginUsed = pos.cost_basis || (pos.quantity * pos.entry_price * leverage);
+
+  return {
+    id: pos.id,
+    symbol,
+    ticker: symbol,
+    assetClass: 'cfd',
+    type: positionType as 'long' | 'short',
+    quantity: pos.quantity,
+    avgPrice: pos.entry_price,
+    currentPrice,
+    pnl,
+    pnlPercent,
+    priceSource,
+    leverage,
+    marginUsed,
+    positionValue,
+  };
+}
+
+// Transform option position (original logic)
+function transformOptionPosition(
+  pos: { id: string; symbol: string; quantity: number; entry_price: number; strike_price?: number | null; expiration_date?: string | null; option_type?: string | null; position_type?: string | null; delta?: number | null; gamma?: number | null; theta?: number | null; vega?: number | null; implied_volatility?: number | null; strategy?: string | null },
+  notes: Record<string, unknown>,
+  underlyingPrices: Record<string, number>
+): TransformedPosition {
       // Try to parse the symbol if strike/expiry are missing
       const parsed = parseOptionSymbol(pos.symbol);
 
@@ -229,6 +470,7 @@ export async function GET() {
         id: pos.id,
         symbol: pos.symbol,
         ticker,
+        assetClass: 'option' as const,
         type: optionType,
         strike,
         expiry,
@@ -250,19 +492,6 @@ export async function GET() {
         priceSource,
         impliedVolatility: impliedVolatility * 100, // Convert to percentage
       };
-    });
-
-    // Detect strategies from position combinations
-    const positionsWithStrategies = detectStrategies(transformedPositions);
-
-    return NextResponse.json({ positions: positionsWithStrategies });
-  } catch (error) {
-    console.error('Error fetching positions:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch positions' },
-      { status: 500 }
-    );
-  }
 }
 
 // Detect multi-leg option strategies from positions
@@ -271,16 +500,24 @@ function detectStrategies(positions: TransformedPosition[]): TransformedPosition
     return positions;
   }
 
+  // Only detect strategies for options
+  const optionPositions = positions.filter(p => p.assetClass === 'option');
+  const nonOptionPositions = positions.filter(p => p.assetClass !== 'option');
+
+  if (optionPositions.length < 2) {
+    return positions;
+  }
+
   // Group positions by ticker
   const byTicker: Record<string, TransformedPosition[]> = {};
-  for (const pos of positions) {
+  for (const pos of optionPositions) {
     if (!byTicker[pos.ticker]) {
       byTicker[pos.ticker] = [];
     }
     byTicker[pos.ticker].push(pos);
   }
 
-  const result: TransformedPosition[] = [];
+  const result: TransformedPosition[] = [...nonOptionPositions];
 
   for (const ticker of Object.keys(byTicker)) {
     const tickerPositions = byTicker[ticker];
@@ -292,7 +529,7 @@ function detectStrategies(positions: TransformedPosition[]): TransformedPosition
     }
 
     // Sort by strike for strategy detection
-    tickerPositions.sort((a, b) => a.strike - b.strike);
+    tickerPositions.sort((a, b) => (a.strike || 0) - (b.strike || 0));
 
     const calls = tickerPositions.filter(p => p.type === 'call');
     const puts = tickerPositions.filter(p => p.type === 'put');
