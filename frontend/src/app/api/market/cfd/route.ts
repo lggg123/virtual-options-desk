@@ -472,8 +472,100 @@ async function getCFDQuote(symbol: string) {
   if (!spec) {
     throw new Error(`Unknown CFD symbol: ${symbol}`);
   }
-  // ...existing code for setting up basePrice, useLivePrice, r, eodhdKey, alphaKey...
-  // (Insert the EODHD/Alpha Vantage fallback block only once, properly structured)
+  let basePrice = BASE_PRICES[symbol] || 100;
+  let useLivePrice = false;
+  let r: Record<string, unknown> = {};
+  const eodhdKey = process.env.EODHD_API_KEY || '';
+  const alphaKey = process.env.ALPHA_VANTAGE_API_KEY || '';
+
+  if (symbol === 'XAUUSD' || symbol === 'XAGUSD' || symbol === 'USOIL' || symbol === 'UKOIL' || symbol === 'NATGAS') {
+    try {
+      const eodhdSymbol = symbol;
+      const url = `https://eodhd.com/api/real-time/${eodhdSymbol}.FOREX?api_token=${eodhdKey}&fmt=json`;
+      const resp = await fetch(url);
+      const raw = await resp.text();
+      let json = {};
+      try {
+        json = JSON.parse(raw);
+      } catch {
+        console.warn('EODHD non-JSON response for', symbol, raw);
+      }
+      r = json || {};
+      if (typeof (r as any).close === 'number') {
+        basePrice = (r as any).close;
+        useLivePrice = true;
+      } else {
+        console.warn('EODHD did not return valid price for', symbol, JSON.stringify(json));
+        // Fallback to Alpha Vantage if EODHD fails
+        if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
+          try {
+            const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+            const resp = await fetch(url);
+            const json = await resp.json();
+            const rate = json['Realtime Currency Exchange Rate'] || {};
+            if (typeof rate['5. Exchange Rate'] === 'string') {
+              basePrice = parseFloat(rate['5. Exchange Rate']);
+              useLivePrice = true;
+              console.warn('Alpha Vantage fallback used for', symbol, basePrice);
+            } else {
+              console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
+            }
+          } catch (err) {
+            console.warn('Alpha Vantage fallback fetch failed for', symbol, err);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('EODHD fetch failed for', symbol, err);
+      // Fallback to Alpha Vantage if EODHD fails
+      if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
+        try {
+          const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+          const resp = await fetch(url);
+          const json = await resp.json();
+          const rate = json['Realtime Currency Exchange Rate'] || {};
+          if (typeof rate['5. Exchange Rate'] === 'string') {
+            basePrice = parseFloat(rate['5. Exchange Rate']);
+            useLivePrice = true;
+            console.warn('Alpha Vantage fallback used for', symbol, basePrice);
+          } else {
+            console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
+          }
+        } catch (err) {
+          console.warn('Alpha Vantage fallback fetch failed for', symbol, err);
+        }
+      }
+    }
+  } else if (symbol.endsWith('.US')) {
+    // Alpha Vantage for US stocks
+    try {
+      const avSymbol = symbol.replace('.US', '');
+      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${avSymbol}&apikey=${alphaKey}`;
+      const resp = await fetch(url);
+      const json = await resp.json();
+      const quote = json['Global Quote'] || {};
+      if (typeof quote['05. price'] === 'string') {
+        basePrice = parseFloat(quote['05. price']);
+        useLivePrice = true;
+      }
+    } catch (err) {
+      console.warn('Alpha Vantage fetch failed for', symbol, err);
+    }
+  } else {
+    // Alpha Vantage for forex
+    try {
+      const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+      const resp = await fetch(url);
+      const json = await resp.json();
+      const rate = json['Realtime Currency Exchange Rate'] || {};
+      if (typeof rate['5. Exchange Rate'] === 'string') {
+        basePrice = parseFloat(rate['5. Exchange Rate']);
+        useLivePrice = true;
+      }
+    } catch (err) {
+      console.warn('Alpha Vantage forex fetch failed for', symbol, err);
+    }
+  }
   } else if (symbol.endsWith('.US')) {
     // Alpha Vantage for US stocks
     try {
