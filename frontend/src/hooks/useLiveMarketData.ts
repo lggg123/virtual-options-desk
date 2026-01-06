@@ -40,7 +40,7 @@ export function useLiveMarketData(symbol: string, refreshInterval = 5000) {
     try {
       // Use yfinance via your backend or a quote API
       const response = await fetch(`/api/market/quote?symbol=${symbol}`);
-      
+
       if (response.ok) {
         const quote = await response.json();
         setData({
@@ -56,6 +56,11 @@ export function useLiveMarketData(symbol: string, refreshInterval = 5000) {
           timestamp: new Date()
         });
         setError(null);
+      } else {
+        // Handle API errors gracefully
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        setError(errorData.error || `Failed to fetch data for ${symbol}`);
+        // Keep previous data instead of clearing it
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch market data');
