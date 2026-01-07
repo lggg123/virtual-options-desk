@@ -322,7 +322,8 @@ function transformFuturePosition(
     priceSource,
     expiry,
     name: notes.name as string | undefined,
-    image: notes.image as string | undefined,
+    image: notes.image as string | undefined
+    // Do NOT include strategy for futures
   };
 }
 
