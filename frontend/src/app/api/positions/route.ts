@@ -143,7 +143,7 @@ export interface TransformedPosition {
   id: string;
   symbol: string;
   ticker: string;
-  assetClass: 'option' | 'crypto' | 'cfd' | 'stock';
+  assetClass: 'option' | 'crypto' | 'cfd' | 'stock' | 'future';
   type?: 'call' | 'put' | 'long' | 'short';
   strike?: number;
   expiry?: string;
@@ -202,13 +202,13 @@ export async function GET() {
 
     // Parse notes to determine asset class for each position
     const positionsWithAssetClass = (positions || []).map(pos => {
-      let assetClass: 'option' | 'crypto' | 'cfd' | 'stock' = 'option';
+      let assetClass: 'option' | 'crypto' | 'cfd' | 'stock' | 'future' = 'option';
       let notes: Record<string, unknown> = {};
 
       try {
         if (pos.notes) {
           notes = typeof pos.notes === 'string' ? JSON.parse(pos.notes) : pos.notes;
-          assetClass = (notes.asset_class as 'option' | 'crypto' | 'cfd' | 'stock' | undefined) || 'option';
+          assetClass = (notes.asset_class as 'option' | 'crypto' | 'cfd' | 'stock' | 'future' | undefined) || 'option';
         }
       } catch (e) {
         console.error('Failed to parse notes for position', pos.id, e);
@@ -221,6 +221,7 @@ export async function GET() {
     const optionPositions = positionsWithAssetClass.filter(p => p.assetClass === 'option');
     const cryptoPositions = positionsWithAssetClass.filter(p => p.assetClass === 'crypto');
     const cfdPositions = positionsWithAssetClass.filter(p => p.assetClass === 'cfd');
+    const futurePositions = positionsWithAssetClass.filter(p => p.assetClass === 'future');
 
     // Fetch underlying prices for options
     const uniqueOptionTickers = [...new Set(optionPositions.map(pos => {
@@ -275,15 +276,55 @@ export async function GET() {
       const assetClass = pos.assetClass;
       const notes = pos.parsedNotes;
 
-      // Handle different asset classes
       if (assetClass === 'crypto') {
         return transformCryptoPosition(pos, notes, cryptoPrices);
       } else if (assetClass === 'cfd') {
         return transformCFDPosition(pos, notes, cfdPrices);
+      } else if (assetClass === 'future') {
+        return transformFuturePosition(pos, notes, underlyingPrices);
       } else {
         return transformOptionPosition(pos, notes, underlyingPrices);
       }
     });
+// Transform Future position
+function transformFuturePosition(
+  pos: { id: string; symbol: string; quantity: number; entry_price: number; current_price?: number | null; contract_size?: number | null; expiry?: string | null; position_type?: string | null },
+  notes: Record<string, unknown>,
+  underlyingPrices: Record<string, number>
+): TransformedPosition {
+  const symbol = pos.symbol;
+  const contractSize = (pos.contract_size as number | undefined) || (notes.contract_size as number | undefined) || 100;
+  const expiry = pos.expiry || (notes.expiry as string | undefined) || undefined;
+  const positionType = (pos.position_type as string | undefined) || (notes.position_type as string | undefined) || 'long';
+  const currentPrice = underlyingPrices[symbol] || pos.current_price || pos.entry_price;
+  const priceSource = underlyingPrices[symbol] ? 'live' : 'entry';
+
+  // P&L calculation for futures (contract size multiplier)
+  const priceDiff = positionType === 'long'
+    ? (currentPrice - pos.entry_price)
+    : (pos.entry_price - currentPrice);
+  const pnl = priceDiff * pos.quantity * contractSize;
+  const pnlPercent = pos.entry_price > 0
+    ? (priceDiff / pos.entry_price) * 100
+    : 0;
+
+  return {
+    id: pos.id,
+    symbol,
+    ticker: symbol,
+    assetClass: 'future',
+    type: positionType as 'long' | 'short',
+    quantity: pos.quantity,
+    avgPrice: pos.entry_price,
+    currentPrice,
+    pnl,
+    pnlPercent,
+    priceSource,
+    expiry,
+    name: notes.name as string | undefined,
+    image: notes.image as string | undefined,
+  };
+}
 
     // Detect strategies from position combinations (options only)
     const positionsWithStrategies = detectStrategies(transformedPositions);
