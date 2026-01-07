@@ -277,6 +277,10 @@ export async function POST(request: NextRequest) {
       } else {
         // Create new position
         console.log(`Creating new position: symbol=${symbol}, qty=${quantity}, price=${price}, contractSize=${contractSize}`);
+
+        // Initial P&L is 0 since entry_price = current_price
+        const initialPnL = 0;
+
         const { data: newPosition, error: positionError } = await supabase
           .from('positions')
           .insert({
@@ -288,8 +292,8 @@ export async function POST(request: NextRequest) {
             entry_price: price,
             current_price: price,
             cost_basis: marginRequired,
-            market_value: 0, // Futures P&L is calculated separately, not added to portfolio as market value
-            unrealized_pl: 0, // Initial P&L is 0
+            market_value: 0, // Futures don't use market_value, they use unrealized_pl directly
+            unrealized_pl: initialPnL, // Initial P&L is 0
             status: 'open',
             notes: JSON.stringify({
               asset_class: 'future',

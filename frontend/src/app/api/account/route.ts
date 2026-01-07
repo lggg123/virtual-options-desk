@@ -79,15 +79,41 @@ export async function GET() {
       console.error('Error fetching positions:', positionsError);
     }
 
-    // Calculate total positions value
-    const positionsValue = (positions || []).reduce((sum, pos) => {
-      return sum + (pos.market_value || pos.cost_basis || 0);
-    }, 0);
+    // Calculate total positions value and P&L
+    let positionsValue = 0;
+    let unrealizedPL = 0;
 
-    // Calculate unrealized P&L from positions
-    const unrealizedPL = (positions || []).reduce((sum, pos) => {
-      return sum + (pos.unrealized_pl || 0);
-    }, 0);
+    (positions || []).forEach((pos) => {
+      // Parse notes to check asset class
+      let assetClass = 'option';
+      let contractSize = 100;
+      let positionType = 'long';
+
+      try {
+        const notes = typeof pos.notes === 'string' ? JSON.parse(pos.notes) : (pos.notes || {});
+        assetClass = notes.asset_class || 'option';
+        contractSize = notes.contract_size || 100;
+        positionType = notes.position_type || 'long';
+      } catch (e) {
+        // Ignore parse errors, use defaults
+      }
+
+      if (assetClass === 'future') {
+        // For futures: calculate P&L using (current_price - entry_price) * quantity * contract_size
+        const currentPrice = pos.current_price || pos.entry_price;
+        const priceDiff = positionType === 'long'
+          ? (currentPrice - pos.entry_price)
+          : (pos.entry_price - currentPrice);
+        const pnl = priceDiff * pos.quantity * contractSize;
+
+        unrealizedPL += pnl;
+        // Futures don't add to market value, only P&L
+      } else {
+        // For options/stocks/crypto: use market value and stored unrealized_pl
+        positionsValue += (pos.market_value || pos.cost_basis || 0);
+        unrealizedPL += (pos.unrealized_pl || 0);
+      }
+    });
 
     // Total portfolio value = cash + positions value
     const totalPortfolioValue = portfolio.cash_balance + positionsValue;
