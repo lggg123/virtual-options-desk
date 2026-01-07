@@ -96,7 +96,7 @@ export default function LiveOptionsChain() {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-expiry" disabled>
                       No expirations available
                     </SelectItem>
                   )}
