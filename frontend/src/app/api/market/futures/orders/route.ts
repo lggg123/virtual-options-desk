@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
         .from('positions')
         .select('*')
         .eq('user_id', userId)
-        .eq('symbol', `${symbol}-${contract}`)
+        .eq('symbol', symbol)
         .eq('status', 'open')
         .single();
 
@@ -191,15 +191,22 @@ export async function POST(request: NextRequest) {
         // Add to existing position
         const newQuantity = existingPosition.quantity + quantity;
         const newCostBasis = existingPosition.cost_basis + marginRequired;
+        const newEntryPrice = price; // Use current price as new entry price
+
+        // Calculate P&L: (current_price - entry_price) * quantity * contract_size
+        const priceDiff = price - newEntryPrice;
+        const unrealizedPL = priceDiff * newQuantity * contractSize;
 
         await supabase
           .from('positions')
           .update({
             quantity: newQuantity,
             cost_basis: newCostBasis,
-            entry_price: newCostBasis / newQuantity,
+            entry_price: newEntryPrice,
             current_price: price,
-            market_value: newQuantity * price * contractSize,
+            market_value: 0, // Futures P&L is calculated separately
+            unrealized_pl: unrealizedPL,
+            contract_size: contractSize,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingPosition.id);
@@ -210,14 +217,25 @@ export async function POST(request: NextRequest) {
           .insert({
             portfolio_id: userPortfolio.id,
             user_id: userId,
-            symbol: `${symbol}-${contract}`,
-            position_type: 'spread', // Using as closest match for futures
+            symbol,
+            position_type: 'spread', // Using 'spread' for futures (database constraint)
             quantity,
             entry_price: price,
             current_price: price,
             cost_basis: marginRequired,
-            market_value: notionalValue,
-            status: 'open'
+            market_value: 0, // Futures P&L is calculated separately, not added to portfolio as market value
+            unrealized_pl: 0, // Initial P&L is 0
+            contract_size: contractSize,
+            expiry: contract, // Store contract month in expiry field
+            status: 'open',
+            notes: JSON.stringify({
+              asset_class: 'future',
+              contract_size: contractSize,
+              margin_requirement: marginRequirement,
+              tick_value: tickValue,
+              position_type: orderType === 'buy' ? 'long' : 'short',
+              notional_value: notionalValue
+            })
           });
       }
 

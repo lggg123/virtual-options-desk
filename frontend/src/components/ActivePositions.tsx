@@ -130,11 +130,13 @@ export default function ActivePositions() {
   const optionCount = positions.filter(p => p.assetClass === 'option').length;
   const cryptoCount = positions.filter(p => p.assetClass === 'crypto').length;
   const cfdCount = positions.filter(p => p.assetClass === 'cfd').length;
+  const futureCount = positions.filter(p => p.assetClass === 'future').length;
 
   const positionSummary = [
     optionCount > 0 && `${optionCount} option${optionCount !== 1 ? 's' : ''}`,
     cryptoCount > 0 && `${cryptoCount} crypto`,
     cfdCount > 0 && `${cfdCount} CFD${cfdCount !== 1 ? 's' : ''}`,
+    futureCount > 0 && `${futureCount} future${futureCount !== 1 ? 's' : ''}`,
   ].filter(Boolean).join(', ') || 'No positions';
 
   return (

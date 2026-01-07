@@ -87,6 +87,27 @@ async function fetchCFDPrice(symbol: string): Promise<{ bid: number; ask: number
   return { bid: 0, ask: 0, mid: 0 };
 }
 
+// Fetch current futures price from internal API
+async function fetchFuturePrice(symbol: string): Promise<number> {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/market/futures`,
+      { next: { revalidate: 30 } }
+    );
+
+    if (response.ok) {
+      const contracts = await response.json();
+      const contract = contracts.find((c: { symbol: string }) => c.symbol === symbol);
+      if (contract && contract.price) {
+        return contract.price;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to fetch futures price for', symbol, e);
+  }
+  return 0;
+}
+
 // Parse option symbol format: "SPY-2026-01-26-680-call" or "AAPL-2025-12-20-180-put"
 function parseOptionSymbol(symbol: string): {
   ticker: string;
@@ -248,11 +269,19 @@ export async function GET() {
       prices: await fetchCFDPrice(symbol)
     }));
 
+    // Fetch futures prices
+    const uniqueFutureSymbols = [...new Set(futurePositions.map(pos => pos.symbol))];
+    const futurePricePromises = uniqueFutureSymbols.map(async symbol => ({
+      symbol,
+      price: await fetchFuturePrice(symbol)
+    }));
+
     // Wait for all prices
-    const [optionPriceResults, cryptoPriceResults, cfdPriceResults] = await Promise.all([
+    const [optionPriceResults, cryptoPriceResults, cfdPriceResults, futurePriceResults] = await Promise.all([
       Promise.all(optionPricePromises),
       Promise.all(cryptoPricePromises),
-      Promise.all(cfdPricePromises)
+      Promise.all(cfdPricePromises),
+      Promise.all(futurePricePromises)
     ]);
 
     // Create price lookup maps
@@ -271,6 +300,11 @@ export async function GET() {
       cfdPrices[symbol] = prices;
     }
 
+    const futurePrices: Record<string, number> = {};
+    for (const { symbol, price } of futurePriceResults) {
+      futurePrices[symbol] = price;
+    }
+
     // Transform database positions to match frontend interface
     const transformedPositions: TransformedPosition[] = positionsWithAssetClass.map(pos => {
       const assetClass = pos.assetClass;
@@ -281,7 +315,7 @@ export async function GET() {
       } else if (assetClass === 'cfd') {
         return transformCFDPosition(pos, notes, cfdPrices);
       } else if (assetClass === 'future') {
-        return transformFuturePosition(pos, notes, underlyingPrices);
+        return transformFuturePosition(pos, notes, futurePrices);
       } else {
         return transformOptionPosition(pos, notes, underlyingPrices);
       }
@@ -290,14 +324,14 @@ export async function GET() {
 function transformFuturePosition(
   pos: { id: string; symbol: string; quantity: number; entry_price: number; current_price?: number | null; contract_size?: number | null; expiry?: string | null; position_type?: string | null },
   notes: Record<string, unknown>,
-  underlyingPrices: Record<string, number>
+  futurePrices: Record<string, number>
 ): TransformedPosition {
   const symbol = pos.symbol;
   const contractSize = (pos.contract_size as number | undefined) || (notes.contract_size as number | undefined) || 100;
   const expiry = pos.expiry || (notes.expiry as string | undefined) || undefined;
   const positionType = (pos.position_type as string | undefined) || (notes.position_type as string | undefined) || 'long';
-  const currentPrice = underlyingPrices[symbol] || pos.current_price || pos.entry_price;
-  const priceSource = underlyingPrices[symbol] ? 'live' : 'entry';
+  const currentPrice = futurePrices[symbol] || pos.current_price || pos.entry_price;
+  const priceSource = futurePrices[symbol] ? 'live' : 'entry';
 
   // P&L calculation for futures (contract size multiplier)
   const priceDiff = positionType === 'long'
