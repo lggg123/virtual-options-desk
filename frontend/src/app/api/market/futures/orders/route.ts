@@ -187,30 +187,77 @@ export async function POST(request: NextRequest) {
         .eq('status', 'open')
         .single();
 
-      if (existingPosition && orderType === 'buy') {
-        // Add to existing position
-        const newQuantity = existingPosition.quantity + quantity;
-        const newCostBasis = existingPosition.cost_basis + marginRequired;
-        const newEntryPrice = price; // Use current price as new entry price
+      if (existingPosition) {
+        // Update existing position
+        const newQuantity = orderType === 'buy'
+          ? existingPosition.quantity + quantity  // Buy adds to position
+          : existingPosition.quantity - quantity; // Sell reduces position
 
-        // Calculate P&L: (current_price - entry_price) * quantity * contract_size
-        const priceDiff = price - newEntryPrice;
-        const unrealizedPL = priceDiff * newQuantity * contractSize;
+        if (newQuantity === 0) {
+          // Position is closed - set status to closed
+          await supabase
+            .from('positions')
+            .update({
+              status: 'closed',
+              current_price: price,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingPosition.id);
+        } else if (newQuantity > 0) {
+          // Still have a long position
+          const avgEntryPrice = orderType === 'buy'
+            ? ((existingPosition.entry_price * existingPosition.quantity) + (price * quantity)) / newQuantity
+            : existingPosition.entry_price; // Keep same entry price when reducing
 
-        await supabase
-          .from('positions')
-          .update({
-            quantity: newQuantity,
-            cost_basis: newCostBasis,
-            entry_price: newEntryPrice,
-            current_price: price,
-            market_value: 0, // Futures P&L is calculated separately
-            unrealized_pl: unrealizedPL,
-            contract_size: contractSize,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingPosition.id);
-      } else if (orderType === 'buy') {
+          const newCostBasis = orderType === 'buy'
+            ? existingPosition.cost_basis + marginRequired
+            : existingPosition.cost_basis - marginRequired;
+
+          const priceDiff = price - avgEntryPrice;
+          const unrealizedPL = priceDiff * newQuantity * contractSize;
+
+          await supabase
+            .from('positions')
+            .update({
+              quantity: newQuantity,
+              cost_basis: Math.max(0, newCostBasis),
+              entry_price: avgEntryPrice,
+              current_price: price,
+              market_value: 0,
+              unrealized_pl: unrealizedPL,
+              contract_size: contractSize,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingPosition.id);
+        } else {
+          // newQuantity < 0 - we've flipped to a short position
+          const avgEntryPrice = price; // New entry price for the flipped position
+          const newCostBasis = Math.abs(newQuantity) * marginRequired;
+
+          await supabase
+            .from('positions')
+            .update({
+              quantity: Math.abs(newQuantity),
+              cost_basis: newCostBasis,
+              entry_price: avgEntryPrice,
+              current_price: price,
+              market_value: 0,
+              unrealized_pl: 0, // Reset P&L for new position
+              contract_size: contractSize,
+              position_type: 'spread',
+              updated_at: new Date().toISOString(),
+              notes: JSON.stringify({
+                asset_class: 'future',
+                contract_size: contractSize,
+                margin_requirement: marginRequirement,
+                tick_value: tickValue,
+                position_type: 'short', // Flipped to short
+                notional_value: notionalValue
+              })
+            })
+            .eq('id', existingPosition.id);
+        }
+      } else {
         // Create new position
         await supabase
           .from('positions')
