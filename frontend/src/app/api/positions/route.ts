@@ -327,7 +327,11 @@ function transformFuturePosition(
 }
 
     // Detect strategies from position combinations (options only)
-    const positionsWithStrategies = detectStrategies(transformedPositions);
+    // Only apply to options, leave futures and others untouched
+    const optionPositionsOnly = transformedPositions.filter(p => p.assetClass === 'option');
+    const nonOptionPositions = transformedPositions.filter(p => p.assetClass !== 'option');
+    const optionsWithStrategies = detectStrategies(optionPositionsOnly);
+    const positionsWithStrategies = [...nonOptionPositions, ...optionsWithStrategies];
 
     return NextResponse.json({ positions: positionsWithStrategies });
   } catch (error) {
