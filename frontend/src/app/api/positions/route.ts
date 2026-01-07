@@ -238,9 +238,16 @@ export async function GET() {
       // If no asset_class in notes, try to infer from symbol or other fields
       if (!notes.asset_class && pos.symbol) {
         // Check for futures symbols (ES, GC, NQ, etc. - typically 1-3 uppercase letters)
+        // Also check for spread notation (e.g., GCSPREAD, ES-SPREAD, etc.)
         const futuresSymbols = ['ES', 'NQ', 'YM', 'RTY', 'MES', 'MNQ', 'CL', 'GC', 'SI', 'NG', 'HG',
                                  '6E', '6J', '6B', '6A', '6C', 'ZB', 'ZN', 'ZF', 'BTC', 'MBT', 'ETH'];
-        if (futuresSymbols.includes(pos.symbol)) {
+        const symbolUpper = pos.symbol.toUpperCase();
+
+        // Check if symbol matches futures symbols or contains SPREAD or has contract_size in notes
+        if (futuresSymbols.includes(pos.symbol) ||
+            symbolUpper.includes('SPREAD') ||
+            futuresSymbols.some(fs => symbolUpper.startsWith(fs)) ||
+            notes.contract_size) {
           assetClass = 'future';
         }
         // Check for option symbols (format: TICKER-YYYY-MM-DD-STRIKE-call/put)
