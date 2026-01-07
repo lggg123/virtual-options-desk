@@ -135,6 +135,21 @@ function StrategyCard({
 export default function EducationPage() {
   const basicStrategies: StrategyCardProps[] = [
     {
+      title: 'Why OTM Options Can Be Profitable',
+      description: 'Understand why you can have a profit on a call or put option even if the underlying price hasn\'t reached the strike.',
+      riskLevel: 'Medium',
+      maxProfit: 'Varies (can be positive before expiration)',
+      maxLoss: 'Premium paid',
+      breakeven: 'Depends on option price movement',
+      outlook: 'Depends on volatility and time',
+      legs: ['Buy 1 Call or Put Option'],
+      example: {
+        setup: 'Buy CVX $160 Call for $2.50 when CVX is at $156.54 (below strike).',
+        result: 'If the option price rises to $3.52 due to increased demand, volatility, or time value—even though CVX is still below $160—you have an unrealized profit of $1.02 per share ($102 per contract). This is because options have time value and can gain value from changes in implied volatility or market sentiment, not just intrinsic value.'
+      },
+      icon: <GraduationCap className="h-5 w-5 text-indigo-600" />
+    },
+    {
       title: 'Long Call',
       description: 'Buy a call option to profit from rising stock prices with limited risk.',
       riskLevel: 'Medium',
