@@ -40,6 +40,23 @@ interface StrategyCardProps {
   icon: React.ReactNode;
 }
 
+/**
+ * Renders a strategy overview card that expands to reveal metrics, legs, and an example.
+ *
+ * Displays the title, description, and a risk badge in the header; clicking the header toggles the detailed view.
+ *
+ * @param title - The strategy title shown in the card header
+ * @param description - A short description shown under the title
+ * @param riskLevel - Risk classification (`Low`, `Medium`, `High`) used to style the risk badge
+ * @param maxProfit - Human-readable max profit information (e.g., "$∞" or "$500")
+ * @param maxLoss - Human-readable max loss information
+ * @param breakeven - Breakeven point description or value
+ * @param outlook - Market outlook for the strategy (e.g., "Bullish", "Bearish", "Neutral")
+ * @param legs - Array of strings describing the individual legs of the strategy
+ * @param example - Example object with `setup` (description of the trade setup) and `result` (outcome summary)
+ * @param icon - JSX element used as the strategy icon in the header
+ * @returns The rendered StrategyCard React element
+ */
 function StrategyCard({
   title,
   description,
@@ -132,8 +149,32 @@ function StrategyCard({
   );
 }
 
+/**
+ * Render the Options Education Center page containing strategy reference content and CTAs.
+ *
+ * Renders a dashboard header, hero section, quick statistics, tabbed strategy lists (Basic, Spread, Advanced)
+ * populated with StrategyCard components, an educational Greeks card, and a call-to-action area linking to trading
+ * and dashboard pages.
+ *
+ * @returns The React element for the education page layout including strategy data, informational banners, and navigation.
+ */
 export default function EducationPage() {
   const basicStrategies: StrategyCardProps[] = [
+    {
+      title: 'Why OTM Options Can Be Profitable',
+      description: 'Understand why you can have a profit on a call or put option even if the underlying price hasn\'t reached the strike.',
+      riskLevel: 'Medium',
+      maxProfit: 'Varies (can be positive before expiration)',
+      maxLoss: 'Premium paid',
+      breakeven: 'Depends on option price movement',
+      outlook: 'Depends on volatility and time',
+      legs: ['Buy 1 Call or Put Option'],
+      example: {
+        setup: 'Buy CVX $160 Call for $2.50 when CVX is at $156.54 (below strike).',
+        result: 'If the option price rises to $3.52 due to increased demand, volatility, or time value—even though CVX is still below $160—you have an unrealized profit of $1.02 per share ($102 per contract). This is because options have time value and can gain value from changes in implied volatility or market sentiment, not just intrinsic value.'
+      },
+      icon: <GraduationCap className="h-5 w-5 text-indigo-600" />
+    },
     {
       title: 'Long Call',
       description: 'Buy a call option to profit from rising stock prices with limited risk.',

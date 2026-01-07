@@ -26,6 +26,16 @@ interface MockUser {
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type Portfolio = Database['public']['Tables']['portfolios']['Row'];
 
+/**
+ * Handles POST requests to create or simulate an options trade order for the authenticated user (or a demo user).
+ *
+ * Validates input, ensures a user profile and portfolio exist (creating them if necessary), checks funds for buys,
+ * and either simulates the order for a demo user or records portfolio/position updates and a trade record for an authenticated user.
+ *
+ * @returns A JSON response containing:
+ * - on success: `success: true`, the created `order`/`trade` record, the updated `newBalance`, an informational `message`, and optional `profile` data;
+ * - on error: an `error` message and, where applicable, `details`. HTTP status codes reflect the error type (400, 401, 404, 500).
+ */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createSupabaseServer();
@@ -251,69 +261,71 @@ export async function POST(request: NextRequest) {
         throw new Error(`Failed to update portfolio: ${portfolioUpdateError.message}`);
       }
 
-      // Handle positions for buy orders
-      if (orderType === 'buy') {
-        const { data: existingPosition, error: positionError } = await supabase
+      // Handle positions for buy and sell orders
+      const { data: existingPosition, error: positionError } = await supabase
+        .from('positions')
+        .select('*')
+        .eq('user_id', mockUser.id)
+        .eq('symbol', symbol)
+        .eq('strike_price', strikePrice)
+        .eq('option_type', optionType)
+        .eq('status', 'open')
+        .single();
+
+      if (positionError && positionError.code !== 'PGRST116') {
+        console.error('Position lookup error:', positionError);
+        throw new Error(`Failed to lookup position: ${positionError.message}`);
+      }
+
+      if (existingPosition) {
+        // Update existing position
+        const newQuantity = existingPosition.quantity + (orderType === 'buy' ? quantity : -quantity);
+        const newCostBasis = existingPosition.cost_basis + (orderType === 'buy' ? totalCost : -totalCost);
+        // Prevent division by zero
+        const newEntryPrice = newQuantity !== 0 ? newCostBasis / (Math.abs(newQuantity) * 100) : 0;
+
+        const { error: updatePositionError } = await supabase
           .from('positions')
-          .select('*')
-          .eq('user_id', mockUser.id)
-          .eq('symbol', symbol)
-          .eq('strike_price', strikePrice)
-          .eq('option_type', optionType)
-          .eq('status', 'open')
-          .single();
+          .update({
+            quantity: newQuantity,
+            cost_basis: newCostBasis,
+            entry_price: newEntryPrice,
+            current_price: price,
+            market_value: newQuantity * price * 100,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingPosition.id);
 
-        if (positionError && positionError.code !== 'PGRST116') {
-          console.error('Position lookup error:', positionError);
-          throw new Error(`Failed to lookup position: ${positionError.message}`);
+        if (updatePositionError) {
+          console.error('Position update error:', updatePositionError);
+          throw new Error(`Failed to update position: ${updatePositionError.message}`);
         }
+      } else {
+        // Create new position
+        // For buy, quantity is positive; for sell, quantity is negative
+        const newPositionQuantity = orderType === 'buy' ? quantity : -quantity;
+        const newCostBasis = orderType === 'buy' ? totalCost : -totalCost;
+        const { error: createPositionError } = await supabase
+          .from('positions')
+          .insert({
+            portfolio_id: userPortfolio.id,
+            user_id: mockUser.id,
+            symbol,
+            position_type: optionType,
+            strike_price: strikePrice,
+            expiration_date: expirationDate,
+            option_type: optionType,
+            quantity: newPositionQuantity,
+            entry_price: price,
+            current_price: price,
+            cost_basis: newCostBasis,
+            market_value: newPositionQuantity * price * 100,
+            status: 'open'
+          });
 
-        if (existingPosition) {
-          // Update existing position
-          const newQuantity = existingPosition.quantity + quantity;
-          const newCostBasis = existingPosition.cost_basis + totalCost;
-          const newEntryPrice = newCostBasis / (newQuantity * 100);
-
-          const { error: updatePositionError } = await supabase
-            .from('positions')
-            .update({
-              quantity: newQuantity,
-              cost_basis: newCostBasis,
-              entry_price: newEntryPrice,
-              current_price: price,
-              market_value: newQuantity * price * 100,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingPosition.id);
-
-          if (updatePositionError) {
-            console.error('Position update error:', updatePositionError);
-            throw new Error(`Failed to update position: ${updatePositionError.message}`);
-          }
-        } else {
-          // Create new position
-          const { error: createPositionError } = await supabase
-            .from('positions')
-            .insert({
-              portfolio_id: userPortfolio.id,
-              user_id: mockUser.id,
-              symbol,
-              position_type: optionType,
-              strike_price: strikePrice,
-              expiration_date: expirationDate,
-              option_type: optionType,
-              quantity,
-              entry_price: price,
-              current_price: price,
-              cost_basis: totalCost,
-              market_value: totalCost,
-              status: 'open'
-            });
-
-          if (createPositionError) {
-            console.error('Position creation error:', createPositionError);
-            throw new Error(`Failed to create position: ${createPositionError.message}`);
-          }
+        if (createPositionError) {
+          console.error('Position creation error:', createPositionError);
+          throw new Error(`Failed to create position: ${createPositionError.message}`);
         }
       }
 
