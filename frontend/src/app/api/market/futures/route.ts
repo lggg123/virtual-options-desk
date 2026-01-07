@@ -420,11 +420,19 @@ async function getFuturesQuote(symbol: string, contract?: string) {
     const fallback = symbol === 'GC' ? BASE_PRICES['GC'] || 2045.00 : BASE_PRICES['SI'] || 23.50;
     try {
       const metalRes = await fetch(`https://api.metalpriceapi.com/v1/latest?api_key=${METALPRICE_API_KEY}&base=${metalCode}&currencies=USD`);
-      if (!metalRes.ok) throw new Error('Failed to fetch metal price');
+      if (!metalRes.ok) {
+        console.error(`[MetalPriceAPI] HTTP error for ${metalCode}:`, metalRes.status, metalRes.statusText);
+        throw new Error('Failed to fetch metal price');
+      }
       const metalData = await metalRes.json();
+      console.log(`[MetalPriceAPI] Response for ${metalCode}:`, metalData);
       // Price is in USD per troy ounce
       price = metalData.rates?.USD || fallback;
+      if (!metalData.rates?.USD) {
+        console.error(`[MetalPriceAPI] No USD rate found for ${metalCode}. Full response:`, metalData);
+      }
     } catch (err) {
+      console.error(`[MetalPriceAPI] Error fetching ${metalCode}:`, err);
       price = fallback;
     }
   } else {
