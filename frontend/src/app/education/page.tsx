@@ -132,6 +132,15 @@ function StrategyCard({
   );
 }
 
+/**
+ * Render the Options Education Center page containing strategy reference content and CTAs.
+ *
+ * Renders a dashboard header, hero section, quick statistics, tabbed strategy lists (Basic, Spread, Advanced)
+ * populated with StrategyCard components, an educational Greeks card, and a call-to-action area linking to trading
+ * and dashboard pages.
+ *
+ * @returns The React element for the education page layout including strategy data, informational banners, and navigation.
+ */
 export default function EducationPage() {
   const basicStrategies: StrategyCardProps[] = [
     {

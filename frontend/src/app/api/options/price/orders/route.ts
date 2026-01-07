@@ -26,6 +26,16 @@ interface MockUser {
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type Portfolio = Database['public']['Tables']['portfolios']['Row'];
 
+/**
+ * Handles POST requests to create or simulate an options trade order for the authenticated user (or a demo user).
+ *
+ * Validates input, ensures a user profile and portfolio exist (creating them if necessary), checks funds for buys,
+ * and either simulates the order for a demo user or records portfolio/position updates and a trade record for an authenticated user.
+ *
+ * @returns A JSON response containing:
+ * - on success: `success: true`, the created `order`/`trade` record, the updated `newBalance`, an informational `message`, and optional `profile` data;
+ * - on error: an `error` message and, where applicable, `details`. HTTP status codes reflect the error type (400, 401, 404, 500).
+ */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createSupabaseServer();
