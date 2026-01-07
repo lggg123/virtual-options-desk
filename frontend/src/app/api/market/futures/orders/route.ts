@@ -195,7 +195,8 @@ export async function POST(request: NextRequest) {
 
         if (newQuantity === 0) {
           // Position is closed - set status to closed
-          await supabase
+          console.log(`Closing position ${existingPosition.id}: ${symbol}`);
+          const { error: closeError } = await supabase
             .from('positions')
             .update({
               status: 'closed',
@@ -203,6 +204,11 @@ export async function POST(request: NextRequest) {
               updated_at: new Date().toISOString()
             })
             .eq('id', existingPosition.id);
+
+          if (closeError) {
+            console.error('Failed to close position:', closeError);
+            throw new Error(`Failed to close position: ${closeError.message}`);
+          }
         } else if (newQuantity > 0) {
           // Still have a long position
           const avgEntryPrice = orderType === 'buy'
@@ -216,7 +222,8 @@ export async function POST(request: NextRequest) {
           const priceDiff = price - avgEntryPrice;
           const unrealizedPL = priceDiff * newQuantity * contractSize;
 
-          await supabase
+          console.log(`Updating position ${existingPosition.id}: ${symbol}, newQty=${newQuantity}, avgEntry=${avgEntryPrice}`);
+          const { error: updateError } = await supabase
             .from('positions')
             .update({
               quantity: newQuantity,
@@ -225,16 +232,21 @@ export async function POST(request: NextRequest) {
               current_price: price,
               market_value: 0,
               unrealized_pl: unrealizedPL,
-              contract_size: contractSize,
               updated_at: new Date().toISOString()
             })
             .eq('id', existingPosition.id);
+
+          if (updateError) {
+            console.error('Failed to update position:', updateError);
+            throw new Error(`Failed to update position: ${updateError.message}`);
+          }
         } else {
           // newQuantity < 0 - we've flipped to a short position
           const avgEntryPrice = price; // New entry price for the flipped position
           const newCostBasis = Math.abs(newQuantity) * marginRequired;
 
-          await supabase
+          console.log(`Flipping position ${existingPosition.id} to SHORT: ${symbol}, qty=${Math.abs(newQuantity)}`);
+          const { error: flipError } = await supabase
             .from('positions')
             .update({
               quantity: Math.abs(newQuantity),
@@ -243,7 +255,6 @@ export async function POST(request: NextRequest) {
               current_price: price,
               market_value: 0,
               unrealized_pl: 0, // Reset P&L for new position
-              contract_size: contractSize,
               position_type: 'spread',
               updated_at: new Date().toISOString(),
               notes: JSON.stringify({
@@ -252,14 +263,21 @@ export async function POST(request: NextRequest) {
                 margin_requirement: marginRequirement,
                 tick_value: tickValue,
                 position_type: 'short', // Flipped to short
-                notional_value: notionalValue
+                notional_value: notionalValue,
+                expiry: contract
               })
             })
             .eq('id', existingPosition.id);
+
+          if (flipError) {
+            console.error('Failed to flip position:', flipError);
+            throw new Error(`Failed to flip position: ${flipError.message}`);
+          }
         }
       } else {
         // Create new position
-        await supabase
+        console.log(`Creating new position: symbol=${symbol}, qty=${quantity}, price=${price}, contractSize=${contractSize}`);
+        const { data: newPosition, error: positionError } = await supabase
           .from('positions')
           .insert({
             portfolio_id: userPortfolio.id,
@@ -272,8 +290,6 @@ export async function POST(request: NextRequest) {
             cost_basis: marginRequired,
             market_value: 0, // Futures P&L is calculated separately, not added to portfolio as market value
             unrealized_pl: 0, // Initial P&L is 0
-            contract_size: contractSize,
-            expiry: contract, // Store contract month in expiry field
             status: 'open',
             notes: JSON.stringify({
               asset_class: 'future',
@@ -281,9 +297,18 @@ export async function POST(request: NextRequest) {
               margin_requirement: marginRequirement,
               tick_value: tickValue,
               position_type: orderType === 'buy' ? 'long' : 'short',
-              notional_value: notionalValue
+              notional_value: notionalValue,
+              expiry: contract // Store contract month in notes since no expiry field
             })
-          });
+          })
+          .select();
+
+        if (positionError) {
+          console.error('Failed to create position:', positionError);
+          throw new Error(`Failed to create position: ${positionError.message}`);
+        }
+
+        console.log('Position created successfully:', newPosition);
       }
 
       return NextResponse.json({
