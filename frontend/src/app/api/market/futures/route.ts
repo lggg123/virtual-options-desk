@@ -281,7 +281,7 @@ const BASE_PRICES: Record<string, number> = {
   '6A': 0.6550,
   '6C': 0.7150,
   'CL': 72.50,
-  'GC': 2045.00,
+  'GC': 4400.00,  // Updated gold price
   'SI': 23.50,
   'NG': 2.85,
   'HG': 3.85,

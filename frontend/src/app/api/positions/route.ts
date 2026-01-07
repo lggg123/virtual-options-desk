@@ -374,16 +374,37 @@ function transformFuturePosition(
   const contractSize = (pos.contract_size as number | undefined) || (notes.contract_size as number | undefined) || 100;
   const expiry = pos.expiry || (notes.expiry as string | undefined) || undefined;
   const positionType = (pos.position_type as string | undefined) || (notes.position_type as string | undefined) || 'long';
-  const currentPrice = futurePrices[symbol] || pos.current_price || pos.entry_price;
-  const priceSource = futurePrices[symbol] ? 'live' : 'entry';
+
+  // Extract base symbol from spread notation (e.g., "GCSPREAD" -> "GC", "GC-G26" -> "GC")
+  const baseSymbol = symbol.replace(/SPREAD.*/, '').replace(/-.*/, '').substring(0, 2);
+
+  // For spreads and complex symbols, try to fetch the base futures price
+  let currentPrice = futurePrices[symbol] || futurePrices[baseSymbol] || pos.current_price || pos.entry_price;
+  const priceSource = (futurePrices[symbol] || futurePrices[baseSymbol]) ? 'live' : 'entry';
+
+  // Use the actual entry_price and current_price from database as-is
+  // The database should store the per-unit price (e.g., $2,200 for gold per oz)
+  // NOT the notional value ($220,000 per contract)
+  let entryPrice = pos.entry_price;
+
+  // Log for debugging
+  console.log(`Future position ${symbol}: entry=${entryPrice}, current=${currentPrice}, qty=${pos.quantity}, contractSize=${contractSize}, type=${positionType}`);
+
+  // Safety check: if prices seem way off for gold/silver, flag it
+  if (['GC', 'SI'].includes(baseSymbol)) {
+    if (entryPrice > 10000 || currentPrice > 10000) {
+      console.warn(`⚠️  WARNING: Abnormal prices detected for ${symbol}. Entry: $${entryPrice}, Current: $${currentPrice}`);
+      console.warn(`This might indicate a data storage issue. Expected range for GC: $2000-$5000, SI: $15-$40`);
+    }
+  }
 
   // P&L calculation for futures (contract size multiplier)
   const priceDiff = positionType === 'long'
-    ? (currentPrice - pos.entry_price)
-    : (pos.entry_price - currentPrice);
+    ? (currentPrice - entryPrice)
+    : (entryPrice - currentPrice);
   const pnl = priceDiff * pos.quantity * contractSize;
-  const pnlPercent = pos.entry_price > 0
-    ? (priceDiff / pos.entry_price) * 100
+  const pnlPercent = entryPrice > 0
+    ? (priceDiff / entryPrice) * 100
     : 0;
 
   return {
@@ -393,7 +414,7 @@ function transformFuturePosition(
     assetClass: 'future',
     type: positionType as 'long' | 'short',
     quantity: pos.quantity,
-    avgPrice: pos.entry_price,
+    avgPrice: entryPrice, // Use corrected entry price
     currentPrice,
     pnl,
     pnlPercent,
