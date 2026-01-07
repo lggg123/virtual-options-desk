@@ -417,10 +417,131 @@ export default function ActivePositions() {
                     // Options rendering (original code)
                     const isITM = (position.intrinsicValue || 0) > 0;
                     const isExpiringSoon = (position.daysToExpiry || 0) <= 7;
+                    const isProfitable = position.pnl >= 0;
 
                     return (
                       <TableRow key={position.id} className={isExpiringSoon ? 'bg-yellow-50 dark:bg-yellow-950/20' : ''}>
-                        {/* ...existing code for options... */}
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium flex items-center gap-2">
+                              {position.ticker}
+                              <Badge variant={position.type === 'call' ? 'default' : 'secondary'} className="text-xs">
+                                {position.type?.toUpperCase()}
+                              </Badge>
+                              <Badge variant={position.quantity > 0 ? "outline" : "destructive"} className="text-xs">
+                                {position.quantity > 0 ? `+${position.quantity}` : position.quantity}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              ${position.strike} Strike
+                            </div>
+                            <div className={`text-xs ${isExpiringSoon ? 'text-yellow-600 font-medium' : 'text-muted-foreground'}`}>
+                              Exp: {position.expiry} ({position.daysToExpiry}d)
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              BE: ${position.breakeven?.toFixed(2)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium text-lg">
+                              ${position.underlyingPrice?.toFixed(2)}
+                            </div>
+                            <Badge variant={isITM ? 'default' : 'outline'} className="text-xs">
+                              {isITM ? 'ITM' : 'OTM'}
+                            </Badge>
+                            <div className="text-xs text-muted-foreground">
+                              IV: {position.impliedVolatility?.toFixed(0)}%
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="text-sm">
+                              Entry: <span className="font-medium">{formatCurrency(position.avgPrice)}</span>
+                            </div>
+                            <div className="text-sm">
+                              Now: <span className={`font-medium ${isProfitable ? 'text-green-600' : 'text-red-600'}`}>
+                                {formatCurrency(position.currentPrice)}
+                              </span>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {position.priceSource === 'live' ? '🟢 Live' : position.priceSource === 'estimated' ? '🟡 Est' : '⚪ Entry'}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Intrinsic:</span>
+                              <span className="font-medium">{formatCurrency(position.intrinsicValue || 0)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Time:</span>
+                              <span className="font-medium">{formatCurrency(position.timeValue || 0)}</span>
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                              <div
+                                className="bg-blue-600 h-1.5 rounded-full"
+                                style={{
+                                  width: `${position.currentPrice > 0 ? ((position.intrinsicValue || 0) / position.currentPrice) * 100 : 0}%`
+                                }}
+                              />
+                            </div>
+                            <div className="text-xs text-muted-foreground text-center">
+                              {position.currentPrice > 0 ? (((position.intrinsicValue || 0) / position.currentPrice) * 100).toFixed(0) : 0}% intrinsic
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className={`font-bold text-lg ${isProfitable ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatCurrency(position.pnl)}
+                            </div>
+                            <div className={`text-sm font-medium ${isProfitable ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatPercent(position.pnlPercent)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Per contract: {formatCurrency(position.pnl / Math.abs(position.quantity))}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+                            <div className="text-muted-foreground">Δ</div>
+                            <div className="font-medium">{position.delta?.toFixed(3)}</div>
+                            <div className="text-muted-foreground">Θ</div>
+                            <div className={`font-medium ${(position.theta || 0) < 0 ? 'text-red-500' : ''}`}>{position.theta?.toFixed(3)}</div>
+                            <div className="text-muted-foreground">Γ</div>
+                            <div className="font-medium">{position.gamma?.toFixed(3)}</div>
+                            <div className="text-muted-foreground">ν</div>
+                            <div className="font-medium">{position.vega?.toFixed(2)}</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Daily Θ: {formatCurrency((position.theta || 0) * position.quantity * 100)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => rollPosition()}
+                            >
+                              <RotateCcw className="h-3 w-3 mr-1" />
+                              Roll
+                            </Button>
+                            <Button
+                              variant={isProfitable ? "default" : "destructive"}
+                              size="sm"
+                              onClick={() => closePosition(position.id)}
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              Close
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     );
                   }
