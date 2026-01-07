@@ -320,6 +320,24 @@ export async function GET() {
         return transformOptionPosition(pos, notes, underlyingPrices);
       }
     });
+
+    // Detect strategies from position combinations (options only)
+    // Only apply to options, leave futures and others untouched
+    const optionPositionsOnly = transformedPositions.filter(p => p.assetClass === 'option');
+    const nonOptionPositions = transformedPositions.filter(p => p.assetClass !== 'option');
+    const optionsWithStrategies = detectStrategies(optionPositionsOnly);
+    const positionsWithStrategies = [...nonOptionPositions, ...optionsWithStrategies];
+
+    return NextResponse.json({ positions: positionsWithStrategies });
+  } catch (error) {
+    console.error('Error fetching positions:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch positions' },
+      { status: 500 }
+    );
+  }
+}
+
 // Transform Future position
 function transformFuturePosition(
   pos: { id: string; symbol: string; quantity: number; entry_price: number; current_price?: number | null; contract_size?: number | null; expiry?: string | null; position_type?: string | null },
@@ -357,25 +375,7 @@ function transformFuturePosition(
     expiry,
     name: notes.name as string | undefined,
     image: notes.image as string | undefined
-    // Do NOT include strategy for futures
   };
-}
-
-    // Detect strategies from position combinations (options only)
-    // Only apply to options, leave futures and others untouched
-    const optionPositionsOnly = transformedPositions.filter(p => p.assetClass === 'option');
-    const nonOptionPositions = transformedPositions.filter(p => p.assetClass !== 'option');
-    const optionsWithStrategies = detectStrategies(optionPositionsOnly);
-    const positionsWithStrategies = [...nonOptionPositions, ...optionsWithStrategies];
-
-    return NextResponse.json({ positions: positionsWithStrategies });
-  } catch (error) {
-    console.error('Error fetching positions:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch positions' },
-      { status: 500 }
-    );
-  }
 }
 
 // Transform crypto position
