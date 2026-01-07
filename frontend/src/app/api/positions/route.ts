@@ -235,6 +235,25 @@ export async function GET() {
         console.error('Failed to parse notes for position', pos.id, e);
       }
 
+      // If no asset_class in notes, try to infer from symbol or other fields
+      if (!notes.asset_class && pos.symbol) {
+        // Check for futures symbols (ES, GC, NQ, etc. - typically 1-3 uppercase letters)
+        const futuresSymbols = ['ES', 'NQ', 'YM', 'RTY', 'MES', 'MNQ', 'CL', 'GC', 'SI', 'NG', 'HG',
+                                 '6E', '6J', '6B', '6A', '6C', 'ZB', 'ZN', 'ZF', 'BTC', 'MBT', 'ETH'];
+        if (futuresSymbols.includes(pos.symbol)) {
+          assetClass = 'future';
+        }
+        // Check for option symbols (format: TICKER-YYYY-MM-DD-STRIKE-call/put)
+        else if (pos.symbol.match(/^[A-Z]+-\d{4}-\d{2}-\d{2}-\d+(\.\d+)?-(call|put)$/i)) {
+          assetClass = 'option';
+        }
+        // Check for crypto symbols
+        else if (['BTC', 'ETH', 'SOL', 'USDT', 'BNB', 'XRP', 'USDC', 'ADA', 'DOGE', 'AVAX',
+                  'TRX', 'TON', 'LINK', 'MATIC', 'DOT', 'SHIB'].includes(pos.symbol)) {
+          assetClass = 'crypto';
+        }
+      }
+
       return { ...pos, assetClass, parsedNotes: notes };
     });
 
