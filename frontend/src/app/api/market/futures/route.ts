@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const METALPRICE_API_KEY = process.env.METALPRICE_API_KEY || '1d54bf0069aab6d5f4d33fb7f5964944';
+const METALPRICE_API_KEY = process.env.METALPRICE_API_KEY;
 
 // Cache for rate limiting
 const cache = new Map<string, { data: unknown; timestamp: number }>();
