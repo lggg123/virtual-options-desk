@@ -413,25 +413,41 @@ async function getFuturesQuote(symbol: string, contract?: string) {
   const monthCode = activeContract.charAt(0);
   const yearCode = activeContract.slice(1);
 
-  const basePrice = BASE_PRICES[symbol] || 100;
-
-  // Simulate price movement
-  const volatility = getVolatilityForCategory(spec.category);
-  const randomChange = (Math.random() - 0.5) * 2 * volatility;
-  const price = basePrice * (1 + randomChange);
+  let price: number;
+  if (symbol === 'GC' || symbol === 'SI') {
+    // Fetch live gold or silver price from metalpriceapi.com
+    const metalCode = symbol === 'GC' ? 'XAU' : 'XAG';
+    const fallback = symbol === 'GC' ? BASE_PRICES['GC'] || 2045.00 : BASE_PRICES['SI'] || 23.50;
+    try {
+      const metalRes = await fetch(`https://api.metalpriceapi.com/v1/latest?api_key=${METALPRICE_API_KEY}&base=${metalCode}&currencies=USD`);
+      if (!metalRes.ok) throw new Error('Failed to fetch metal price');
+      const metalData = await metalRes.json();
+      // Price is in USD per troy ounce
+      price = metalData.rates?.USD || fallback;
+    } catch (err) {
+      price = fallback;
+    }
+  } else {
+    // Simulate price movement for other contracts
+    const basePrice = BASE_PRICES[symbol] || 100;
+    const volatility = getVolatilityForCategory(spec.category);
+    const randomChange = (Math.random() - 0.5) * 2 * volatility;
+    price = basePrice * (1 + randomChange);
+  }
 
   // Add contango/backwardation effect for non-front month contracts
   const contractIndex = availableContracts.indexOf(activeContract);
   const carryAdjustment = contractIndex * 0.001 * (spec.category === 'commodity' ? 1 : -0.5);
   const adjustedPrice = price * (1 + carryAdjustment);
 
-  const change = adjustedPrice - basePrice;
-  const changePercent = (change / basePrice) * 100;
+  const change = adjustedPrice - (BASE_PRICES[symbol] || 100);
+  const changePercent = (change / (BASE_PRICES[symbol] || 100)) * 100;
 
   // Simulate intraday data
+  const volatility = getVolatilityForCategory(spec.category);
   const high = adjustedPrice * (1 + volatility * Math.random() * 0.5);
   const low = adjustedPrice * (1 - volatility * Math.random() * 0.5);
-  const open = basePrice * (1 + (Math.random() - 0.5) * volatility * 0.5);
+  const open = (BASE_PRICES[symbol] || 100) * (1 + (Math.random() - 0.5) * volatility * 0.5);
   const volume = Math.floor(50000 + Math.random() * 200000);
   const openInterest = Math.floor(500000 + Math.random() * 1000000);
 
@@ -445,7 +461,7 @@ async function getFuturesQuote(symbol: string, contract?: string) {
     open: roundPrice(open, symbol),
     high: roundPrice(high, symbol),
     low: roundPrice(low, symbol),
-    previous_close: roundPrice(basePrice, symbol),
+    previous_close: roundPrice(BASE_PRICES[symbol] || 100, symbol),
     volume,
     open_interest: openInterest,
     expiration_date: getExpirationDate(monthCode, yearCode),
