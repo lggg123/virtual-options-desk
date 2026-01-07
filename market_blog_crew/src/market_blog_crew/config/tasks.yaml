@@ -236,27 +236,29 @@ write_blog_post_task:
     
     **Output Format**:
     Output a structured blog post with clear sections separated by headers:
-    
+
     TITLE: [Your engaging article title here]
-    
+
     META_DESCRIPTION: [Your 155 character meta description here]
-    
+
     TAGS: [Comma-separated tags like: options-trading, market-analysis, technical-analysis]
-    
+
     KEYWORDS: [Comma-separated SEO keywords like: options trading strategy, market analysis, technical indicators]
-    
+
     SP500_LEVEL: [Number like: 5321.45]
-    
+
     VIX_LEVEL: [Number like: 14.85]
-    
+
     TOP_SECTOR: [Sector name like: Technology]
-    
+
     CONTENT:
     [Your full 1800-2200 word markdown article starts here...]
-    
+
     Date: {current_date}
 
     IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE.
+    Do NOT include any statements about how the content was generated, SEO formatting, or your process. Only output the blog post content itself, in the required format.
+
     If using a tool:
     Thought: [reasoning]
     Action: [tool name] [tool input]
