@@ -40,6 +40,23 @@ interface StrategyCardProps {
   icon: React.ReactNode;
 }
 
+/**
+ * Renders a strategy overview card that expands to reveal metrics, legs, and an example.
+ *
+ * Displays the title, description, and a risk badge in the header; clicking the header toggles the detailed view.
+ *
+ * @param title - The strategy title shown in the card header
+ * @param description - A short description shown under the title
+ * @param riskLevel - Risk classification (`Low`, `Medium`, `High`) used to style the risk badge
+ * @param maxProfit - Human-readable max profit information (e.g., "$∞" or "$500")
+ * @param maxLoss - Human-readable max loss information
+ * @param breakeven - Breakeven point description or value
+ * @param outlook - Market outlook for the strategy (e.g., "Bullish", "Bearish", "Neutral")
+ * @param legs - Array of strings describing the individual legs of the strategy
+ * @param example - Example object with `setup` (description of the trade setup) and `result` (outcome summary)
+ * @param icon - JSX element used as the strategy icon in the header
+ * @returns The rendered StrategyCard React element
+ */
 function StrategyCard({
   title,
   description,
