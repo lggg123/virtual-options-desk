@@ -6,17 +6,26 @@ import type { EODMarketData } from '@/lib/blog/simple-blog-agent';
 export async function fetchEODHDMarketDataServer(
   symbols: string[],
   apiKey: string,
-  timeoutMs: number = 5000
+  timeoutMs: number = 5000,
+  defaultExchange: string = '.US'
 ): Promise<EODMarketData[]> {
   if (!apiKey) throw new Error('EODHD API key required');
   // Enforce HTTPS
   const baseUrl = 'https://eodhd.com/api/real-time/';
   const marketData: EODMarketData[] = [];
 
-  const fetchPromises = symbols.map(symbol => {
+  const fetchPromises = symbols.map(symbolRaw => {
+    let symbol = symbolRaw;
+    let exchange = defaultExchange;
+    // If symbol already has an exchange suffix, use it
+    const match = symbolRaw.match(/^([A-Za-z0-9]+)(\.[A-Za-z]+)$/);
+    if (match) {
+      symbol = match[1];
+      exchange = match[2];
+    }
     const controller = new AbortController();
     const signal = controller.signal;
-    const url = `${baseUrl}${symbol}.US?fmt=json`;
+    const url = `${baseUrl}${symbol}${exchange}?fmt=json`;
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     return fetch(url, {
       signal,
@@ -41,7 +50,7 @@ export async function fetchEODHDMarketDataServer(
             high: data.high,
             low: data.low,
             close: data.close,
-            volume: data.volume || 1000,
+            volume: data.volume ?? 0,
           };
         } else {
           throw new Error(`No close price for ${symbol}`);

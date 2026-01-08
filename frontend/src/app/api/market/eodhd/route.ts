@@ -7,9 +7,6 @@ export async function GET(request: NextRequest) {
   const symbols = symbolsParam ? symbolsParam.split(',') : ['AAPL', 'GOOG', 'GOOGL', 'MSFT', 'INTC'];
 
   try {
-    if (typeof window !== 'undefined') {
-      return NextResponse.json({ success: false, error: 'Server-side only' }, { status: 400 });
-    }
     const apiKey = process.env.EODHD_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ success: false, error: 'EODHD_API_KEY not set' }, { status: 500 });
@@ -43,7 +40,8 @@ export async function GET(request: NextRequest) {
         }
       } catch (err) {
         // Redact sensitive info in logs
-        console.error(`[EODHD] Error for symbol: ${symbol}:`, err.message);
+        const msg = typeof err === 'object' && err !== null && 'message' in err ? (err as any).message : String(err);
+        console.error(`[EODHD] Error for symbol: ${symbol}:`, msg);
         return null;
       }
     });
