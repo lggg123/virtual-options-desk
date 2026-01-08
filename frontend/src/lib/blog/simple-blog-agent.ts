@@ -15,6 +15,16 @@ export interface BlogPost {
   status: 'draft' | 'published';
 }
 
+export interface EODMarketData {
+  symbol: string;
+  timestamp: string;
+  open?: number;
+  high?: number;
+  low?: number;
+  close: number;
+  volume: number;
+}
+
 export class SimpleBlogAgent {
   private cronJob: CronJob | null = null;
   private apiKey: string | undefined;
@@ -28,33 +38,66 @@ export class SimpleBlogAgent {
    * Fetches real-time price data for a set of symbols from EODHD API.
    * Returns an array of { price, volume, timestamp, symbol } objects for each symbol.
    */
-  async fetchEODHDMarketData(symbols: string[]): Promise<any[]> {
+
+  async fetchEODHDMarketData(symbols: string[], timeoutMs: number = 5000): Promise<EODMarketData[]> {
     const apiKey = process.env.NEXT_PUBLIC_EODHD_API_KEY || process.env.EODHD_API_KEY;
     if (!apiKey) {
       throw new Error('EODHD API key not found in environment variables.');
     }
-    // EODHD free endpoint: https://eodhd.com/financial-apis/api-real-time-data
-    // We'll fetch the latest price for each symbol
     const baseUrl = 'https://eodhd.com/api/real-time/';
-    const marketData: any[] = [];
-    for (const symbol of symbols) {
-      try {
-        const url = `${baseUrl}${symbol}.US?api_token=${apiKey}&fmt=json`;
-        const res = await fetch(url);
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (data && data.close) {
-          marketData.push({
-            price: data.close,
-            volume: data.volume || 1000,
-            timestamp: new Date().toISOString(),
-            symbol: symbol
-          });
+    const marketData: EODMarketData[] = [];
+
+    const fetchPromises = symbols.map(symbol => {
+      const controller = new AbortController();
+      const signal = controller.signal;
+      const url = `${baseUrl}${symbol}.US?api_token=${apiKey}&fmt=json`;
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      return fetch(url, { signal })
+        .then(res => {
+          clearTimeout(timeout);
+          if (!res.ok) {
+            throw new Error(`Fetch failed for ${symbol}: status ${res.status}`);
+          }
+          return res.json();
+        })
+        .then(data => {
+          if (data && typeof data.close === 'number') {
+            return {
+              symbol,
+              timestamp: new Date().toISOString(),
+              open: data.open,
+              high: data.high,
+              low: data.low,
+              close: data.close,
+              volume: data.volume || 1000
+            } as EODMarketData;
+          } else {
+            throw new Error(`No close price for ${symbol}`);
+          }
+        })
+        .catch(err => {
+          clearTimeout(timeout);
+          if (err.name === 'AbortError') {
+            throw new Error(`Timeout/Abort for ${symbol}`);
+          }
+          throw err;
+        });
+    });
+
+    const results = await Promise.allSettled(fetchPromises);
+    results.forEach((result, idx) => {
+      const symbol = symbols[idx];
+      if (result.status === 'fulfilled') {
+        const data = result.value;
+        if (data && typeof data.close === 'number') {
+          marketData.push(data);
+        } else {
+          console.error(`[EODHD] Data missing 'close' for symbol: ${symbol}`, data);
         }
-      } catch (e) {
-        // Ignore failed fetches for now
+      } else {
+        console.error(`[EODHD] Error fetching symbol: ${symbol}`, result.reason);
       }
-    }
+    });
     return marketData;
   }
 
@@ -65,7 +108,7 @@ export class SimpleBlogAgent {
       // Define the symbols you want to analyze (could be dynamic)
       const symbols = ['AAPL', 'GOOG', 'GOOGL', 'MSFT', 'INTC'];
       // Fetch real market data
-      const marketData = await this.fetchEODHDMarketData(symbols);
+      const marketData: EODMarketData[] = await this.fetchEODHDMarketData(symbols);
       if (!marketData.length) throw new Error('No market data fetched from EODHD.');
       // Get market analysis from CrewAI
       const crewaiService = getCrewAIService({ apiKey: this.apiKey });
