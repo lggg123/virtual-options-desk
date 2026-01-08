@@ -26,6 +26,16 @@ class EODHDPriceTool(BaseTool):
         self.api_key = api_key or os.getenv("EODHD_API_KEY")
 
     def get_price(self, symbol: str, exchange: str = "US"):
+        """
+        Fetches the latest closing price for a symbol from the configured EODHD API.
+        
+        Parameters:
+            symbol (str): Ticker symbol to fetch; if it does not include a period, ".{exchange}" is appended.
+            exchange (str): Exchange code used when appending to the symbol (default "US").
+        
+        Returns:
+            float or None: The latest closing price for the symbol if available; `None` if the API response lacks valid data or an error occurs.
+        """
         if "." not in symbol:
             symbol = f"{symbol}.{exchange}"
         url = f"{self.api_url}/api/market/eodhd?symbols={symbol}"
@@ -41,5 +51,10 @@ class EODHDPriceTool(BaseTool):
             return None
 
     def _run(self, symbol: str, exchange: str = "US") -> Optional[float]:
-        """CrewAI tool interface: fetch price for symbol (and optional exchange)."""
+        """
+        Fetch the real-time price for a symbol and optional exchange.
+        
+        Returns:
+            price (Optional[float]): The latest close price for the symbol, or None if unavailable.
+        """
         return self.get_price(symbol, exchange)
