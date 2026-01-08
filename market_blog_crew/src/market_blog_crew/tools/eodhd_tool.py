@@ -9,6 +9,13 @@ class EODHDPriceTool:
     description = "Fetches real-time price for a given symbol from the EODHD API."
 
     def __init__(self, api_url=None, api_key=None):
+        """
+        Initialize the tool with the EODHD API base URL and optional API key.
+        
+        Parameters:
+            api_url (str | None): Base URL for the EODHD API. If None, reads the EODHD_API_URL environment variable or defaults to "http://localhost:3000".
+            api_key (str | None): API token for authenticating requests. If None, reads the EODHD_API_KEY environment variable.
+        """
         self.api_url = api_url or os.getenv("EODHD_API_URL", "http://localhost:3000")
         self.api_key = api_key or os.getenv("EODHD_API_KEY")
 
