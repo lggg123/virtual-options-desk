@@ -33,7 +33,12 @@ class EODHDPriceTool(BaseTool):
         Returns:
             float or None: The latest closing price for the symbol if available; `None` if the API response lacks valid data or an error occurs.
         """
-        if "." not in symbol:
+        # Map .NYSE and .NASDAQ to .US for EODHD compatibility
+        if "." in symbol:
+            base, suffix = symbol.split(".", 1)
+            if suffix.upper() in ["NYSE", "NASDAQ", "US"]:
+                symbol = f"{base}.US"
+        else:
             symbol = f"{symbol}.{exchange}"
         url = f"{self._api_url}/api/market/eodhd?symbols={symbol}"
         headers = {"X-API-Token": self._api_key} if self._api_key else {}
