@@ -14,6 +14,13 @@ class EODHDPriceTool(BaseTool):
     args_schema: Type[BaseModel] = EODHDPriceToolInput
 
     def __init__(self, api_url=None, api_key=None):
+        """
+        Initialize the tool with the EODHD API base URL and optional API key.
+        
+        Parameters:
+            api_url (str | None): Base URL for the EODHD API. If None, reads the EODHD_API_URL environment variable or defaults to "http://localhost:3000".
+            api_key (str | None): API token for authenticating requests. If None, reads the EODHD_API_KEY environment variable.
+        """
         super().__init__()
         self.api_url = api_url or os.getenv("EODHD_API_URL", "http://localhost:3000")
         self.api_key = api_key or os.getenv("EODHD_API_KEY")
@@ -29,7 +36,7 @@ class EODHDPriceTool(BaseTool):
             data = resp.json()
             if data.get("success") and data["data"]:
                 return data["data"][0]["close"]
-        except Exception as e:
+        except Exception as e:")
             print(f"[EODHDPriceTool] Error fetching price for {symbol}: {e}")
         return None
 
