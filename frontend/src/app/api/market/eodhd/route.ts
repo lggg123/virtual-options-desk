@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 // Direct server-side fetch to EODHD API
 
-// Server-side API route to fetch EODHD market data securely
+/**
+ * Handle GET requests to fetch real-time market data from EODHD for one or more symbols.
+ *
+ * Reads optional query parameters on the request:
+ * - `symbols`: comma-separated list of symbols (defaults to `AAPL,GOOG,GOOGL,MSFT,INTC` if not provided).
+ * - `exchange`: exchange suffix to append to symbols that don't contain a dot (defaults to `US`).
+ *
+ * The handler requires the `EODHD_API_KEY` environment variable and validates symbols before fetching.
+ *
+ * @param request - NextRequest containing optional `symbols` and `exchange` query parameters.
+ * @returns JSON response:
+ * - Success (HTTP 200): `{ success: true, data: MarketData[] }` where each MarketData has:
+ *   `{ symbol: string, timestamp?: string, open?: number, high?: number, low?: number, close: number, volume: number }`.
+ * - Failure when API key is missing (HTTP 500): `{ success: false, error: string }`.
+ * - Failure when no market data was retrieved (HTTP 404): `{ success: false, message: string }`.
+ * - Failure for unexpected errors (HTTP 500): `{ success: false, error: string }`.
+ */
 export async function GET(request: NextRequest) {
   const symbolsParam = request.nextUrl.searchParams.get('symbols');
   const exchangeParam = request.nextUrl.searchParams.get('exchange') || 'US';

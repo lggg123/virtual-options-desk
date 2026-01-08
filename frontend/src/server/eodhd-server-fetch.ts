@@ -3,6 +3,16 @@
 
 import type { EODMarketData } from '@/lib/blog/simple-blog-agent';
 
+/**
+ * Fetches real-time end-of-day market data for multiple symbols from EODHD.
+ *
+ * @param symbols - Array of symbol strings; each may include an exchange suffix (for example, "AAPL.US"). If a symbol has no suffix, `defaultExchange` is appended.
+ * @param apiKey - EODHD API key; required.
+ * @param timeoutMs - Per-request timeout in milliseconds. Requests exceeding this are aborted. Defaults to 5000.
+ * @param defaultExchange - Exchange suffix to append to symbols that lack one (for example, ".US").
+ * @returns An array of market data objects containing `symbol`, `timestamp`, `open`, `high`, `low`, `close`, and `volume`. Symbols that fail to fetch or time out are omitted from the result.
+ * @throws Error if `apiKey` is not provided.
+ */
 export async function fetchEODHDMarketDataServer(
   symbols: string[],
   apiKey: string,
