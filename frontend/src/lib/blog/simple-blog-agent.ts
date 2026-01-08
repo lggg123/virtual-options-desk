@@ -24,13 +24,51 @@ export class SimpleBlogAgent {
     this.apiKey = apiKey;
   }
 
+  /**
+   * Fetches real-time price data for a set of symbols from EODHD API.
+   * Returns an array of { price, volume, timestamp, symbol } objects for each symbol.
+   */
+  async fetchEODHDMarketData(symbols: string[]): Promise<any[]> {
+    const apiKey = process.env.NEXT_PUBLIC_EODHD_API_KEY || process.env.EODHD_API_KEY;
+    if (!apiKey) {
+      throw new Error('EODHD API key not found in environment variables.');
+    }
+    // EODHD free endpoint: https://eodhd.com/financial-apis/api-real-time-data
+    // We'll fetch the latest price for each symbol
+    const baseUrl = 'https://eodhd.com/api/real-time/';
+    const marketData: any[] = [];
+    for (const symbol of symbols) {
+      try {
+        const url = `${baseUrl}${symbol}.US?api_token=${apiKey}&fmt=json`;
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data && data.close) {
+          marketData.push({
+            price: data.close,
+            volume: data.volume || 1000,
+            timestamp: new Date().toISOString(),
+            symbol: symbol
+          });
+        }
+      } catch (e) {
+        // Ignore failed fetches for now
+      }
+    }
+    return marketData;
+  }
+
   async generateDailyBlog(): Promise<BlogPost> {
     console.log('🤖 Blog Agent: Generating daily market blog...');
     
     try {
+      // Define the symbols you want to analyze (could be dynamic)
+      const symbols = ['AAPL', 'GOOG', 'GOOGL', 'MSFT', 'INTC'];
+      // Fetch real market data
+      const marketData = await this.fetchEODHDMarketData(symbols);
+      if (!marketData.length) throw new Error('No market data fetched from EODHD.');
       // Get market analysis from CrewAI
       const crewaiService = getCrewAIService({ apiKey: this.apiKey });
-      const marketData = this.generateMockMarketData();
       const marketAnalysis = await crewaiService.analyzeMarketTrend(marketData);
       
       // Generate blog content
@@ -266,24 +304,6 @@ For retail and institutional investors looking to engage with ${topic}:
 3. **Risk Management**: Always prioritize capital preservation
 4. **Opportunity**: ${analysis.trend !== 'sideways' ? 'Directional momentum plays' : 'Premium collection strategies'}
 5. **Monitoring**: Watch key support/resistance levels for confirmation`;
-  }
-
-  private generateMockMarketData() {
-    const now = new Date();
-    const basePrice = 150 + Math.random() * 50;
-    const data = [];
-    
-    for (let i = 0; i < 10; i++) {
-      const priceVariation = (Math.random() - 0.5) * 4; // +/- $2 variation
-      
-      data.push({
-        price: basePrice + priceVariation,
-        volume: 1000 + Math.random() * 2000,
-        timestamp: new Date(now.getTime() - (9 - i) * 15 * 60 * 1000).toISOString()
-      });
-    }
-    
-    return data;
   }
 
   private async publishBlog(blogPost: BlogPost): Promise<void> {
