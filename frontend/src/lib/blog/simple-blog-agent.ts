@@ -40,65 +40,17 @@ export class SimpleBlogAgent {
    */
 
   async fetchEODHDMarketData(symbols: string[], timeoutMs: number = 5000): Promise<EODMarketData[]> {
-    const apiKey = process.env.NEXT_PUBLIC_EODHD_API_KEY || process.env.EODHD_API_KEY;
-    if (!apiKey) {
-      throw new Error('EODHD API key not found in environment variables.');
+    // Use secure server-side API route instead of direct fetch with API key
+    const url = `/api/market/eodhd?symbols=${symbols.join(',')}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch EODHD market data: ${response.status}`);
     }
-    const baseUrl = 'https://eodhd.com/api/real-time/';
-    const marketData: EODMarketData[] = [];
-
-    const fetchPromises = symbols.map(symbol => {
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const url = `${baseUrl}${symbol}.US?api_token=${apiKey}&fmt=json`;
-      const timeout = setTimeout(() => controller.abort(), timeoutMs);
-      return fetch(url, { signal })
-        .then(res => {
-          clearTimeout(timeout);
-          if (!res.ok) {
-            throw new Error(`Fetch failed for ${symbol}: status ${res.status}`);
-          }
-          return res.json();
-        })
-        .then(data => {
-          if (data && typeof data.close === 'number') {
-            return {
-              symbol,
-              timestamp: new Date().toISOString(),
-              open: data.open,
-              high: data.high,
-              low: data.low,
-              close: data.close,
-              volume: data.volume || 1000
-            } as EODMarketData;
-          } else {
-            throw new Error(`No close price for ${symbol}`);
-          }
-        })
-        .catch(err => {
-          clearTimeout(timeout);
-          if (err.name === 'AbortError') {
-            throw new Error(`Timeout/Abort for ${symbol}`);
-          }
-          throw err;
-        });
-    });
-
-    const results = await Promise.allSettled(fetchPromises);
-    results.forEach((result, idx) => {
-      const symbol = symbols[idx];
-      if (result.status === 'fulfilled') {
-        const data = result.value;
-        if (data && typeof data.close === 'number') {
-          marketData.push(data);
-        } else {
-          console.error(`[EODHD] Data missing 'close' for symbol: ${symbol}`, data);
-        }
-      } else {
-        console.error(`[EODHD] Error fetching symbol: ${symbol}`, result.reason);
-      }
-    });
-    return marketData;
+    const result = await response.json();
+    if (!result.success || !Array.isArray(result.data)) {
+      throw new Error(`Invalid EODHD market data response`);
+    }
+    return result.data as EODMarketData[];
   }
 
   async generateDailyBlog(): Promise<BlogPost> {
