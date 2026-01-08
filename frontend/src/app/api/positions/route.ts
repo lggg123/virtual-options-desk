@@ -90,15 +90,18 @@ async function fetchCFDPrice(symbol: string): Promise<{ bid: number; ask: number
 // Fetch current futures price from internal API
 async function fetchFuturePrice(symbol: string): Promise<number> {
   try {
+    // Extract base symbol from spread notation (e.g., "GCSPREAD" -> "GC", "GC-G26" -> "GC")
+    const baseSymbol = symbol.replace(/SPREAD.*/, '').replace(/-.*/, '').substring(0, 2).toUpperCase();
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/market/futures`,
+      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/market/futures?symbol=${baseSymbol}`,
       { next: { revalidate: 30 } }
     );
 
     if (response.ok) {
-      const contracts = await response.json();
-      const contract = contracts.find((c: { symbol: string }) => c.symbol === symbol);
+      const contract = await response.json();
       if (contract && contract.price) {
+        console.log(`[FuturePrice] Fetched ${baseSymbol} price: $${contract.price}`);
         return contract.price;
       }
     }
@@ -346,6 +349,34 @@ export async function GET() {
         return transformOptionPosition(pos, notes, underlyingPrices);
       }
     });
+
+    // Update current_price and unrealized_pl in database for futures positions
+    // This ensures the account API has access to updated prices
+    const futureUpdatePromises = transformedPositions
+      .filter(p => p.assetClass === 'future' && p.priceSource === 'live')
+      .map(async (pos) => {
+        try {
+          const { error } = await supabase
+            .from('positions')
+            .update({
+              current_price: pos.currentPrice,
+              unrealized_pl: pos.pnl,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', pos.id);
+
+          if (error) {
+            console.error(`Failed to update price for position ${pos.id}:`, error);
+          } else {
+            console.log(`Updated ${pos.symbol} price: $${pos.currentPrice}, P&L: $${pos.pnl.toFixed(2)}`);
+          }
+        } catch (e) {
+          console.error(`Error updating position ${pos.id}:`, e);
+        }
+      });
+
+    // Run updates in background (don't block response)
+    Promise.all(futureUpdatePromises).catch(e => console.error('Error updating futures prices:', e));
 
     // Detect strategies from position combinations (options only)
     // Only apply to options, leave futures and others untouched
