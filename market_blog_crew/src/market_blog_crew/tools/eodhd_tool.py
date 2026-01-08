@@ -2,7 +2,7 @@ import os
 import requests
 from typing import Type, Optional
 from pydantic import BaseModel, Field
-from crewai.tools import BaseTool
+from crewai_tools import BaseTool
 
 class EODHDPriceToolInput(BaseModel):
     symbol: str = Field(..., description="Ticker symbol to fetch price for.")
