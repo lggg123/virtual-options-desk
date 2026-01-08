@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         if (data && typeof data.close === 'number') {
           return {
             symbol,
-            timestamp: data.timestamp ? new Date(data.timestamp * 1000).toISOString() : undefined,
+            timestamp: data.timestamp ? new Date(data.timestamp * 1000).toISOString() : new Date().toISOString(),
             open: data.open,
             high: data.high,
             low: data.low,

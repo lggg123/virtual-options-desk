@@ -54,7 +54,7 @@ export async function fetchEODHDMarketDataServer(
       .then(data => {
         if (data && typeof data.close === 'number') {
           return {
-            symbol,
+            symbol: `${symbol}${exchange}`,
             timestamp: new Date().toISOString(),
             open: data.open,
             high: data.high,
