@@ -42,14 +42,15 @@ class MarketBlogCrew():
         # Initialize research tools
         self.search_tool = SerperDevTool()
         self.web_scraper = ScrapeWebsiteTool()
-        
+        # EODHD price fetch tool
+        from market_blog_crew.tools.eodhd_tool import EODHDPriceTool
+        self.eodhd_price_tool = EODHDPriceTool()
         # Financial news and data websites for targeted research
         self.financial_websites = [
             'https://finance.yahoo.com',
             'https://www.cnbc.com/markets',
             'https://www.investing.com'
         ]
-        
         # Create website-specific search tools
         self.web_rag_tools = [
             WebsiteSearchTool(website=site) for site in self.financial_websites
@@ -73,7 +74,7 @@ class MarketBlogCrew():
     def technical_analyst(self) -> Agent:
         return Agent(
             config=self.agents_config['technical_analyst'], # type: ignore[index]
-            tools=[self.search_tool, self.web_scraper],
+            tools=[self.search_tool, self.web_scraper, self.eodhd_price_tool],
             verbose=True
         )
 
@@ -81,7 +82,7 @@ class MarketBlogCrew():
     def options_strategist(self) -> Agent:
         return Agent(
             config=self.agents_config['options_strategist'], # type: ignore[index]
-            tools=[self.search_tool],
+            tools=[self.search_tool, self.eodhd_price_tool],
             verbose=True
         )
 
