@@ -23,6 +23,9 @@ ENV FLASK_ENV=production
 ENV PORT=8000
 ENV PYTHONUNBUFFERED=1
 
+# Set PYTHONPATH so src is a package root
+ENV PYTHONPATH=/app/src
+
 # Set Google credentials path (actual secret written at runtime)
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
 
