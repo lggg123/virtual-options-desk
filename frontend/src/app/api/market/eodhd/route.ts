@@ -1,0 +1,105 @@
+import { NextRequest, NextResponse } from 'next/server';
+// Direct server-side fetch to EODHD API
+
+/**
+ * Handle GET requests to fetch real-time market data from EODHD for one or more symbols.
+ *
+ * Reads optional query parameters on the request:
+ * - `symbols`: comma-separated list of symbols (defaults to `AAPL,GOOG,GOOGL,MSFT,INTC` if not provided).
+ * - `exchange`: exchange suffix to append to symbols that don't contain a dot (defaults to `US`).
+ *
+ * The handler requires the `EODHD_API_KEY` environment variable and validates symbols before fetching.
+ *
+ * @param request - NextRequest containing optional `symbols` and `exchange` query parameters.
+ * @returns JSON response:
+ * - Success (HTTP 200): `{ success: true, data: MarketData[] }` where each MarketData has:
+ *   `{ symbol: string, timestamp?: string, open?: number, high?: number, low?: number, close: number, volume: number }`.
+ * - Failure when API key is missing (HTTP 500): `{ success: false, error: string }`.
+ * - Failure when no market data was retrieved (HTTP 404): `{ success: false, message: string }`.
+ * - Failure for unexpected errors (HTTP 500): `{ success: false, error: string }`.
+ */
+export async function GET(request: NextRequest) {
+  const symbolsParam = request.nextUrl.searchParams.get('symbols');
+  const exchangeParam = request.nextUrl.searchParams.get('exchange') || 'US';
+  // Normalize and validate symbols: trim, uppercase, filter empty
+  const symbols = symbolsParam
+    ? symbolsParam.split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+    : ['AAPL', 'GOOG', 'GOOGL', 'MSFT', 'INTC'];
+
+  try {
+    const apiKey = process.env.EODHD_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ success: false, error: 'EODHD_API_KEY not set' }, { status: 500 });
+    }
+    const baseUrl = 'https://eodhd.com/api/real-time/';
+    const fetchPromises = symbols.map(async origSymbol => {
+      // If symbol already contains a dot, assume it's fully qualified
+      let symbol = origSymbol;
+      if (!symbol.includes('.')) {
+        // Only append exchange if not present and exchangeParam is set
+        if (exchangeParam) {
+          symbol = `${symbol}.${exchangeParam}`;
+        }
+      }
+      // Validate symbol: must be [A-Z0-9.]+
+      if (!/^[A-Z0-9.]+$/.test(symbol)) {
+        console.error(`[EODHD] Invalid symbol: ${symbol}`);
+        return null;
+      }
+      const url = `${baseUrl}${symbol}?fmt=json`;
+      try {
+        const res = await fetch(url, {
+          headers: {
+            'X-API-Token': apiKey,
+            'Accept': 'application/json',
+          },
+        });
+        if (!res.ok) {
+          throw new Error(`Fetch failed for ${symbol}: status ${res.status}`);
+        }
+        const data = await res.json();
+        if (data && typeof data.close === 'number') {
+          return {
+            symbol,
+            timestamp: data.timestamp ? new Date(data.timestamp * 1000).toISOString() : new Date().toISOString(),
+            open: data.open,
+            high: data.high,
+            low: data.low,
+            close: data.close,
+            volume: data.volume ?? 0,
+          };
+        } else {
+          throw new Error(`No close price for ${symbol}`);
+        }
+      } catch (err) {
+        let msg: string;
+        if (err instanceof Error) {
+          msg = err.message;
+        } else if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
+          msg = (err as any).message;
+        } else {
+          msg = String(err);
+        }
+        console.error(`[EODHD] Error for symbol: ${symbol}:`, msg);
+        return null;
+      }
+    });
+    const results = await Promise.all(fetchPromises);
+    const marketData = results.filter(Boolean);
+    if (marketData.length === 0) {
+      return NextResponse.json({ success: false, message: 'No market data retrieved' }, { status: 404 });
+    }
+    // Optionally, could check for partial success here
+    return NextResponse.json({ success: true, data: marketData });
+  } catch (error) {
+    let msg: string;
+    if (error instanceof Error) {
+      msg = error.message;
+    } else if (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string') {
+      msg = (error as any).message;
+    } else {
+      msg = String(error);
+    }
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+  }
+}

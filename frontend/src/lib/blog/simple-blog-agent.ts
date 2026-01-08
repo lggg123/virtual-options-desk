@@ -15,6 +15,16 @@ export interface BlogPost {
   status: 'draft' | 'published';
 }
 
+export interface EODMarketData {
+  symbol: string;
+  timestamp: string;
+  open?: number;
+  high?: number;
+  low?: number;
+  close: number;
+  volume: number;
+}
+
 export class SimpleBlogAgent {
   private cronJob: CronJob | null = null;
   private apiKey: string | undefined;
@@ -24,14 +34,68 @@ export class SimpleBlogAgent {
     this.apiKey = apiKey;
   }
 
+  /**
+  * Fetches real-time market data for a set of symbols from EODHD API.
+  * Returns an array of EODMarketData objects for each symbol:
+  *   {
+  *     symbol: string,
+  *     timestamp: string,
+  *     open?: number,
+  *     high?: number,
+  *     low?: number,
+  *     close: number, // 'close' is the price field
+  *     volume: number
+  *   }
+   */
+
+  async fetchEODHDMarketData(symbols: string[], timeoutMs: number = 5000): Promise<EODMarketData[]> {
+    // Use secure server-side API route instead of direct fetch with API key
+    const url = `/api/market/eodhd?symbols=${symbols.join(',')}`;
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { signal });
+      clearTimeout(timeout);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch EODHD market data: ${response.status}`);
+      }
+      const result = await response.json();
+      if (!result.success || !Array.isArray(result.data)) {
+        throw new Error(`Invalid EODHD market data response`);
+      }
+      return result.data as EODMarketData[];
+    } catch (err: any) {
+      clearTimeout(timeout);
+      if (err.name === 'AbortError') {
+        throw new Error('EODHD market data fetch timed out');
+      }
+      throw err;
+    }
+  }
+
   async generateDailyBlog(): Promise<BlogPost> {
     console.log('🤖 Blog Agent: Generating daily market blog...');
     
     try {
+      // Define the symbols you want to analyze (could be dynamic)
+      const symbols = ['AAPL', 'GOOG', 'GOOGL', 'MSFT', 'INTC'];
+      // Fetch real market data
+      const marketData: EODMarketData[] = await this.fetchEODHDMarketData(symbols);
+      if (!marketData.length) throw new Error('No market data fetched from EODHD.');
+      // Convert EODMarketData[] to MarketData[]
+      const marketDataForAnalysis = marketData.map(d => ({
+        price: d.close,
+        volume: d.volume,
+        timestamp: d.timestamp,
+        high: d.high,
+        low: d.low,
+        open: d.open,
+        symbol: d.symbol
+      }));
       // Get market analysis from CrewAI
       const crewaiService = getCrewAIService({ apiKey: this.apiKey });
-      const marketData = this.generateMockMarketData();
-      const marketAnalysis = await crewaiService.analyzeMarketTrend(marketData);
+      const marketAnalysis = await crewaiService.analyzeMarketTrend(marketDataForAnalysis);
       
       // Generate blog content
       const blogPost = this.createBlogFromAnalysis(marketAnalysis);
@@ -266,24 +330,6 @@ For retail and institutional investors looking to engage with ${topic}:
 3. **Risk Management**: Always prioritize capital preservation
 4. **Opportunity**: ${analysis.trend !== 'sideways' ? 'Directional momentum plays' : 'Premium collection strategies'}
 5. **Monitoring**: Watch key support/resistance levels for confirmation`;
-  }
-
-  private generateMockMarketData() {
-    const now = new Date();
-    const basePrice = 150 + Math.random() * 50;
-    const data = [];
-    
-    for (let i = 0; i < 10; i++) {
-      const priceVariation = (Math.random() - 0.5) * 4; // +/- $2 variation
-      
-      data.push({
-        price: basePrice + priceVariation,
-        volume: 1000 + Math.random() * 2000,
-        timestamp: new Date(now.getTime() - (9 - i) * 15 * 60 * 1000).toISOString()
-      });
-    }
-    
-    return data;
   }
 
   private async publishBlog(blogPost: BlogPost): Promise<void> {
