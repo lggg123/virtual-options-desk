@@ -93,20 +93,37 @@ async function fetchFuturePrice(symbol: string): Promise<number> {
     // Extract base symbol from spread notation (e.g., "GCSPREAD" -> "GC", "GC-G26" -> "GC")
     const baseSymbol = symbol.replace(/SPREAD.*/, '').replace(/-.*/, '').substring(0, 2).toUpperCase();
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/market/futures?symbol=${baseSymbol}`,
-      { next: { revalidate: 30 } }
-    );
+    // Use absolute URL for external API calls in server-side Next.js
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const apiUrl = `${baseUrl}/api/market/futures?symbol=${baseSymbol}`;
+
+    console.log(`[FuturePrice] Fetching ${baseSymbol} from ${apiUrl}`);
+
+    const response = await fetch(apiUrl, {
+      cache: 'no-store', // Disable cache to always get fresh prices
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    console.log(`[FuturePrice] Response status for ${baseSymbol}: ${response.status}`);
 
     if (response.ok) {
       const contract = await response.json();
+      console.log(`[FuturePrice] Response for ${baseSymbol}:`, JSON.stringify(contract).substring(0, 200));
+
       if (contract && contract.price) {
-        console.log(`[FuturePrice] Fetched ${baseSymbol} price: $${contract.price}`);
+        console.log(`[FuturePrice] ✓ Fetched ${baseSymbol} price: $${contract.price}`);
         return contract.price;
+      } else {
+        console.error(`[FuturePrice] No price in response for ${baseSymbol}:`, contract);
       }
+    } else {
+      const errorText = await response.text();
+      console.error(`[FuturePrice] HTTP ${response.status} for ${baseSymbol}: ${errorText.substring(0, 200)}`);
     }
   } catch (e) {
-    console.error('Failed to fetch futures price for', symbol, e);
+    console.error(`[FuturePrice] Error fetching ${symbol}:`, e);
   }
   return 0;
 }
