@@ -35,22 +35,43 @@ export class SimpleBlogAgent {
   }
 
   /**
-   * Fetches real-time price data for a set of symbols from EODHD API.
-   * Returns an array of { price, volume, timestamp, symbol } objects for each symbol.
+  * Fetches real-time market data for a set of symbols from EODHD API.
+  * Returns an array of EODMarketData objects for each symbol:
+  *   {
+  *     symbol: string,
+  *     timestamp: string,
+  *     open?: number,
+  *     high?: number,
+  *     low?: number,
+  *     close: number, // 'close' is the price field
+  *     volume: number
+  *   }
    */
 
   async fetchEODHDMarketData(symbols: string[], timeoutMs: number = 5000): Promise<EODMarketData[]> {
     // Use secure server-side API route instead of direct fetch with API key
     const url = `/api/market/eodhd?symbols=${symbols.join(',')}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch EODHD market data: ${response.status}`);
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { signal });
+      clearTimeout(timeout);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch EODHD market data: ${response.status}`);
+      }
+      const result = await response.json();
+      if (!result.success || !Array.isArray(result.data)) {
+        throw new Error(`Invalid EODHD market data response`);
+      }
+      return result.data as EODMarketData[];
+    } catch (err: any) {
+      clearTimeout(timeout);
+      if (err.name === 'AbortError') {
+        throw new Error('EODHD market data fetch timed out');
+      }
+      throw err;
     }
-    const result = await response.json();
-    if (!result.success || !Array.isArray(result.data)) {
-      throw new Error(`Invalid EODHD market data response`);
-    }
-    return result.data as EODMarketData[];
   }
 
   async generateDailyBlog(): Promise<BlogPost> {
