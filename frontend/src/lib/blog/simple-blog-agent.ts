@@ -110,9 +110,19 @@ export class SimpleBlogAgent {
       // Fetch real market data
       const marketData: EODMarketData[] = await this.fetchEODHDMarketData(symbols);
       if (!marketData.length) throw new Error('No market data fetched from EODHD.');
+      // Convert EODMarketData[] to MarketData[]
+      const marketDataForAnalysis = marketData.map(d => ({
+        price: d.close,
+        volume: d.volume,
+        timestamp: d.timestamp,
+        high: d.high,
+        low: d.low,
+        open: d.open,
+        symbol: d.symbol
+      }));
       // Get market analysis from CrewAI
       const crewaiService = getCrewAIService({ apiKey: this.apiKey });
-      const marketAnalysis = await crewaiService.analyzeMarketTrend(marketData);
+      const marketAnalysis = await crewaiService.analyzeMarketTrend(marketDataForAnalysis);
       
       // Generate blog content
       const blogPost = this.createBlogFromAnalysis(marketAnalysis);
