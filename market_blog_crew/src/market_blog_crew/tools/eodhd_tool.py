@@ -36,7 +36,7 @@ class EODHDPriceTool(BaseTool):
             data = resp.json()
             if data.get("success") and data["data"]:
                 return data["data"][0]["close"]
-        except Exception as e:")
+        except Exception as e:
             print(f"[EODHDPriceTool] Error fetching price for {symbol}: {e}")
             return None
 
