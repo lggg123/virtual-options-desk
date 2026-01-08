@@ -38,7 +38,7 @@ class EODHDPriceTool(BaseTool):
                 return data["data"][0]["close"]
         except Exception as e:")
             print(f"[EODHDPriceTool] Error fetching price for {symbol}: {e}")
-        return None
+            return None
 
     def _run(self, symbol: str, exchange: str = "US") -> Optional[float]:
         """CrewAI tool interface: fetch price for symbol (and optional exchange)."""
