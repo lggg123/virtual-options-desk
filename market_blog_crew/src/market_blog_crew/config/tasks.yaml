@@ -69,22 +69,23 @@ analyze_technicals_task:
     Based on the market research provided, perform technical analysis on the most promising
     opportunities identified. For each asset/ticker, analyze:
     
-    1. **Trend Analysis**: Is the asset in an uptrend, downtrend, or consolidation?
-    2. **Chart Patterns**: Identify any bullish/bearish patterns (head & shoulders, triangles, flags, etc.)
-    3. **Support & Resistance**: Key price levels where the asset might bounce or break
-    4. **Technical Indicators**: 
+     1. **Trend Analysis**: Is the asset in an uptrend, downtrend, or consolidation?
+     2. **Chart Patterns**: Identify any bullish/bearish patterns (head & shoulders, triangles, flags, etc.)
+     3. **Support & Resistance**: Key price levels where the asset might bounce or break
+     4. **Technical Indicators**: 
        - RSI (oversold/overbought conditions)
        - MACD (momentum and trend direction)
        - Moving Averages (20, 50, 200-day crossovers)
        - Bollinger Bands (volatility and price extremes)
-    5. **Volume Analysis**: Is volume confirming the price action?
-    6. **Multiple Timeframes**: Validate signals across daily, weekly, monthly charts
-    7. **Breakout/Breakdown Levels**: Specific price points that could trigger major moves
+     5. **Volume Analysis**: Is volume confirming the price action?
+     6. **Multiple Timeframes**: Validate signals across daily, weekly, monthly charts
+     7. **Breakout/Breakdown Levels**: Specific price points that could trigger major moves
+     8. **Current Price**: You MUST use the EODHDPriceTool to fetch the latest real-time price for each asset/ticker and cite it as the 'Current Price'.
     
     Focus on setups with high probability for options trades (strong trends, clear levels, momentum).
     Date: {current_date}
 
-    IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE.
+    IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE. For 'Current Price', always use the EODHDPriceTool and cite the value and timestamp.
     If using a tool:
     Thought: [reasoning]
     Action: [tool name] [tool input]
@@ -118,12 +119,13 @@ identify_options_opportunities_task:
        - Directional: Long call, long put, call/put spread
        - Volatility: Straddle, strangle, iron condor
        - Income: Covered call, cash-secured put
-    4. **Specific Trade Details**:
+     4. **Specific Trade Details**:
        - Strike prices (specific numbers)
        - Expiration dates (provide actual dates, not just DTE)
        - Entry price range
        - Maximum profit potential ($ and %)
        - Maximum loss ($ and %)
+       - **Current Price**: You MUST use the EODHDPriceTool to fetch the latest real-time price for each asset/ticker and cite it as the 'Current Price'.
     5. **Greeks Analysis**: Expected delta, theta decay, vega exposure
     6. **Probability of Profit**: Realistic assessment based on volatility
     7. **Exit Strategy**: When to take profits, when to cut losses, adjustment rules
