@@ -6,42 +6,47 @@ research_market_task:
     
     Search for and compile the following LIVE information:
     
-    1. **Major Market Indices** (Search: "S&P 500 today", "Nasdaq today", "Dow Jones today")
+    1. **Major Market Indices** (Search: "S&P 500 {current_date}", "Nasdaq {current_date}", "Dow Jones {current_date}")
        - Current levels and performance for S&P 500, Nasdaq, Dow Jones, Russell 2000
        - Search multiple financial websites (Yahoo Finance, MarketWatch, Bloomberg)
     
-    2. **Economic Calendar** (Search: "economic calendar {current_date}", "market news today")
+    2. **Economic Calendar** (Search: "economic calendar {current_date}", "market news {current_date}")
        - Today's economic data releases
        - Upcoming Fed meetings or policy announcements
        - Recent inflation/jobs/GDP reports
     
-    3. **Sector Performance** (Search: "sector performance today", "best performing sectors")
+    3. **Sector Performance** (Search: "sector performance {current_date}", "best performing sectors {current_date}")
        - Which sectors are leading/lagging TODAY
        - Use live market data from financial websites
     
-    4. **Top Market News** (Search: "market news today", "stock market breaking news")
+    4. **Top Market News** (Search: "market news {current_date}", "stock market breaking news {current_date}")
        - Breaking news affecting markets TODAY
        - Major earnings reports
        - Geopolitical events
     
-    5. **Volatility Environment** (Search: "VIX today", "market volatility")
+    5. **Volatility Environment** (Search: "VIX {current_date}", "market volatility {current_date}")
        - Current VIX level
        - Market sentiment indicators
     
-    6. **Notable Stock Movers** (Search: "biggest stock movers today", "stocks with high volume")
+    6. **Notable Stock Movers** (Search: "biggest stock movers {current_date}", "stocks with high volume {current_date}")
        - Stocks with unusual activity TODAY
        - Major price movements
     
-    7. **Commodities & Currencies** (Search: "gold price today", "oil price today", "dollar index")
+    7. **Commodities & Currencies** (Search: "gold price {current_date}", "oil price {current_date}", "dollar index {current_date}")
        - Current prices affecting risk sentiment
     
-    8. **Market Sentiment** (Search: "market sentiment today", "fear and greed index")
+    8. **Market Sentiment** (Search: "market sentiment {current_date}", "fear and greed index {current_date}")
        - Investor mood and sentiment indicators
     
     **YOU MUST USE YOUR TOOLS** - Do not rely on training data. Search the web for current information.
     Use SerperDevTool for broad searches and WebsiteSearchTool for specific financial sites.
     
+
     Date: {current_date}
+
+    After all metadata fields (TITLE, META_DESCRIPTION, TAGS, KEYWORDS, SP500_LEVEL, VIX_LEVEL, TOP_SECTOR), you MUST include a line that says exactly:
+    CONTENT:
+    and then write the full article content in markdown. Do not omit this marker. The parser will fail if CONTENT: is missing.
 
     IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE.
     If using a tool:
