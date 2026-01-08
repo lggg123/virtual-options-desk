@@ -232,7 +232,16 @@ export async function POST(request: NextRequest) {
               current_price: price,
               market_value: 0,
               unrealized_pl: unrealizedPL,
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
+              notes: JSON.stringify({
+                asset_class: 'future',
+                contract_size: contractSize,
+                margin_requirement: marginRequirement,
+                tick_value: tickValue,
+                position_type: 'long', // Ensure position_type is always 'long' for positive quantity
+                notional_value: notionalValue,
+                expiry: contract
+              })
             })
             .eq('id', existingPosition.id);
 
