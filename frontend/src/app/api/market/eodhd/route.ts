@@ -46,11 +46,10 @@ export async function GET(request: NextRequest) {
         console.error(`[EODHD] Invalid symbol: ${symbol}`);
         return null;
       }
-      const url = `${baseUrl}${symbol}?fmt=json`;
+      const url = `${baseUrl}${symbol}?api_token=${apiKey}&fmt=json`;
       try {
         const res = await fetch(url, {
           headers: {
-            'X-API-Token': apiKey,
             'Accept': 'application/json',
           },
         });
