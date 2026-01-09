@@ -85,12 +85,12 @@ analyze_technicals_task:
      5. **Volume Analysis**: Is volume confirming the price action?
      6. **Multiple Timeframes**: Validate signals across daily, weekly, monthly charts
      7. **Breakout/Breakdown Levels**: Specific price points that could trigger major moves
-     8. **Current Price**: You MUST use the EODHDPriceTool to fetch the latest real-time price for each asset/ticker and cite it as the 'Current Price'.
+    8. **Current Price**: You MUST use the AlphaVantagePriceTool to fetch the latest real-time price for each asset/ticker and cite it as the 'Current Price'.
     
     Focus on setups with high probability for options trades (strong trends, clear levels, momentum).
     Date: {current_date}
 
-    IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE. For 'Current Price', always use the EODHDPriceTool and cite the value and timestamp.
+    IMPORTANT: FORMAT YOUR OUTPUT EXACTLY AS BELOW. DO NOT DEVIATE. For 'Current Price', always use the AlphaVantagePriceTool and cite the value and timestamp.
     If using a tool:
     Thought: [reasoning]
     Action: [tool name] [tool input]
@@ -130,7 +130,7 @@ identify_options_opportunities_task:
        - Entry price range
        - Maximum profit potential ($ and %)
        - Maximum loss ($ and %)
-       - **Current Price**: You MUST use the EODHDPriceTool to fetch the latest real-time price for each asset/ticker and cite it as the 'Current Price'.
+      - **Current Price**: You MUST use the AlphaVantagePriceTool to fetch the latest real-time price for each asset/ticker and cite it as the 'Current Price'.
     5. **Greeks Analysis**: Expected delta, theta decay, vega exposure
     6. **Probability of Profit**: Realistic assessment based on volatility
     7. **Exit Strategy**: When to take profits, when to cut losses, adjustment rules
