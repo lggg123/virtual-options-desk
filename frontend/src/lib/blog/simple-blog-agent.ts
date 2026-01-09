@@ -35,77 +35,57 @@ export class SimpleBlogAgent {
   }
 
   /**
-  * Fetches real-time market data for a set of symbols from EODHD API.
-  * Returns an array of EODMarketData objects for each symbol:
-  *   {
-  *     symbol: string,
-  *     timestamp: string,
-  *     open?: number,
-  *     high?: number,
-  *     low?: number,
-  *     close: number, // 'close' is the price field
-  *     volume: number
-  *   }
-   */
-
-  async fetchEODHDMarketData(symbols: string[], timeoutMs: number = 5000): Promise<EODMarketData[]> {
-    // Use secure server-side API route instead of direct fetch with API key
-    const url = `/api/market/eodhd?symbols=${symbols.join(',')}`;
-    const controller = new AbortController();
-    const signal = controller.signal;
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const response = await fetch(url, { signal });
-      clearTimeout(timeout);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch EODHD market data: ${response.status}`);
-      }
-      const result = await response.json();
-      if (!result.success || !Array.isArray(result.data)) {
-        throw new Error(`Invalid EODHD market data response`);
-      }
-      return result.data as EODMarketData[];
-    } catch (err: any) {
-      clearTimeout(timeout);
-      if (err.name === 'AbortError') {
-        throw new Error('EODHD market data fetch timed out');
-      }
-      throw err;
+  * Fetches real-time price data for a set of symbols from Alpha Vantage API.
+  * Returns an array of { price, volume, timestamp, symbol } objects for each symbol.
+  */
+  async fetchAlphaVantageMarketData(symbols: string[]): Promise<any[]> {
+    const apiKey = process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY || process.env.ALPHA_VANTAGE_API_KEY;
+    if (!apiKey) {
+      throw new Error('Alpha Vantage API key not found in environment variables.');
     }
+    // Alpha Vantage endpoint: https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=IBM&apikey=demo
+    const baseUrl = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE';
+    const marketData: any[] = [];
+    for (const symbol of symbols) {
+      try {
+        const url = `${baseUrl}&symbol=${symbol}&apikey=${apiKey}`;
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        const quote = data["Global Quote"];
+        if (quote && quote["05. price"]) {
+          marketData.push({
+            price: parseFloat(quote["05. price"]),
+            volume: parseInt(quote["06. volume"]) || 1000,
+            timestamp: new Date().toISOString(),
+            symbol: symbol
+          });
+        }
+      } catch (e) {
+        // Ignore failed fetches for now
+      }
+    }
+    return marketData;
   }
 
   async generateDailyBlog(): Promise<BlogPost> {
     console.log('🤖 Blog Agent: Generating daily market blog...');
-    
     try {
       // Define the symbols you want to analyze (could be dynamic)
       const symbols = ['AAPL', 'GOOG', 'GOOGL', 'MSFT', 'INTC'];
-      // Fetch real market data
-      const marketData: EODMarketData[] = await this.fetchEODHDMarketData(symbols);
-      if (!marketData.length) throw new Error('No market data fetched from EODHD.');
-      // Convert EODMarketData[] to MarketData[]
-      const marketDataForAnalysis = marketData.map(d => ({
-        price: d.close,
-        volume: d.volume,
-        timestamp: d.timestamp,
-        high: d.high,
-        low: d.low,
-        open: d.open,
-        symbol: d.symbol
-      }));
+      // Fetch real market data from Alpha Vantage
+      const marketData = await this.fetchAlphaVantageMarketData(symbols);
+      if (!marketData.length) throw new Error('No market data fetched from Alpha Vantage.');
       // Get market analysis from CrewAI
       const crewaiService = getCrewAIService({ apiKey: this.apiKey });
-      const marketAnalysis = await crewaiService.analyzeMarketTrend(marketDataForAnalysis);
-      
+      const marketAnalysis = await crewaiService.analyzeMarketTrend(marketData);
       // Generate blog content
       const blogPost = this.createBlogFromAnalysis(marketAnalysis);
-      
       console.log(`✅ Generated blog: "${blogPost.title}"`);
       return blogPost;
-      
-    } catch (error) {
-      console.error('❌ Blog generation failed:', error);
-      throw error;
+    } catch (err) {
+      console.error('❌ Blog generation failed:', err);
+      throw err;
     }
   }
 

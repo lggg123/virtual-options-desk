@@ -45,6 +45,9 @@ class MarketBlogCrew():
         # EODHD price fetch tool
         from market_blog_crew.tools.eodhd_tool import EODHDPriceTool
         self.eodhd_price_tool = EODHDPriceTool()
+        # Alpha Vantage price fetch tool
+        from market_blog_crew.tools.alpha_vantage_tool import AlphaVantagePriceTool
+        self.alpha_vantage_price_tool = AlphaVantagePriceTool()
         # Financial news and data websites for targeted research
         self.financial_websites = [
             'https://finance.yahoo.com',
@@ -74,7 +77,7 @@ class MarketBlogCrew():
     def technical_analyst(self) -> Agent:
         return Agent(
             config=self.agents_config['technical_analyst'], # type: ignore[index]
-            tools=[self.search_tool, self.web_scraper, self.eodhd_price_tool],
+            tools=[self.search_tool, self.web_scraper, self.eodhd_price_tool, self.alpha_vantage_price_tool],
             verbose=True
         )
 
@@ -82,7 +85,7 @@ class MarketBlogCrew():
     def options_strategist(self) -> Agent:
         return Agent(
             config=self.agents_config['options_strategist'], # type: ignore[index]
-            tools=[self.search_tool, self.eodhd_price_tool],
+            tools=[self.search_tool, self.eodhd_price_tool, self.alpha_vantage_price_tool],
             verbose=True
         )
 
