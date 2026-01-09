@@ -9,11 +9,6 @@ class AlphaVantagePriceToolInput(BaseModel):
     symbol: str = Field(..., description="Ticker symbol to fetch price for.")
 
 class AlphaVantagePriceTool(BaseTool):
-        def _run(self, symbol: str) -> Optional[float]:
-            """
-            Required by BaseTool: fetches the price for the given symbol.
-            """
-            return self.get_price(symbol)
     name: str = "AlphaVantagePriceTool"
     description: str = "Fetches real-time price for a given symbol from the Alpha Vantage API."
     args_schema: Type[BaseModel] = AlphaVantagePriceToolInput
@@ -42,3 +37,9 @@ class AlphaVantagePriceTool(BaseTool):
         except Exception:
             pass
         return None
+
+    def _run(self, symbol: str) -> Optional[float]:
+        """
+        Required by BaseTool: fetches the price for the given symbol.
+        """
+        return self.get_price(symbol)
