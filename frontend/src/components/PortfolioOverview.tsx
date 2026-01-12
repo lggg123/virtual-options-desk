@@ -10,6 +10,7 @@ interface Position {
   id: string;
   symbol: string;
   type: string;
+  assetClass: 'option' | 'crypto' | 'cfd' | 'stock' | 'future';
   quantity: number;
   avgPrice: number;
   currentPrice: number;
@@ -96,6 +97,7 @@ export default function PortfolioOverview() {
   interface GroupedPosition {
     symbol: string;
     type: string;
+    assetClass: 'option' | 'crypto' | 'cfd' | 'stock' | 'future';
     quantity: number;
     value: number;
     percentage: number;
@@ -105,7 +107,7 @@ export default function PortfolioOverview() {
   const groupedPositions = positions.reduce((acc: GroupedPosition[], pos) => {
     const existing = acc.find(p => p.symbol === pos.symbol && p.type === pos.type);
     const value = pos.currentPrice * pos.quantity * 100;
-    
+
     if (existing) {
       existing.quantity += pos.quantity;
       existing.value += value;
@@ -113,6 +115,7 @@ export default function PortfolioOverview() {
       acc.push({
         symbol: pos.symbol,
         type: pos.type,
+        assetClass: pos.assetClass,
         quantity: pos.quantity,
         value: value,
         percentage: 0
@@ -125,6 +128,31 @@ export default function PortfolioOverview() {
   groupedPositions.forEach(pos => {
     pos.percentage = totalValue > 0 ? (pos.value / totalValue) * 100 : 0;
   });
+
+  // Helper function to format quantity display based on asset class
+  const formatQuantityLabel = (position: GroupedPosition): string => {
+    const qty = position.quantity.toFixed(4);
+
+    switch (position.assetClass) {
+      case 'crypto':
+        // For crypto, show: "200.0000 SOL" or "1.0000 XRP"
+        return `${qty} ${position.symbol}`;
+      case 'future':
+        // For futures, show: "1 contracts"
+        return `${position.quantity} contract${position.quantity !== 1 ? 's' : ''}`;
+      case 'option':
+        // For options, show: "10 contracts"
+        return `${position.quantity} contract${position.quantity !== 1 ? 's' : ''}`;
+      case 'cfd':
+        // For CFDs, show quantity with units
+        return `${qty} ${position.symbol}`;
+      case 'stock':
+        // For stocks, show quantity as shares
+        return `${position.quantity} share${position.quantity !== 1 ? 's' : ''}`;
+      default:
+        return `${position.quantity} contracts`;
+    }
+  };
 
   return (
     <Card>
@@ -157,7 +185,7 @@ export default function PortfolioOverview() {
                 <div>
                   <div className="font-medium">{position.symbol} {position.type}</div>
                   <div className="text-sm text-muted-foreground">
-                    {position.quantity} contracts
+                    {formatQuantityLabel(position)}
                   </div>
                 </div>
                 <div className="text-right">
