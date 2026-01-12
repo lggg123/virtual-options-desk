@@ -281,8 +281,8 @@ const BASE_PRICES: Record<string, number> = {
   '6A': 0.6550,
   '6C': 0.7150,
   'CL': 72.50,
-  'GC': 4400.00,  // Updated gold price
-  'SI': 23.50,
+  'GC': 4510.00,  // Gold - updated Jan 12, 2026
+  'SI': 85.85,    // Silver - updated Jan 12, 2026 (ATH territory!)
   'NG': 2.85,
   'HG': 3.85,
   'ZB': 118.50,
@@ -417,7 +417,7 @@ async function getFuturesQuote(symbol: string, contract?: string) {
   if (symbol === 'GC' || symbol === 'SI') {
     // Fetch live gold or silver price from metalpriceapi.com
     const metalCode = symbol === 'GC' ? 'XAU' : 'XAG';
-    const fallback = symbol === 'GC' ? BASE_PRICES['GC'] || 2045.00 : BASE_PRICES['SI'] || 23.50;
+    const fallback = symbol === 'GC' ? BASE_PRICES['GC'] : BASE_PRICES['SI'];
     try {
       const metalRes = await fetch(`https://api.metalpriceapi.com/v1/latest?api_key=${METALPRICE_API_KEY}&base=${metalCode}&currencies=USD`);
       if (!metalRes.ok) {
