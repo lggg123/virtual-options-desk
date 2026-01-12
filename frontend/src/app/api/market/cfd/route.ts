@@ -419,9 +419,9 @@ const BASE_PRICES: Record<string, number> = {
   'US30': 44500,
   'GER40': 19850,
   'UK100': 8250,
-  // Commodity - Updated Jan 2026
-  'XAUUSD': 4498.60, // Gold - Updated Jan 2026 (live market)
-  'XAGUSD': 80.96, // Silver - Updated Jan 2026 (live market)
+  // Commodity - Updated Jan 12, 2026
+  'XAUUSD': 4510.00, // Gold - Updated Jan 12, 2026 (ATH)
+  'XAGUSD': 85.85, // Silver - Updated Jan 12, 2026 (ATH)
   'USOIL': 58.00, // WTI Crude - Updated Jan 2026
   'UKOIL': 62.50, // Brent Crude - Updated Jan 2026
   'NATGAS': 2.85,
@@ -527,8 +527,28 @@ async function getCFDQuote(symbol: string) {
   let r: Record<string, unknown> = {};
   const eodhdKey = process.env.EODHD_API_KEY || '';
   const alphaKey = process.env.ALPHA_VANTAGE_API_KEY || '';
+  const metalPriceKey = process.env.METALPRICE_API_KEY || '';
 
-  if (symbol === 'XAUUSD' || symbol === 'XAGUSD' || symbol === 'USOIL' || symbol === 'UKOIL' || symbol === 'NATGAS') {
+  // Use MetalPriceAPI for gold and silver (more reliable)
+  if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
+    try {
+      const metalCode = symbol === 'XAUUSD' ? 'XAU' : 'XAG';
+      const url = `https://api.metalpriceapi.com/v1/latest?api_key=${metalPriceKey}&base=${metalCode}&currencies=USD`;
+      const resp = await fetchWithTimeout(url, 5000);
+      const json = await resp.json();
+      if (json.success && json.rates?.USD) {
+        basePrice = json.rates.USD;
+        useLivePrice = true;
+        r = json;
+        console.log(`MetalPriceAPI: ${symbol} = $${basePrice}`);
+      } else {
+        console.warn('MetalPriceAPI did not return valid price for', symbol, JSON.stringify(json));
+      }
+    } catch (err) {
+      console.warn('MetalPriceAPI fetch failed for', symbol, err);
+    }
+  } else if (symbol === 'USOIL' || symbol === 'UKOIL' || symbol === 'NATGAS') {
+    // Use EODHD for oil/gas commodities
     try {
       const eodhdSymbol = symbol;
       const url = `https://eodhd.com/api/real-time/${eodhdSymbol}.FOREX?api_token=${eodhdKey}&fmt=json`;
@@ -546,47 +566,9 @@ async function getCFDQuote(symbol: string) {
         useLivePrice = true;
       } else {
         console.warn('EODHD did not return valid price for', symbol, JSON.stringify(json));
-        // Fallback to Alpha Vantage if EODHD fails
-        if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
-          try {
-            const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
-            const resp = await fetchWithTimeout(url, 5000);
-            const json = await resp.json();
-            const rate = json['Realtime Currency Exchange Rate'] || {};
-            if (typeof rate['5. Exchange Rate'] === 'string') {
-              basePrice = parseFloat(rate['5. Exchange Rate']);
-              useLivePrice = true;
-              r = rate;
-              console.warn('Alpha Vantage fallback used for', symbol, basePrice);
-            } else {
-              console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
-            }
-          } catch (err) {
-            console.warn('Alpha Vantage fallback fetch failed for', symbol, err);
-          }
-        }
       }
     } catch (err) {
       console.warn('EODHD fetch failed for', symbol, err);
-      // Fallback to Alpha Vantage if EODHD fails
-      if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
-        try {
-          const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
-          const resp = await fetchWithTimeout(url, 5000);
-          const json = await resp.json();
-          const rate = json['Realtime Currency Exchange Rate'] || {};
-          if (typeof rate['5. Exchange Rate'] === 'string') {
-            basePrice = parseFloat(rate['5. Exchange Rate']);
-            useLivePrice = true;
-            r = rate;
-            console.warn('Alpha Vantage fallback used for', symbol, basePrice);
-          } else {
-            console.warn('Alpha Vantage did not return valid price for', symbol, JSON.stringify(rate));
-          }
-        } catch (err) {
-          console.warn('Alpha Vantage fallback fetch failed for', symbol, err);
-        }
-      }
     }
   } else if (symbol.endsWith('.US')) {
     // Alpha Vantage for US stocks
@@ -603,19 +585,37 @@ async function getCFDQuote(symbol: string) {
       console.warn('Alpha Vantage US stock fetch failed for', symbol, err);
     }
   } else {
-    // Alpha Vantage for forex
+    // Try MetalPriceAPI for forex first (supports all major currencies)
     try {
-      const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+      const fromCurrency = symbol.slice(0, 3);
+      const toCurrency = symbol.slice(3, 6);
+      const url = `https://api.metalpriceapi.com/v1/latest?api_key=${metalPriceKey}&base=${fromCurrency}&currencies=${toCurrency}`;
       const resp = await fetchWithTimeout(url, 5000);
       const json = await resp.json();
-      const rate = json['Realtime Currency Exchange Rate'] || {};
-      if (typeof rate['5. Exchange Rate'] === 'string') {
-        basePrice = parseFloat(rate['5. Exchange Rate']);
+      if (json.success && json.rates?.[toCurrency]) {
+        basePrice = json.rates[toCurrency];
         useLivePrice = true;
-        r = rate;
+        r = json;
+        console.log(`MetalPriceAPI forex: ${symbol} = ${basePrice}`);
+      } else {
+        // Fallback to Alpha Vantage if MetalPriceAPI doesn't have the pair
+        throw new Error('MetalPriceAPI forex pair not available');
       }
     } catch (err) {
-      console.warn('Alpha Vantage forex fetch failed for', symbol, err);
+      // Fallback to Alpha Vantage for forex
+      try {
+        const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.slice(0,3)}&to_currency=${symbol.slice(3)}&apikey=${alphaKey}`;
+        const resp = await fetchWithTimeout(url, 5000);
+        const json = await resp.json();
+        const rate = json['Realtime Currency Exchange Rate'] || {};
+        if (typeof rate['5. Exchange Rate'] === 'string') {
+          basePrice = parseFloat(rate['5. Exchange Rate']);
+          useLivePrice = true;
+          r = rate;
+        }
+      } catch (err) {
+        console.warn('Alpha Vantage forex fetch failed for', symbol, err);
+      }
     }
   }
 
