@@ -427,7 +427,9 @@ function transformFuturePosition(
   const symbol = pos.symbol;
   const contractSize = (pos.contract_size as number | undefined) || (notes.contract_size as number | undefined) || 100;
   const expiry = pos.expiry || (notes.expiry as string | undefined) || undefined;
-  const positionType = (pos.position_type as string | undefined) || (notes.position_type as string | undefined) || 'long';
+
+  // Prioritize notes.position_type over pos.position_type because database column may have incorrect values like "spread"
+  const positionType = (notes.position_type as string | undefined) || (pos.position_type as string | undefined) || 'long';
 
   // Extract base symbol from spread notation (e.g., "GCSPREAD" -> "GC", "GC-G26" -> "GC")
   const baseSymbol = symbol.replace(/SPREAD.*/, '').replace(/-.*/, '').substring(0, 2);
