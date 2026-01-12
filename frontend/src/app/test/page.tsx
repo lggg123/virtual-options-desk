@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
+
 export default function TestPage() {
-  const [symbol, setSymbol] = React.useState('AAPL');
-  const [result, setResult] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [symbol, setSymbol] = useState('AAPL');
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchPrice = async () => {
     setLoading(true);
