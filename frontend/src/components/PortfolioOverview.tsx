@@ -32,7 +32,9 @@ export default function PortfolioOverview() {
 
         // Calculate total portfolio value
         const total = (data.positions || []).reduce((sum: number, pos: Position) => {
-          return sum + (pos.currentPrice * pos.quantity * 100);
+          // Options have a 100x multiplier, other assets don't
+          const multiplier = pos.assetClass === 'option' ? 100 : 1;
+          return sum + (pos.currentPrice * pos.quantity * multiplier);
         }, 0);
         setTotalValue(total);
       }
@@ -106,7 +108,12 @@ export default function PortfolioOverview() {
   // Group positions by symbol and calculate percentages
   const groupedPositions = positions.reduce((acc: GroupedPosition[], pos) => {
     const existing = acc.find(p => p.symbol === pos.symbol && p.type === pos.type);
-    const value = pos.currentPrice * pos.quantity * 100;
+
+    // Calculate value based on asset class
+    // Options have a 100x multiplier (1 contract = 100 shares)
+    // Crypto, CFDs, stocks, and futures don't use the 100x multiplier
+    const multiplier = pos.assetClass === 'option' ? 100 : 1;
+    const value = pos.currentPrice * pos.quantity * multiplier;
 
     if (existing) {
       existing.quantity += pos.quantity;
