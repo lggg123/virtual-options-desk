@@ -94,10 +94,13 @@ async function fetchFuturePrice(symbol: string): Promise<number> {
     const baseSymbol = symbol.replace(/SPREAD.*/, '').replace(/-.*/, '').substring(0, 2).toUpperCase();
 
     // Use absolute URL for external API calls in server-side Next.js
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Try multiple env variables for the base URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+                    process.env.NEXT_PUBLIC_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
     const apiUrl = `${baseUrl}/api/market/futures?symbol=${baseSymbol}`;
 
-    console.log(`[FuturePrice] Fetching ${baseSymbol} from ${apiUrl}`);
+    console.log(`[FuturePrice] 🔍 Fetching ${symbol} -> ${baseSymbol} from ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
       cache: 'no-store', // Disable cache to always get fresh prices
@@ -113,18 +116,19 @@ async function fetchFuturePrice(symbol: string): Promise<number> {
       console.log(`[FuturePrice] Response for ${baseSymbol}:`, JSON.stringify(contract).substring(0, 200));
 
       if (contract && contract.price) {
-        console.log(`[FuturePrice] ✓ Fetched ${baseSymbol} price: $${contract.price}`);
+        console.log(`[FuturePrice] ✅ Fetched ${baseSymbol} price: $${contract.price}`);
         return contract.price;
       } else {
-        console.error(`[FuturePrice] No price in response for ${baseSymbol}:`, contract);
+        console.error(`[FuturePrice] ❌ No price in response for ${baseSymbol}:`, contract);
       }
     } else {
       const errorText = await response.text();
-      console.error(`[FuturePrice] HTTP ${response.status} for ${baseSymbol}: ${errorText.substring(0, 200)}`);
+      console.error(`[FuturePrice] ❌ HTTP ${response.status} for ${baseSymbol}: ${errorText.substring(0, 200)}`);
     }
   } catch (e) {
-    console.error(`[FuturePrice] Error fetching ${symbol}:`, e);
+    console.error(`[FuturePrice] ❌ Error fetching ${symbol}:`, e);
   }
+  console.log(`[FuturePrice] ⚠️  Returning 0 for ${symbol}`);
   return 0;
 }
 
@@ -349,7 +353,9 @@ export async function GET() {
     const futurePrices: Record<string, number> = {};
     for (const { symbol, price } of futurePriceResults) {
       futurePrices[symbol] = price;
+      console.log(`[Positions] Mapped future price: ${symbol} = $${price}`);
     }
+    console.log(`[Positions] Future prices map:`, futurePrices);
 
     // Transform database positions to match frontend interface
     const transformedPositions: TransformedPosition[] = positionsWithAssetClass.map(pos => {
