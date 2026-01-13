@@ -18,10 +18,10 @@ class AlphaVantagePriceTool(BaseTool):
         super().__init__()
         self._api_key = api_key or os.getenv("ALPHA_VANTAGE_API_KEY")
 
-    def get_price(self, symbol: str):
+    def get_price_and_timestamp(self, symbol: str):
         """
-        Fetches the latest price for a symbol from the Alpha Vantage API.
-        Returns float or None.
+        Fetches the latest price and timestamp for a symbol from the Alpha Vantage API.
+        Returns (price: float or None, timestamp: str or None).
         """
         if not self._api_key:
             raise ValueError("Alpha Vantage API key not set in environment or constructor.")
@@ -32,14 +32,17 @@ class AlphaVantagePriceTool(BaseTool):
             data = response.json()
             quote = data.get("Global Quote", {})
             price = quote.get("05. price")
+            timestamp = quote.get("07. latest trading day")
             if price:
-                return float(price)
+                return float(price), timestamp
         except Exception:
             pass
-        return None
+        return None, None
 
-    def _run(self, symbol: str) -> Optional[float]:
+    def _run(self, symbol: str):
         """
-        Required by BaseTool: fetches the price for the given symbol.
+        Required by BaseTool: fetches the price and timestamp for the given symbol.
+        Returns a dict with 'price' and 'timestamp'.
         """
-        return self.get_price(symbol)
+        price, timestamp = self.get_price_and_timestamp(symbol)
+        return {"price": price, "timestamp": timestamp}
