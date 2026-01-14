@@ -32,9 +32,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      let errorMessage = 'Prediction failed';
+      try {
+        const error = await response.json();
+        errorMessage = error.detail || errorMessage;
+      } catch (e) {
+        // ML service might be down or returning HTML
+        errorMessage = 'ML service is not responding. Please ensure it is running on port 8002.';
+      }
       return NextResponse.json(
-        { error: error.detail || 'Prediction failed' },
+        { error: errorMessage },
         { status: response.status }
       );
     }
