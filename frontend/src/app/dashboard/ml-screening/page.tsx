@@ -66,9 +66,8 @@ export default function MLScreeningPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           symbols: [
-            'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'AMD',
-            'NFLX', 'DIS', 'BABA', 'TSM', 'INTC', 'ORCL', 'CRM', 'ADBE',
-            'PYPL', 'SQ', 'SHOP', 'UBER', 'COIN', 'PLTR', 'SNOW', 'CRWD'
+            // Use symbols that actually exist in the database
+            'A', 'AA', 'AACG', 'AACI', 'AAL', 'AAPL'
           ],
           top_n: 100
         })
