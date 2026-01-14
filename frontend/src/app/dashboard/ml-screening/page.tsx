@@ -84,27 +84,13 @@ export default function MLScreeningPage() {
           setSelectedStock(result.predictions[0]);
         }
       } else {
-        const errorData = await response.json();
-        console.error('[ML Screening] Error response:', errorData);
-        
-        // Use mock data as fallback
-        console.log('[ML Screening] Using mock data as fallback');
-        const mockData = generateMockPredictions();
-        setData(mockData);
-        if (mockData.predictions.length > 0) {
-          setSelectedStock(mockData.predictions[0]);
-        }
+        const errorText = await response.text();
+        console.error('[ML Screening] Error response:', errorText);
+        throw new Error(`Failed to fetch predictions: ${response.status} - ${errorText}`);
       }
     } catch (error) {
       console.error('[ML Screening] Failed to fetch ML predictions:', error);
-      
-      // Use mock data as fallback
-      console.log('[ML Screening] Using mock data as fallback');
-      const mockData = generateMockPredictions();
-      setData(mockData);
-      if (mockData.predictions.length > 0) {
-        setSelectedStock(mockData.predictions[0]);
-      }
+      throw error;
     } finally {
       setLoading(false);
     }

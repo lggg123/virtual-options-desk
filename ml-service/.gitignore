@@ -2,6 +2,10 @@
 .env
 .env.local
 
+# Data files (use Supabase instead)
+historical_stock_data.csv
+*.csv
+
 # Python
 __pycache__/
 *.py[cod]

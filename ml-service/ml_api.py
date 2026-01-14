@@ -202,9 +202,82 @@ async def generate_predictions(request: PredictionRequest):
             )
     
     try:
-        # TODO: Load stock factors for the requested symbols
-        # This is where you'd integrate with your factor calculator
-        stock_factors = []  # Load factors for request.symbols
+        # Calculate stock factors from Supabase historical data
+        import pandas as pd
+        import numpy as np
+        from pathlib import Path
+        
+        # Try Supabase first, fall back to CSV
+        try:
+            from supabase_data import fetch_historical_data
+            import asyncio
+            
+            print(f"📊 Fetching data from Supabase for {len(request.symbols)} symbols...")
+            df = asyncio.run(fetch_historical_data(request.symbols, days=365))
+            
+            if df.empty:
+                print("⚠️  No data from Supabase, trying CSV fallback...")
+                raise Exception("No Supabase data")
+                
+        except Exception as supabase_error:
+            print(f"⚠️  Supabase fetch failed: {supabase_error}")
+            print("📂 Falling back to CSV...")
+            
+            # Fallback to CSV
+            data_path = Path("historical_stock_data.csv")
+            if not data_path.exists():
+                data_path = Path("../data/historical_stock_data.csv")
+            
+            if not data_path.exists():
+                raise HTTPException(
+                    status_code=404,
+                    detail="No stock data available. Please run migration or ensure CSV exists."
+                )
+            
+            df = pd.read_csv(data_path)
+            df['date'] = pd.to_datetime(df['date'])
+        
+        # Import calculation functions from train script
+        from train_ml_models import (
+            calculate_technical_indicators,
+            calculate_fundamental_metrics,
+            calculate_market_factors,
+            StockFactors
+        )
+        
+        stock_factors = []
+        
+        # Calculate factors for requested symbols
+        for symbol in request.symbols:
+            stock_df = df[df['symbol'] == symbol].sort_values('date')
+            
+            if len(stock_df) < 60:
+                continue
+            
+            try:
+                technical = calculate_technical_indicators(stock_df)
+                fundamental = calculate_fundamental_metrics(stock_df)
+                market = calculate_market_factors(stock_df)
+                
+                factors = StockFactors(
+                    symbol=symbol,
+                    timestamp=stock_df['date'].iloc[-1].isoformat(),
+                    fundamental=fundamental,
+                    technical=technical,
+                    sentiment={'score': 0.5},
+                    market=market
+                )
+                
+                stock_factors.append(factors)
+            except Exception as e:
+                print(f"Error calculating factors for {symbol}: {e}")
+                continue
+        
+        if not stock_factors:
+            raise HTTPException(
+                status_code=404,
+                detail="No stock data available for the requested symbols."
+            )
         
         # Generate predictions
         predictions = ensemble.predict(stock_factors)
@@ -219,7 +292,11 @@ async def generate_predictions(request: PredictionRequest):
             model_version="1.0.0"
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 
