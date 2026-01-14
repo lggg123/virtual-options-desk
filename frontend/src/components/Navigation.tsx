@@ -18,7 +18,8 @@ import {
   LucideIcon,
   BarChart3,
   DollarSign,
-  Bitcoin
+  Bitcoin,
+  Brain
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -33,6 +34,7 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'AI Stock Picks', href: '/dashboard/ai-picks', icon: TrendingUp },
+  { name: 'ML Screening', href: '/dashboard/ml-screening', icon: Brain },
   { name: 'Virtual Options', href: '/trading', icon: CandlestickChart },
   { name: 'Futures', href: '/trading/futures', icon: BarChart3 },
   { name: 'CFDs', href: '/trading/cfd', icon: DollarSign },

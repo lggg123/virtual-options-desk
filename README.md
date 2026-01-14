@@ -139,8 +139,9 @@ virtual-options-desk/
 - **📝 Daily Blogs**: Automated market analysis posts
 - **📊 3D Visualization**: Interactive price/volume charts
 - **💹 Options Trading**: Virtual trading environment
-- **� Mobile App**: Flutter app with candlestick charts & AI insights
-- **�🔄 Fallback Systems**: Works without external services
+- **📱 Mobile App**: Flutter app with candlestick charts & AI insights
+- **🔄 Fallback Systems**: Works without external services
+- **🧠 ML Stock Screening**: Interactive dashboard with ensemble model predictions, confidence scoring, and risk assessment
 
 ## 🚀 Deployment Options
 
@@ -250,6 +251,14 @@ curl -X POST http://localhost:3000/api/ml/predict \
 - ⚠️ Risk assessment for each prediction
 - 📈 Feature importance analysis
 - 🔄 Monthly screening pipeline for 1000+ stocks
+
+**Frontend Dashboard:**
+- 🖥️ ML Screening Dashboard at `/dashboard/ml-screening`
+- 📊 Visual ranking of top predictions
+- 🧠 Model ensemble breakdown showing individual model contributions
+- 📈 Interactive confidence and risk score visualizations
+- 🎯 Feature importance analysis for each stock
+- 🔍 Detailed prediction insights with filtering by risk level
 
 See the [ML Training Guide](docs/ML_TRAINING_GUIDE.md) for complete documentation.
 
