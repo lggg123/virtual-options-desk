@@ -187,12 +187,12 @@ def main():
     # Load CSV
     df = load_csv()
     
-    # Confirm migration
+    # Start migration automatically
     print(f"\n⚠️  About to upload {len(df):,} rows to Supabase")
-    response = input("Continue? (yes/no): ")
-    if response.lower() not in ['yes', 'y']:
-        print("Migration cancelled.")
-        sys.exit(0)
+    print("Starting migration in 2 seconds... (Ctrl+C to cancel)")
+    
+    import time
+    time.sleep(2)
     
     # Start migration
     start_time = datetime.now()

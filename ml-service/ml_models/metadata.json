@@ -35,7 +35,7 @@
       "lstm": 0.1
     }
   },
-  "trained_at": "2026-01-14T04:00:20.282789",
+  "trained_at": "2026-01-14T05:52:41.201443",
   "feature_count": 24,
   "torch_available": true
 }
