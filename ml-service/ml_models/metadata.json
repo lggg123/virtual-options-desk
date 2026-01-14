@@ -1,62 +1,41 @@
 {
-  "training_date": "2025-11-28T08:09:22.778899",
-  "num_stocks": 5196,
-  "training_samples": 1080974,
-  "test_samples": 270244,
-  "feature_count": 18,
-  "features": [
-    "close",
-    "volume",
-    "return_1d",
-    "return_5d",
-    "return_20d",
-    "return_60d",
-    "volatility_20d",
-    "volatility_60d",
-    "sma_20",
-    "sma_50",
-    "sma_200",
-    "sma_20_50_ratio",
-    "sma_50_200_ratio",
-    "rsi_14",
-    "bb_position",
-    "volume_20d_avg",
-    "volume_ratio",
-    "momentum_20d"
-  ],
-  "model_weights": {
-    "xgboost": 0.35,
-    "random_forest": 0.25,
-    "lightgbm": 0.4
-  },
-  "performance": {
+  "config": {
     "xgboost": {
-      "mse": 3975.817349690052,
-      "mae": 0.41963393343866345,
-      "r2": 0.4324517354150972
+      "n_estimators": 500,
+      "max_depth": 8,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "objective": "reg:squarederror",
+      "eval_metric": "rmse",
+      "random_state": 42
     },
     "random_forest": {
-      "mse": 3106.14619690907,
-      "mae": 0.5442586539270944,
-      "r2": 0.5565973663905435
+      "n_estimators": 300,
+      "max_depth": 15,
+      "min_samples_split": 10,
+      "min_samples_leaf": 5,
+      "max_features": "sqrt",
+      "random_state": 42
     },
     "lightgbm": {
-      "mse": 1028.3902107261913,
-      "mae": 0.607612723984988,
-      "r2": 0.853197210012866
+      "n_estimators": 500,
+      "max_depth": 8,
+      "learning_rate": 0.05,
+      "num_leaves": 31,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "random_state": 42,
+      "verbose": -1
     },
-    "ensemble": {
-      "mse": 829.609137363881,
-      "mae": 0.4563939628124772,
-      "r2": 0.8815732251303358
+    "ensemble_weights": {
+      "xgboost": 0.35,
+      "random_forest": 0.25,
+      "lightgbm": 0.3,
+      "lstm": 0.1
     }
   },
-  "config": {
-    "training_universe_size": null,
-    "history_days": 730,
-    "forward_prediction_days": 30,
-    "test_size": 0.2,
-    "random_state": 42,
-    "output_dir": "ml_models"
-  }
+  "trained_at": "2026-01-14T04:00:20.282789",
+  "feature_count": 24,
+  "torch_available": true
 }
