@@ -12,7 +12,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { symbols, top_n = 100 } = body;
 
+    console.log('[ML Predict API] Request received:', { symbols: symbols?.length, top_n });
+    console.log('[ML Predict API] ML_SERVICE_URL:', ML_SERVICE_URL);
+
     if (!symbols || !Array.isArray(symbols) || symbols.length === 0) {
+      console.error('[ML Predict API] Invalid symbols:', symbols);
       return NextResponse.json(
         { error: 'Please provide an array of stock symbols' },
         { status: 400 }
@@ -20,6 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call Python ML API
+    console.log('[ML Predict API] Calling ML service...');
     const response = await fetch(`${ML_SERVICE_URL}/api/ml/predict`, {
       method: 'POST',
       headers: {
@@ -31,27 +36,36 @@ export async function POST(request: NextRequest) {
       }),
     });
 
+    console.log('[ML Predict API] ML service response status:', response.status);
+
     if (!response.ok) {
       let errorMessage = 'Prediction failed';
       try {
         const error = await response.json();
         errorMessage = error.detail || errorMessage;
+        console.error('[ML Predict API] ML service error:', error);
       } catch (e) {
         // ML service might be down or returning HTML
-        errorMessage = 'ML service is not responding. Please ensure it is running on port 8002.';
+        const text = await response.text();
+        console.error('[ML Predict API] ML service response (non-JSON):', text.substring(0, 200));
+        errorMessage = 'ML service is not responding properly. Please check the service health.';
       }
       return NextResponse.json(
-        { error: errorMessage },
+        { error: errorMessage, ml_service_url: ML_SERVICE_URL },
         { status: response.status }
       );
     }
 
     const data = await response.json();
+    console.log('[ML Predict API] Success, predictions:', data.predictions?.length || 0);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('ML prediction error:', error);
+    console.error('[ML Predict API] Exception:', error);
     return NextResponse.json(
-      { error: 'Failed to generate predictions. Is the ML service running?' },
+      { 
+        error: 'Failed to generate predictions. Check server logs for details.',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

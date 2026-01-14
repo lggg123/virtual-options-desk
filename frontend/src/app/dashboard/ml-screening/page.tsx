@@ -60,6 +60,7 @@ export default function MLScreeningPage() {
   async function fetchMLPredictions() {
     setLoading(true);
     try {
+      console.log('[ML Screening] Fetching predictions...');
       const response = await fetch('/api/ml/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,15 +74,21 @@ export default function MLScreeningPage() {
         })
       });
 
+      console.log('[ML Screening] Response status:', response.status);
+
       if (response.ok) {
         const result = await response.json();
+        console.log('[ML Screening] Data received:', result);
         setData(result);
-        if (result.predictions.length > 0) {
+        if (result.predictions && result.predictions.length > 0) {
           setSelectedStock(result.predictions[0]);
         }
+      } else {
+        const errorData = await response.json();
+        console.error('[ML Screening] Error response:', errorData);
       }
     } catch (error) {
-      console.error('Failed to fetch ML predictions:', error);
+      console.error('[ML Screening] Failed to fetch ML predictions:', error);
     } finally {
       setLoading(false);
     }
