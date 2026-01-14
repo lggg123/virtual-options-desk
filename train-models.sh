@@ -11,7 +11,7 @@ if [ -d ".venv" ]; then
 fi
 
 echo "📥 Installing ML dependencies..."
-pip install -q pandas numpy scikit-learn==1.5.2 xgboost lightgbm joblib
+pip install -q pandas numpy scikit-learn==1.7.2 xgboost lightgbm joblib
 
 echo ""
 echo "✅ Dependencies installed!"

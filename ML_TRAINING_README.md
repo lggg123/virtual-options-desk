@@ -38,7 +38,7 @@ Or manually:
 
 ```bash
 # Install dependencies
-pip install pandas numpy scikit-learn==1.5.2 xgboost lightgbm joblib
+pip install pandas numpy scikit-learn==1.7.2 xgboost lightgbm joblib
 
 # Run training
 cd ml-service
