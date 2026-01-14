@@ -210,10 +210,9 @@ async def generate_predictions(request: PredictionRequest):
         # Try Supabase first, fall back to CSV
         try:
             from supabase_data import fetch_historical_data
-            import asyncio
             
             print(f"📊 Fetching data from Supabase for {len(request.symbols)} symbols...")
-            df = asyncio.run(fetch_historical_data(request.symbols, days=365))
+            df = await fetch_historical_data(request.symbols, days=365)
             
             if df.empty:
                 print("⚠️  No data from Supabase, trying CSV fallback...")
