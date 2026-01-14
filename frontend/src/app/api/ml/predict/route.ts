@@ -5,7 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8002';
+// Remove trailing slash from ML_SERVICE_URL to avoid double slashes
+const ML_SERVICE_URL = (process.env.ML_SERVICE_URL || 'http://localhost:8002').replace(/\/$/, '');
 
 export async function POST(request: NextRequest) {
   try {
