@@ -41,16 +41,19 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       let errorMessage = 'Prediction failed';
+      let responseText = '';
+      
       try {
-        const error = await response.json();
+        responseText = await response.text();
+        const error = JSON.parse(responseText);
         errorMessage = error.detail || errorMessage;
         console.error('[ML Predict API] ML service error:', error);
       } catch (e) {
-        // ML service might be down or returning HTML
-        const text = await response.text();
-        console.error('[ML Predict API] ML service response (non-JSON):', text.substring(0, 200));
-        errorMessage = 'ML service is not responding properly. Please check the service health.';
+        // Response was not JSON (might be HTML or plain text)
+        console.error('[ML Predict API] ML service response (non-JSON):', responseText.substring(0, 200));
+        errorMessage = 'ML service returned an error. The models may need to be retrained.';
       }
+      
       return NextResponse.json(
         { error: errorMessage, ml_service_url: ML_SERVICE_URL },
         { status: response.status }

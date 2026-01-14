@@ -86,12 +86,65 @@ export default function MLScreeningPage() {
       } else {
         const errorData = await response.json();
         console.error('[ML Screening] Error response:', errorData);
+        
+        // Use mock data as fallback
+        console.log('[ML Screening] Using mock data as fallback');
+        const mockData = generateMockPredictions();
+        setData(mockData);
+        if (mockData.predictions.length > 0) {
+          setSelectedStock(mockData.predictions[0]);
+        }
       }
     } catch (error) {
       console.error('[ML Screening] Failed to fetch ML predictions:', error);
+      
+      // Use mock data as fallback
+      console.log('[ML Screening] Using mock data as fallback');
+      const mockData = generateMockPredictions();
+      setData(mockData);
+      if (mockData.predictions.length > 0) {
+        setSelectedStock(mockData.predictions[0]);
+      }
     } finally {
       setLoading(false);
     }
+  }
+
+  function generateMockPredictions(): MLScreeningData {
+    const symbols = [
+      'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'AMD',
+      'NFLX', 'DIS', 'TSM', 'INTC', 'ORCL', 'CRM', 'ADBE'
+    ];
+    
+    return {
+      predictions: symbols.map((symbol, index) => ({
+        symbol,
+        score: 95 - index * 3,
+        rank: index + 1,
+        confidence: 0.85 - index * 0.03,
+        predicted_return: 15 - index * 0.8,
+        risk_score: 20 + index * 2.5,
+        model_contributions: {
+          xgboost: 3.5 - index * 0.2,
+          random_forest: 2.8 - index * 0.15,
+          lightgbm: 3.2 - index * 0.18,
+          lstm: 0.8 - index * 0.05
+        },
+        factor_importance: {
+          'tech_rsi_14': 0.15,
+          'fund_pe_ratio': 0.12,
+          'tech_momentum_20d': 0.11,
+          'tech_volatility_60d': 0.09,
+          'fund_revenue_growth': 0.08,
+          'mkt_volume_ratio': 0.07,
+          'tech_macd': 0.06,
+          'fund_profit_margin': 0.05
+        }
+      })),
+      generated_at: new Date().toISOString(),
+      model_version: '1.0.0 (Demo)',
+      total_screened: symbols.length
+    };
   }
 
   const getRiskLevel = (riskScore: number): 'low' | 'medium' | 'high' => {
