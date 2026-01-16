@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendBlogPostToSubscribers } from '@/lib/newsletter';
 
 // Create Supabase admin client
 const supabaseAdmin = createClient(
@@ -114,6 +115,40 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('❌ Error saving blog post:', error);
+
+      // Check if this is a duplicate key error (PostgreSQL error code 23505)
+      if (error.code === '23505' && error.message.includes('blog_posts_slug_key')) {
+        // The post already exists - check if it was created today
+        console.log('⚠️  Duplicate slug detected, checking existing post...');
+
+        const { data: existingPost } = await supabaseAdmin
+          .from('blog_posts')
+          .select('id, title, slug, published_at')
+          .eq('slug', blogPost.slug)
+          .single();
+
+        if (existingPost) {
+          const existingDate = new Date(existingPost.published_at).toISOString().split('T')[0];
+          const today = new Date().toISOString().split('T')[0];
+
+          if (existingDate === today) {
+            // Post already exists for today - return success (idempotent)
+            console.log(`✅ Blog post already exists for today: "${existingPost.title}" (ID: ${existingPost.id})`);
+            return NextResponse.json({
+              success: true,
+              message: 'Daily blog already exists for today',
+              post: {
+                id: existingPost.id,
+                title: existingPost.title,
+                slug: existingPost.slug,
+                published_at: existingPost.published_at
+              }
+            });
+          }
+        }
+      }
+
+      // For other errors or if duplicate is from a different day, return error
       return NextResponse.json(
         { error: 'Failed to save blog post', details: error.message },
         { status: 500 }
@@ -121,6 +156,27 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(`✅ Blog post published: "${data.title}" (ID: ${data.id})`);
+
+    // Send newsletter to subscribers (non-blocking)
+    sendBlogPostToSubscribers({
+      id: data.id,
+      title: data.title,
+      slug: data.slug,
+      summary: data.summary,
+      content: data.content,
+      author: data.author,
+      reading_time: data.reading_time,
+      tags: data.tags,
+      published_at: data.published_at,
+    }).then(result => {
+      if (result.success) {
+        console.log(`📧 Newsletter sent to ${result.sent} subscribers`);
+      } else {
+        console.error('📧 Newsletter sending failed:', result.error);
+      }
+    }).catch(error => {
+      console.error('📧 Newsletter sending error:', error);
+    });
 
     return NextResponse.json({
       success: true,

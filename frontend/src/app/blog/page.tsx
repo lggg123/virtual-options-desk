@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Calendar, Clock, Eye, ArrowRight, Home, LogIn } from 'lucide-react';
+import { Calendar, Clock, Eye, ArrowRight, Home, LogIn, Rss } from 'lucide-react';
+import { NewsletterSignup } from '@/components/NewsletterSignup';
 
 interface BlogPost {
   id: string;
@@ -78,6 +79,17 @@ export default function BlogPage() {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Daily market analysis and trading opportunities powered by artificial intelligence
           </p>
+          <div className="mt-6">
+            <a
+              href="/api/blog/rss"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Rss className="w-4 h-4" />
+              Subscribe to RSS Feed
+            </a>
+          </div>
         </div>
 
         {/* Blog Posts Grid */}
@@ -140,6 +152,11 @@ export default function BlogPage() {
             ))}
           </div>
         )}
+
+        {/* Newsletter Signup */}
+        <div className="max-w-4xl mx-auto mt-12">
+          <NewsletterSignup />
+        </div>
       </div>
     </div>
   );

@@ -8,6 +8,8 @@ import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import type { Database } from '@/lib/types';
 import BlogViewTracker from './BlogViewTracker';
+import { RelatedPosts } from '@/components/RelatedPosts';
+import { BlogComments } from '@/components/BlogComments';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -202,6 +204,12 @@ export default async function BlogPostPage({ params }: PageProps) {
             )}
           </CardContent>
         </Card>
+
+        {/* Comments Section */}
+        <BlogComments slug={slug} />
+
+        {/* Related Posts */}
+        <RelatedPosts currentSlug={slug} />
 
         {/* Back to Blog Button */}
         <div className="mt-8 text-center">

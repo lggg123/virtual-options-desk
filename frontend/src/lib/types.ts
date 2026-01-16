@@ -778,6 +778,137 @@ export interface Database {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          id: string
+          email: string
+          status: 'pending' | 'confirmed' | 'unsubscribed'
+          confirmation_token: string | null
+          confirmed_at: string | null
+          unsubscribed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          status?: 'pending' | 'confirmed' | 'unsubscribed'
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          unsubscribed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          status?: 'pending' | 'confirmed' | 'unsubscribed'
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          unsubscribed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_comments: {
+        Row: {
+          id: string
+          blog_post_id: string
+          author_name: string
+          author_email: string
+          content: string
+          status: 'pending' | 'approved' | 'rejected' | 'spam'
+          ip_address: string | null
+          user_agent: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          blog_post_id: string
+          author_name: string
+          author_email: string
+          content: string
+          status?: 'pending' | 'approved' | 'rejected' | 'spam'
+          ip_address?: string | null
+          user_agent?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          blog_post_id?: string
+          author_name?: string
+          author_email?: string
+          content?: string
+          status?: 'pending' | 'approved' | 'rejected' | 'spam'
+          ip_address?: string | null
+          user_agent?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_comments_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      social_media_posts: {
+        Row: {
+          id: string
+          blog_post_id: string
+          platform: 'twitter' | 'linkedin' | 'facebook' | 'reddit'
+          post_id: string | null
+          post_url: string | null
+          status: 'pending' | 'posted' | 'failed'
+          error_message: string | null
+          posted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          blog_post_id: string
+          platform: 'twitter' | 'linkedin' | 'facebook' | 'reddit'
+          post_id?: string | null
+          post_url?: string | null
+          status?: 'pending' | 'posted' | 'failed'
+          error_message?: string | null
+          posted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          blog_post_id?: string
+          platform?: 'twitter' | 'linkedin' | 'facebook' | 'reddit'
+          post_id?: string | null
+          post_url?: string | null
+          status?: 'pending' | 'posted' | 'failed'
+          error_message?: string | null
+          posted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_posts_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -788,6 +919,12 @@ export interface Database {
           post_slug: string
         }
         Returns: void
+      }
+      get_approved_comment_count: {
+        Args: {
+          post_id: string
+        }
+        Returns: number
       }
     }
     Enums: {
