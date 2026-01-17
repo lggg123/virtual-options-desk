@@ -262,4 +262,58 @@ curl -X POST http://localhost:3000/api/ml/predict \
 
 See the [ML Training Guide](docs/ML_TRAINING_GUIDE.md) for complete documentation.
 
+## 🚀 Strategic Roadmaps
+
+We have **three comprehensive roadmaps** for platform evolution. Each targets different markets and technical approaches.
+
+### 🎯 Which Path to Choose?
+
+**See**: [Roadmap Comparison Guide](docs/ROADMAP_COMPARISON.md) - Decision framework to help you choose
+
+### Available Roadmaps
+
+#### 1. [Algorithmic Trading Roadmap](docs/ALGORITHMIC_TRADING_ROADMAP.md)
+**"QuantConnect for Options"** - Code-first platform  
+- **Target Users**: Developer/quant traders who code  
+- **Key Features**: Python strategy editor, backtesting, analytics  
+- **Time to MVP**: 3-6 months  
+- **Revenue Model**: $0/$29/$99/mo  
+- **Best For**: Fast MVP, proven concept, low risk
+
+#### 2. [Agentic Trading Roadmap](docs/AGENTIC_TRADING_STRATEGIC_ROADMAP.md)
+**"AI Agents Orchestrate Your Strategies"** - Natural language platform  
+- **Target Users**: All levels including non-coders  
+- **Key Features**: Natural language strategy creation, multi-agent orchestration, continuous learning  
+- **Time to MVP**: 6-9 months  
+- **Revenue Model**: $0/$29/$299/mo  
+- **Best For**: Innovation, differentiation, accessibility
+
+#### 3. [Diamond Architecture Roadmap](docs/DIAMOND_ARCHITECTURE_ROADMAP.md) 🆕
+**"Interview the AI" Marketplace** - Premium subscription service  
+- **Target Users**: Traders who value transparency over DIY  
+- **Key Features**: 
+  - Microsoft Qlib (data layer)
+  - AlphaPy (AutoML signal generation)
+  - TradingAgents (Bull vs Bear structured debate)
+  - LangGraph (state orchestration)
+  - ElizaOS (interactive character chat)
+  - Multi-perspective risk review
+- **Time to MVP**: 12-19 months (7 phases)
+- **Revenue Model**: $0/$40/$99/mo  
+- **Best For**: Premium marketplace, defensible moat, high ARPU
+
+### 📚 Supporting Documentation
+
+- [Diamond Integration Summary](docs/DIAMOND_INTEGRATION_SUMMARY.md) - How Diamond integrates with existing code
+- [Diamond Quick Start](docs/DIAMOND_QUICK_START.md) - 2-week Qlib setup guide
+
+### 💡 Recommended Approach
+
+**Hybrid Path** (lowest risk, highest potential):
+1. **Q1-Q2 2026**: Build Algorithmic MVP → Get first revenue
+2. **Q3-Q4 2026**: Add Agentic features → Increase ARPU
+3. **2027**: Upgrade premium tier to Diamond → $40/mo subscriptions
+
+This lets you ship fast, validate market fit, then upgrade to premium features.
+
 Ready to trade! 📊✨

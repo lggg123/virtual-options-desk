@@ -315,12 +315,190 @@ curl https://yoursite.com/api/blog/latest
 2. Adjust task descriptions in `tasks.yaml`
 3. Consider upgrading to Gemini Pro for better output
 
-## Next Steps
+## Completed Features
 
-- [ ] Add RSS feed generation
-- [ ] Implement blog post scheduling (draft → published)
-- [ ] Add email newsletter integration
-- [ ] Create admin interface for editing posts
-- [ ] Add comment system
-- [ ] Implement related posts suggestions
-- [ ] Add social media auto-posting
+- [x] Add RSS feed generation
+- [x] Add email newsletter integration (Resend)
+- [x] Create admin interface for editing posts
+- [x] Add comment system (with moderation)
+- [x] Implement related posts suggestions
+- [x] Add social media auto-posting (Twitter, LinkedIn, Facebook, Reddit)
+
+## Pending Features
+
+- [ ] Implement blog post scheduling (draft → published with scheduled time)
+
+---
+
+## RSS Feed
+
+The blog includes an RSS feed at `/api/blog/rss`:
+
+- ✅ RSS 2.0 standard format
+- ✅ Automatic discovery via HTML `<link>` tag
+- ✅ Up to 50 most recent published posts
+- ✅ Full post metadata
+- ✅ 1-hour caching
+
+**Feed URL:** `https://yourdomain.com/api/blog/rss`
+
+---
+
+## Email Newsletter
+
+Powered by **Resend**, the newsletter system includes:
+
+- ✅ Double opt-in subscription (confirmation email)
+- ✅ Beautiful HTML email templates
+- ✅ Auto-send when new blog posts are published
+- ✅ Unsubscribe functionality
+- ✅ Signup form on blog page
+- ✅ Batch sending with rate limiting
+
+### Required Environment Variables
+
+```env
+RESEND_API_KEY=re_xxxxx
+RESEND_FROM_EMAIL=insights@yourdomain.com
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
+```
+
+### API Endpoints
+
+- `POST /api/newsletter/subscribe` - Subscribe new email
+- `GET /api/newsletter/confirm?token=xxx` - Confirm subscription
+- `GET /api/newsletter/unsubscribe?email=xxx` - Unsubscribe
+
+---
+
+## Comment System
+
+Anonymous comments with moderation:
+
+- ✅ Anonymous submission (name + email required, email not shown)
+- ✅ Pending moderation by default
+- ✅ Admin approval/rejection/spam marking
+- ✅ Rate limiting (3 comments/minute per IP)
+- ✅ Displayed on blog post pages
+
+### API Endpoints
+
+- `GET /api/blog/comments?slug=xxx` - Get approved comments
+- `POST /api/blog/comments` - Submit new comment
+
+---
+
+## Related Posts
+
+Tag-based recommendations:
+
+- ✅ Finds posts with similar tags
+- ✅ Relevance scoring algorithm
+- ✅ Falls back to recent posts if no matches
+- ✅ Shows 3 related posts on each blog page
+
+### API Endpoint
+
+- `GET /api/blog/related?slug=xxx&limit=3` - Get related posts
+
+---
+
+## Admin Dashboard
+
+Access at `/admin/blog` (requires authentication):
+
+- ✅ Blog post management (list, publish, archive, delete)
+- ✅ Comment moderation (approve, reject, spam, delete)
+- ✅ Stats overview (total posts, views, pending comments)
+- ✅ Social media posting controls
+
+---
+
+## Social Media Auto-Posting
+
+Supports Twitter/X, LinkedIn, Facebook, and Reddit:
+
+### Required Environment Variables
+
+```env
+# Twitter/X
+TWITTER_API_KEY=xxx
+TWITTER_API_SECRET=xxx
+TWITTER_ACCESS_TOKEN=xxx
+TWITTER_ACCESS_SECRET=xxx
+
+# LinkedIn
+LINKEDIN_ACCESS_TOKEN=xxx
+LINKEDIN_ORG_ID=xxx  # or LINKEDIN_PERSON_ID for personal profiles
+
+# Facebook
+FACEBOOK_ACCESS_TOKEN=xxx
+FACEBOOK_PAGE_ID=xxx
+
+# Reddit
+REDDIT_CLIENT_ID=xxx
+REDDIT_CLIENT_SECRET=xxx
+REDDIT_USERNAME=xxx
+REDDIT_PASSWORD=xxx
+REDDIT_SUBREDDIT=options  # target subreddit
+```
+
+### API Endpoints
+
+- `GET /api/admin/social-post?postId=xxx` - Get posting status
+- `POST /api/admin/social-post` - Trigger social media posts
+
+### Features
+
+- ✅ Auto-generates hashtags from tags
+- ✅ Platform-specific formatting
+- ✅ Tracks posting status in database
+- ✅ Manual trigger from admin dashboard
+
+---
+
+## Database Schema (New Tables)
+
+Run the migration at `frontend/supabase/migrations/002_newsletter_and_comments.sql`:
+
+```sql
+-- Newsletter Subscribers
+CREATE TABLE newsletter_subscribers (
+  id UUID PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  status TEXT CHECK (status IN ('pending', 'confirmed', 'unsubscribed')),
+  confirmation_token TEXT UNIQUE,
+  confirmed_at TIMESTAMPTZ,
+  unsubscribed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+
+-- Blog Comments
+CREATE TABLE blog_comments (
+  id UUID PRIMARY KEY,
+  blog_post_id UUID REFERENCES blog_posts(id),
+  author_name TEXT NOT NULL,
+  author_email TEXT NOT NULL,
+  content TEXT NOT NULL,
+  status TEXT CHECK (status IN ('pending', 'approved', 'rejected', 'spam')),
+  ip_address TEXT,
+  approved_at TIMESTAMPTZ,
+  approved_by UUID,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+
+-- Social Media Posts
+CREATE TABLE social_media_posts (
+  id UUID PRIMARY KEY,
+  blog_post_id UUID REFERENCES blog_posts(id),
+  platform TEXT CHECK (platform IN ('twitter', 'linkedin', 'facebook', 'reddit')),
+  post_id TEXT,
+  post_url TEXT,
+  status TEXT CHECK (status IN ('pending', 'posted', 'failed')),
+  error_message TEXT,
+  posted_at TIMESTAMPTZ,
+  UNIQUE(blog_post_id, platform)
+);
+```

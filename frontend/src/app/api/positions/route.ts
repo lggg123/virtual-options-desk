@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/supabase/server';
-import { calculateBlackScholes } from '@/lib/calculations/black-scholes';
+import { calculateBinomialTree } from '@/lib/calculations/binomial-tree';
 
 // In-memory cache for external API calls to prevent rate limiting
 const priceCache = new Map<string, { data: number | { bid: number; ask: number; mid: number }; timestamp: number }>();
@@ -596,24 +596,27 @@ function transformOptionPosition(
 
       if (underlyingPrice > 0 && strike > 0 && daysToExpiry > 0) {
         try {
-          const bsResult = calculateBlackScholes({
+          // Use binomial tree for American options (most US equity options)
+          const result = calculateBinomialTree({
             spotPrice: underlyingPrice,
             strikePrice: strike,
             timeToExpiry,
             riskFreeRate: 0.05, // 5% risk-free rate
             volatility: impliedVolatility,
-            optionType
+            optionType,
+            optionStyle: 'american', // US equity options are American-style
+            steps: 50, // Balance of speed and accuracy for portfolio display
           });
-          currentPrice = bsResult.price;
+          currentPrice = result.price;
           greeks = {
-            delta: bsResult.greeks.delta,
-            gamma: bsResult.greeks.gamma,
-            theta: bsResult.greeks.theta,
-            vega: bsResult.greeks.vega
+            delta: result.greeks.delta,
+            gamma: result.greeks.gamma,
+            theta: result.greeks.theta,
+            vega: result.greeks.vega
           };
           priceSource = 'live';
         } catch (e) {
-          console.error('Black-Scholes calculation failed:', e);
+          console.error('Binomial tree calculation failed:', e);
           // Fall back to estimated Greeks
           greeks = estimateGreeks(optionType, strike, daysToExpiry, pos.entry_price);
           priceSource = 'estimated';
